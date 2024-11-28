@@ -1,11 +1,117 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model city {
+  city_id   String     @id(map: "cities_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  city_name String     @unique(map: "cities_city_name_key") @db.VarChar(50)
+  location  location[]
+}
+
+model device {
+  device_id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serial_number                 String?   @unique @db.VarChar(60)
+  model_code                    String?   @db.VarChar(40)
+  inventory_number              String?   @unique @db.VarChar(40)
+  title                         String    @db.VarChar(100)
+  type                          String    @db.VarChar(40)
+  manufacturer                  String    @db.VarChar(40)
+  weight                        Decimal?  @db.Decimal
+  media                         String?   @db.VarChar(100)
+  serviceable                   Boolean
+  assigned_to                   String?   @db.Uuid
+  location_item                 String?   @db.Uuid
+  in_stock                      Boolean
+  created_by                    String    @db.Uuid
+  updated_by                    String    @db.Uuid
+  created_at                    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                    DateTime  @default(now()) @db.Timestamp(6)
+  user_device_assigned_toTouser user?     @relation("device_assigned_toTouser", fields: [assigned_to], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  user_device_created_byTouser  user      @relation("device_created_byTouser", fields: [created_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  location                      location? @relation(fields: [location_item], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+  user_device_updated_byTouser  user      @relation("device_updated_byTouser", fields: [updated_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model location {
+  location_id                  String   @id(map: "locations_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                        String   @unique(map: "locations_title_key") @db.VarChar(50)
+  city_id                      String   @db.Uuid
+  device                       device[]
+  city                         city     @relation(fields: [city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "locations_city_id_fkey")
+  user_user_locationTolocation user[]   @relation("user_locationTolocation")
+}
+
+model password {
+  password_id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String @db.Uuid
+  password    String @db.VarChar
+  user        user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model permission {
+  permission_id   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  permission_name String            @unique @db.VarChar(50)
+  description     String
+  permission_role permission_role[]
+}
+
+model permission_role {
+  permission_role_id String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  permission_id      String     @db.Uuid
+  role_id            String     @db.Uuid
+  permission         permission @relation(fields: [permission_id], references: [permission_id], onDelete: NoAction, onUpdate: NoAction)
+  role               role       @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model role {
+  role_id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_name       String            @unique @db.VarChar(40)
+  description     String?
+  permission_role permission_role[]
+  user_role       user_role[]
+}
+
+model token {
+  token_id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String   @db.Uuid
+  access_token  String   @unique @db.VarChar
+  refresh_token String   @unique @db.VarChar
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
+  user          user     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  user_id                          String      @id(map: "users_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  work_id                          String?     @unique(map: "users_work_id_key") @db.VarChar(40)
+  login                            String      @unique(map: "users_login_key") @db.VarChar(50)
+  email                            String      @unique(map: "users_email_key") @db.VarChar(60)
+  first_name                       String      @db.VarChar(70)
+  last_name                        String      @db.VarChar(70)
+  department                       String      @db.VarChar(50)
+  location                         String      @db.Uuid
+  created_by                       String?     @db.Uuid
+  updated_by                       String?     @db.Uuid
+  created_at                       DateTime    @default(now()) @db.Timestamp(6)
+  updated_at                       DateTime    @default(now()) @db.Timestamp(6)
+  device_device_assigned_toTouser  device[]    @relation("device_assigned_toTouser")
+  device_device_created_byTouser   device[]    @relation("device_created_byTouser")
+  device_device_updated_byTouser   device[]    @relation("device_updated_byTouser")
+  password                         password[]
+  token                            token[]
+  location_user_locationTolocation location    @relation("user_locationTolocation", fields: [location], references: [location_id], onDelete: NoAction, onUpdate: NoAction, map: "users_location_fkey")
+  user_role                        user_role[]
+}
+
+model user_role {
+  user_role_id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_id      String @db.Uuid
+  user_id      String @db.Uuid
+  role         role   @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+  user         user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
