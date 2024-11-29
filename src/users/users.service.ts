@@ -9,19 +9,21 @@ export class UsersService {
   constructor(private prisma: PrismaService){};
 
   async create(userDto: UserDto) {
-    const saltOrRounds = 10;
-    const password = uuidv4();
-    console.log(password);
-    const hash = await bcrypt.hash(password, saltOrRounds);
+    const password = "PfrhsnsqL0cneg"
+    const hash = await bcrypt.hash(password, 9);
+
     const user = await this.prisma.user.create({
      data: userDto
     });
-    await this.prisma.password.create({
-      data: {
-        user_id: user.user_id,
-        password: hash,
-      }
-    });
+
+    if (user) {
+      await this.prisma.password.create({
+        data: {
+          user_id: user.user_id,
+          password: hash,
+        }
+      });
+    }
   }
 
   findAll() {

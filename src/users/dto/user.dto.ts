@@ -7,8 +7,6 @@ export class UserDto {
     last_name: string
     department: string
     location: string
-    created_by: string
-    updated_by: string
     created_at: Date
     updated_at: Date
 }
