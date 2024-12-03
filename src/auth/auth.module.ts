@@ -1,11 +1,27 @@
+import { RefreshTokenStrategy } from './strategies/refresh.strategy';
+import { AccessTokenStrategy } from './strategies/access.strategy';
+import { UsersModule } from './../users/users.module';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaModule } from './../../prisma/prisma.module';
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { JwtModule } from '@nestjs/jwt';
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    UsersModule,
+    PrismaModule,
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_ACEESS_SECRET,
+      signOptions: { expiresIn: '60s' },
+    }),
+  ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtService, AccessTokenStrategy, RefreshTokenStrategy],
 })
 export class AuthModule {}

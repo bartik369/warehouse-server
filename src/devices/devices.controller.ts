@@ -16,10 +16,10 @@ export class DevicesController {
   //   return this.devicesService.findOne(id);
   // }
 
-  // @Post('new')
-  // async create(@Body() deviceDto: DeviceDto) {
-  //   return this.devicesService.create(deviceDto);
-  // }
+  @Post('create')
+  async create(@Body() deviceDto: DeviceDto) {
+    return this.devicesService.create(deviceDto);
+  }
 
   // @Patch(':id')
   // async update(

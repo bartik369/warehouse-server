@@ -16,11 +16,13 @@ export class DevicesService {
     //     });
     // };
 
-    // async create(deviceDto:DeviceDto) {
-    //     return this.prisma.device.create({
-    //         data: deviceDto
-    //     });
-    // };
+    async create(deviceDto:DeviceDto) {
+        console.log(deviceDto);
+        
+        // return this.prisma.device.create({
+        //     data: deviceDto
+        // });
+    };
 
     // async update(id: string, deviceDto:DeviceDto) {
     //     return this.prisma.device.update ({

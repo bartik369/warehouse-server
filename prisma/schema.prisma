@@ -91,6 +91,7 @@ model user {
   device_device_created_byTouser   device[]    @relation("device_created_byTouser")
   device_device_updated_byTouser   device[]    @relation("device_updated_byTouser")
   password                         password[]
+  token                            token[]
   location_user_locationTolocation location    @relation("user_locationTolocation", fields: [location], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
   user_role                        user_role[]
 }
@@ -101,4 +102,11 @@ model user_role {
   user_id      String? @db.Uuid
   role         role?   @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
   user         user?   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model token {
+  token_id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  refresh_token String @db.VarChar
+  user_id       String @db.Uuid
+  user          user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
