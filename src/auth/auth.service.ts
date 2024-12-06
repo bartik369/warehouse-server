@@ -14,12 +14,73 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async getTokens(user_id: string, email: string): Promise<Tokens> {
+  // Updating refresh token in token table
+  async updateRefreshHash(userId: string, refreshToken: string) {
+    const hash = await this.hashData(refreshToken);
+    await this.prisma.token.updateMany({
+      where: {
+        user_id: userId
+      },
+      data: {
+        refresh_token: hash
+      }
+    })
+  }
+
+  async signin(authDto: AuthDto): Promise<Tokens> {
+    const user: UserDto = await this.prisma.user.findUnique({
+      where: {
+        email: authDto.email,
+      },
+    });
+
+    if (!user) throw new ForbiddenException('Something went wrong', {
+        cause: new Error(),
+        description:'Please, check your credentials',
+    });
+    const userDBPassword = await this.prisma.password.findMany({
+        where: {
+            user_id: user.user_id,
+        },
+    });
+    const isMatch = await bcrypt.compare(
+        authDto.password,
+        userDBPassword[0].password,
+    );
+
+    if (!isMatch) throw new UnauthorizedException('Something went wrong', {
+        cause: new Error(),
+        description:'Please, check your credentials',
+    });
+
+    const tokens:Tokens = await this.getTokens(user);
+    await this.updateRefreshHash(user.user_id, tokens.refresh_token)
+    return tokens
+  }
+
+  async refreshToken(authDto: AuthDto) {
+    
+  }
+  async logout(id: string) {
+    await this.prisma.token.update({
+      where: {
+        user_id: id
+      },
+      data: {
+        refresh_token: ''
+      }
+    })
+  }
+
+    // Utility functions
+
+  async getTokens(data: Pick<UserDto, 'user_id' | 'email' | 'login'>): Promise<Tokens> {
     const [access, refresh] = await Promise.all([
       this.jwtService.signAsync(
         {
-          sub: user_id,
-          email,
+            userId: data.user_id,
+            userEmail: data.email,
+            userLogin: data.login,
         },
         {
         secret: 'access-secret',
@@ -28,8 +89,9 @@ export class AuthService {
       ),
       this.jwtService.signAsync(
         {
-          sub: user_id,
-          email,
+            userId: data.user_id,
+            userEmail: data.email,
+            userLogin: data.login,
         },
         {
         secret: 'refresh-secret',
@@ -41,81 +103,9 @@ export class AuthService {
         access_token: access,
         refresh_token: refresh,
     }
-  }
+  };
 
-  async signup(authDto: UserDto) {
-    console.log(authDto);
-    const newUser = await this.prisma.user.create({
-      data: authDto,
-    });
-
-    return newUser;
-  }
-
-  async signin(authDto: AuthDto): Promise<any> {
-    const user: UserDto = await this.prisma.user.findUnique({
-      where: {
-        email: authDto.email,
-      },
-    });
-
-    if (!user) throw new ForbiddenException('Access denied');
-    const userDBPassword = await this.prisma.password.findMany({
-        where: {
-            user_id: user.user_id,
-        },
-    });
-    const isMatch = await bcrypt.compare(
-        authDto.password,
-        userDBPassword[0].password,
-    );
-    if (!isMatch) throw new UnauthorizedException();
-    console.log('ffsdff');
-    
-    const tokens:Tokens = await this.getTokens(user.user_id, user.email);
-    await this.prisma.token.updateMany({
-        where: {
-            user_id: user.user_id
-        },
-        data: {
-            user_id: user.user_id,
-            refresh_token: tokens.refresh_token
-        }
-    });
-    return tokens
-
-
-    // if (user) {
-    //     const userDBPassword = await this.prisma.password.findMany({
-    //         where: {
-    //           user_id: user.user_id,
-    //         },
-    //     });
-    //     const isMatch = await bcrypt.compare(
-    //         authDto.password,
-    //         userDBPassword[0].password,
-    //     );
-    // }
-    
-    // const existToken = await this.prisma.token.findMany({
-    //   where: {
-    //     user_id: user.user_id,
-    //   },
-    // });
-    
-
-    // if (isMatch && !existToken[0]) {
-    //   const tokens:Tokens = await this.getTokens(user.user_id, user.email);
-    //   await this.prisma.token.create({
-    //     data: {
-    //         refresh_token: tokens.refresh_token
-    //     }
-    // });
-    //    return tokens
-    // } else {
-    //   throw new UnauthorizedException();
-    // }
-  }
-  async refreshToken() {}
-  async logout() {}
+  hashData(data: string) {
+    return bcrypt.hash(data, 9);
+  };
 }

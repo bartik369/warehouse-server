@@ -8,22 +8,18 @@ import { Get, Body, Controller, Post, HttpCode, HttpStatus, UseGuards, Request }
 @Controller('/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  @Post('/signup')
-  signup(@Body() authDto: UserDto) {
-    return this.authService.signup(authDto)
-  }
 
   @Post('/signin')
   signin(@Body() authDto: AuthDto):Promise<Tokens> {
     return this.authService.signin(authDto)
   }
   @Post('/refresh')
-  refreshToken(@Body()authDto: AuthDto) {
-
+  refreshToken(@Body() authDto: AuthDto) {
+    return this.authService.refreshToken(authDto)
   }
   @Post('/logout')
-  logout(@Body() authDto: AuthDto) {
-
+  logout(@Body() id: string) {
+    return this.authService.logout(id)
   }
 
 }
