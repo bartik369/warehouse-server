@@ -1,7 +1,6 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -13,16 +12,15 @@ model City {
   location        Location?
 
 }
-
 model Location {
   id              String  @id @default(uuid()) @db.Uuid
   name            String  @unique @db.VarChar(70)
   city            City    @relation(fields: [cityId], references: [id])
   cityId          String  @unique @db.Uuid
   user            User?
-  device          Device?       
+  device          Device? @relation("device_location")   
+  inventory       Inventory? @relation("inventory_location")
 }
-
 model User {
   id              String @id @default(uuid())  @db.Uuid
   workId          String @unique @db.VarChar(70)
@@ -39,24 +37,25 @@ model User {
   token           Token?
   userRole        User_Role?
   assignedTo      Assign_Device? @relation("device_assigned_to")
-  assignedBy      Assign_Device? @relation("device_assigned_by")
-  updatedBy       Assign_Device? @relation("device_updated_by")
+  returnFrom      Return_Device? @relation("returned_from_user")
+  inventoryBy     Inventory? @relation("inventory_by_user")
+  inventoryUpdate Inventory? @relation("inventory_update_by_user")
+  device          Device? @relation("assigned_to_user")
+  device_create   Device? @relation("created_by_user")
+  device_update   Device? @relation("updated_by_user")
 }
-
 model Password {
   id              String @id @default(uuid()) @db.Uuid
   password        String @db.VarChar(255)
   user            User   @relation(fields: [userId], references: [id])
   userId          String @unique @db.Uuid
 }
-
 model Token {
   id              String @id @default(uuid()) @db.Uuid
   refreshToken    String? @unique @db.VarChar(255)
   user            User @relation(fields: [userId], references: [id])
   userId          String @unique @db.Uuid
 }
-
 model Role {
   id              String @id @default(uuid()) @db.Uuid
   name            String @unique @db.VarChar(70)
@@ -64,7 +63,6 @@ model Role {
   userRole        User_Role?
   permissionRole  Permission_Role?
 }
-
 model User_Role {
   id              String @id @default(uuid()) @db.Uuid
   roleId          String @unique @db.Uuid
@@ -72,24 +70,21 @@ model User_Role {
   userId          String @unique @db.Uuid
   user            User @relation(fields: [userId], references: [id])
 }
-
 model Permission_Role {
   id              String @id @default(uuid())  @db.Uuid
   name            String @unique @db.VarChar(70)
   description     String @db.Text
   permissionId    String @unique @db.Uuid
-  roleId         String @unique @db.Uuid
+  roleId          String @unique @db.Uuid
   permission      Permission @relation(fields: [permissionId], references: [id])
   role            Role @relation(fields: [roleId], references: [id])
 }
-
 model Permission {
   id              String @id @default(uuid()) @db.Uuid
   name            String @unique @db.VarChar(70)
   description     String @db.Text
   permissionRole  Permission_Role?
 }
-
 model Device {
   id              String @id @default(uuid()) @db.Uuid
   serialNumber    String? @unique @db.VarChar(70)
@@ -102,23 +97,48 @@ model Device {
   media           String? @db.VarChar(100)
   serviceable     Boolean @default(true) @db.Boolean      
   inStock         Boolean @default(true) @db.Boolean
-  assignedTo      String @default("") @db.VarChar(70)
+  deviceFor       User @relation("assigned_to_user", fields: [assignedTo], references: [id])
+  assignedTo      String @unique @default("") @db.Uuid
+  location        Location @relation("device_location", fields: [locationId], references: [id])
   locationId      String @unique @db.Uuid
-  createdBy       String @db.Uuid
-  updatedBy       String @db.Uuid
+  processUser     User  @relation("created_by_user", fields: [createdBy], references: [id])
+  createdBy       String @unique @db.Uuid
+  processUpdate   User @relation("updated_by_user", fields: [updatedBy], references: [id])
+  updatedBy       String @unique @db.Uuid
   createdAt       DateTime  @default(now()) @db.Timestamp(0)
   updatedAt       DateTime  @default(now()) @db.Timestamp(0)
-  location        Location @relation(fields: [locationId], references: [id])
 }
-
  model Assign_Device {
    id             String @id @default(uuid()) @db.Uuid
    devicesId      String[]  @db.Text
+   locationFrom   String @db.VarChar(100)
    userTo         User? @relation("device_assigned_to", fields: [assignedTo], references: [id])
    assignedTo     String? @unique @db.Uuid
-   userBy         User? @relation("device_assigned_by",fields: [createdBy], references: [id])
    createdBy      String @unique @db.Uuid
-   userByUpdate   User? @relation("device_updated_by", fields: [updatedBy], references: [id])
+   updatedBy      String @unique @db.Uuid
+   createdAt      DateTime @default(now()) @db.Timestamp(0)
+   updatedAt      DateTime @default(now()) @db.Timestamp(0)
+   completedAt    DateTime @default(now()) @db.Timestamp(0)
+ }
+ model Return_Device {
+   id             String @id @default(uuid()) @db.Uuid
+   devicesId      String[]  @db.Text
+   locationTo     String @db.VarChar(100)
+   returnFrom     User? @relation("returned_from_user", fields: [userFrom], references: [id])
+   userFrom       String @unique @db.Uuid
+   createdBy      String @unique @db.Uuid
+   updatedBy      String @unique @db.Uuid
+   createdAt      DateTime @default(now()) @db.Timestamp(0)
+   updatedAt      DateTime @default(now()) @db.Timestamp(0)
+   completedAt    DateTime @default(now()) @db.Timestamp(0)
+ }
+ model Inventory {
+   id             String @id @default(uuid()) @db.Uuid
+   locationId     String @unique @db.Uuid
+   location       Location @relation("inventory_location", fields: [locationId], references: [id])
+   actionBy       User @relation("inventory_by_user", fields: [createdBy], references: [id])
+   actionUpdate   User @relation("inventory_update_by_user", fields: [updatedBy], references: [id])
+   createdBy      String @unique @db.Uuid
    updatedBy      String @unique @db.Uuid
    createdAt      DateTime @default(now()) @db.Timestamp(0)
    updatedAt      DateTime @default(now()) @db.Timestamp(0)
