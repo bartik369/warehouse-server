@@ -19,16 +19,16 @@ export class AuthService {
     const hash = await this.hashData(refreshToken);
     await this.prisma.token.updateMany({
       where: {
-        user_id: userId
+        userId: userId
       },
       data: {
-        refresh_token: hash
+        refreshToken: hash
       }
     })
   }
 
   async signin(authDto: AuthDto): Promise<Tokens> {
-    const user: UserDto = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         email: authDto.email,
       },
@@ -38,9 +38,9 @@ export class AuthService {
         cause: new Error(),
         description:'Please, check your credentials',
     });
-    const userDBPassword = await this.prisma.password.findMany({
+    const userDBPassword = await this.prisma.password.findUnique({
         where: {
-            user_id: user.user_id,
+            userId: user.id
         },
     });
     const isMatch = await bcrypt.compare(
@@ -54,7 +54,7 @@ export class AuthService {
     });
 
     const tokens:Tokens = await this.getTokens(user);
-    await this.updateRefreshHash(user.user_id, tokens.refresh_token)
+    await this.updateRefreshHash(user.id, tokens.refreshToken)
     return tokens
   }
 
@@ -64,21 +64,21 @@ export class AuthService {
   async logout(id: string) {
     await this.prisma.token.update({
       where: {
-        user_id: id
+        userId: id
       },
       data: {
-        refresh_token: ''
+        refreshToken: ''
       }
     })
   }
 
     // Utility functions
 
-  async getTokens(data: Pick<UserDto, 'user_id' | 'email' | 'login'>): Promise<Tokens> {
+  async getTokens(data: Pick<UserDto, 'id' | 'email' | 'login'>): Promise<Tokens> {
     const [access, refresh] = await Promise.all([
       this.jwtService.signAsync(
         {
-            userId: data.user_id,
+            userId: data.id,
             userEmail: data.email,
             userLogin: data.login,
         },
@@ -89,7 +89,7 @@ export class AuthService {
       ),
       this.jwtService.signAsync(
         {
-            userId: data.user_id,
+            userId: data.id,
             userEmail: data.email,
             userLogin: data.login,
         },
@@ -100,8 +100,8 @@ export class AuthService {
       ),
     ]);
     return {
-        access_token: access,
-        refresh_token: refresh,
+        accessToken: access,
+        refreshToken: refresh,
     }
   };
 

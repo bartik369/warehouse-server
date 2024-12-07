@@ -20,6 +20,7 @@ model Location {
   city            City    @relation(fields: [cityId], references: [id])
   cityId          String  @unique @db.Uuid
   user            User?
+  device          Device?       
 }
 
 model User {
@@ -29,7 +30,7 @@ model User {
   email           String @unique @db.VarChar(100)
   firstName       String @db.VarChar(70)
   lastName        String @db.VarChar(70)
-  depatment       String @db.VarChar(70)
+  department      String @db.VarChar(70)
   locationId      String @unique @db.Uuid
   createdAt       DateTime  @default(now()) @db.Timestamp(0)
   updatedAt       DateTime  @default(now()) @db.Timestamp(0)
@@ -37,6 +38,9 @@ model User {
   password        Password?
   token           Token?
   userRole        User_Role?
+  assignedTo      Assign_Device? @relation("device_assigned_to")
+  assignedBy      Assign_Device? @relation("device_assigned_by")
+  updatedBy       Assign_Device? @relation("device_updated_by")
 }
 
 model Password {
@@ -74,14 +78,49 @@ model Permission_Role {
   name            String @unique @db.VarChar(70)
   description     String @db.Text
   permissionId    String @unique @db.Uuid
-  role_id         String @unique @db.Uuid
+  roleId         String @unique @db.Uuid
   permission      Permission @relation(fields: [permissionId], references: [id])
-  role            Role  @relation(fields: [role_id], references: [id])
+  role            Role @relation(fields: [roleId], references: [id])
 }
 
 model Permission {
-  id              String  @id @default(uuid()) @db.Uuid
+  id              String @id @default(uuid()) @db.Uuid
   name            String @unique @db.VarChar(70)
   description     String @db.Text
   permissionRole  Permission_Role?
 }
+
+model Device {
+  id              String @id @default(uuid()) @db.Uuid
+  serialNumber    String? @unique @db.VarChar(70)
+  modelCode       String? @db.VarChar(40)
+  inventoryNumber String? @unique @db.VarChar(40)
+  title           String @db.VarChar(100)
+  type            String @db.VarChar(40)
+  manufacturer    String? @db.VarChar(40)
+  weight          Int? @db.Integer
+  media           String? @db.VarChar(100)
+  serviceable     Boolean @default(true) @db.Boolean      
+  inStock         Boolean @default(true) @db.Boolean
+  assignedTo      String @default("") @db.VarChar(70)
+  locationId      String @unique @db.Uuid
+  createdBy       String @db.Uuid
+  updatedBy       String @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime  @default(now()) @db.Timestamp(0)
+  location        Location @relation(fields: [locationId], references: [id])
+}
+
+ model Assign_Device {
+   id             String @id @default(uuid()) @db.Uuid
+   devicesId      String[]  @db.Text
+   userTo         User? @relation("device_assigned_to", fields: [assignedTo], references: [id])
+   assignedTo     String? @unique @db.Uuid
+   userBy         User? @relation("device_assigned_by",fields: [createdBy], references: [id])
+   createdBy      String @unique @db.Uuid
+   userByUpdate   User? @relation("device_updated_by", fields: [updatedBy], references: [id])
+   updatedBy      String @unique @db.Uuid
+   createdAt      DateTime @default(now()) @db.Timestamp(0)
+   updatedAt      DateTime @default(now()) @db.Timestamp(0)
+   completedAt    DateTime @default(now()) @db.Timestamp(0)
+ }

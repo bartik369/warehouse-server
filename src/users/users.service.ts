@@ -27,14 +27,14 @@ export class UsersService {
 
     await this.prisma.password.create({
       data: {
-        user_id: user.user_id,
+        userId: user.id,
         password: hash,
       },
     });
     await this.prisma.token.create({
       data: {
-        refresh_token: '',
-        user_id: user.user_id,
+        userId: user.id,
+        refreshToken: '',
       },
     });
 
@@ -48,7 +48,7 @@ export class UsersService {
   findOne(id: string) {
     return this.prisma.user.findUnique({
       where: {
-        user_id: id,
+        id: id,
       }
     })
   }
@@ -58,14 +58,14 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    await this.prisma.password.deleteMany({
+    await this.prisma.password.delete({
       where: {
-        user_id: id
+        id: id
       }
     });
     await this.prisma.user.delete({
       where: {
-        user_id: id
+        id: id
       }
     });
   }

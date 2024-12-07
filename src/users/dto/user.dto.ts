@@ -1,14 +1,14 @@
 export class UserDto {
-    user_id: string
-    work_id: string
+    id: string
+    workId: string
     login: string
     email: string 
-    first_name: string 
-    last_name: string
+    firstName: string 
+    lastName: string
     department: string
-    location: string
-    created_at: Date
-    updated_at: Date
+    locationId: string
+    createdAt: Date
+    updatedAt: Date
 }
 
 export type TUserDto = UserDto;
