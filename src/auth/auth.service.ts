@@ -83,7 +83,7 @@ export class AuthService {
             userLogin: data.login,
         },
         {
-        secret: 'access-secret',
+        secret: process.env.JWT_ACCESS_SECRET,
           expiresIn: 60 * 15,
         },
       ),
@@ -94,7 +94,7 @@ export class AuthService {
             userLogin: data.login,
         },
         {
-        secret: 'refresh-secret',
+        secret: process.env.JWT_REFRESH_SECRET,
           expiresIn: 60 * 15 * 24 * 7,
         },
       ),

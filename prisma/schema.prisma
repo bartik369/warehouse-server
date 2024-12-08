@@ -6,95 +6,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model City {
-  id              String @id @default(uuid()) @db.Uuid
+model city {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name            String @unique @db.VarChar(70)
-  location        Location?
+  location        location[]
 
 }
-model Location {
-  id              String  @id @default(uuid()) @db.Uuid
+model location {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name            String  @unique @db.VarChar(70)
-  cityId          String  @unique @db.Uuid
-  city            City?   @relation(fields: [cityId], references: [id])
-  user            User?
-  device          Device? @relation("device_location")   
-  inventory       Inventory[] @relation("inventory_location")
-  movingFrom      Moving[] @relation("moving_location_from")
-  movingTo        Moving[] @relation("moving_location_to")
+  cityId          String  @db.Uuid
+  city            city?   @relation(fields: [cityId], references: [id])
+  user            user[]
+  device          device[] @relation("device_location")   
+  inventory       inventory[] @relation("inventory_location")
+  movingFrom      moving[] @relation("moving_location_from")
+  movingTo        moving[] @relation("moving_location_to")
+  assignFrom      assign_device[] @relation("assign_device_from")
+  returnTo        return_device[] @relation("return_device_to_location")
 }
-model User {
-  id              String @id @default(uuid())  @db.Uuid
+model user {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workId          String @unique @db.VarChar(70)
   login           String @unique @db.VarChar(70)
   email           String @unique @db.VarChar(100)
   firstName       String @db.VarChar(70)
   lastName        String @db.VarChar(70)
   department      String @db.VarChar(70)
-  locationId      String @unique @db.Uuid
+  locationId      String @db.Uuid
   createdAt       DateTime  @default(now()) @db.Timestamp(0)
   updatedAt       DateTime  @default(now()) @db.Timestamp(0)
-  location        Location? @relation(fields: [locationId], references: [id])
-  password        Password?
-  token           Token?
-  userRole        User_Role?
-  userAssign      Assign_Device[] @relation("device_assigned_to")
-  assignAction    Assign_Device[] @relation("assign_action_by_user")
-  updateAction    Assign_Device[] @relation("assign_action_update_by_user")
-  inventoryBy     Inventory[] @relation("inventory_by_user")
-  inventoryUpdate Inventory[] @relation("inventory_update_by_user")
-  device          Device[] @relation("assigned_to_user")
-  deviceCreateBy  Device[] @relation("created_by_user")
-  deviceUpdateBy  Device[] @relation("updated_by_user")
-  userReturn      Return_Device[] @relation("returned_from_user")
-  returnActionBy  Return_Device[] @relation("return_action_by_user")
-  updateActionBy  Return_Device[] @relation("return_action_update_by_user")
-  movingBy        Moving[] @relation("moving_by_user")
-  updateMovingBy  Moving[] @relation("moving_update_by_user")
+  location        location? @relation(fields: [locationId], references: [id])
+  userPassword    password?
+  userToken       token? @relation("token_for_user")
+  userRole        user_role[]
+  userAssign      assign_device[] @relation("device_assigned_to")
+  assignAction    assign_device[] @relation("assign_action_by_user")
+  updateAction    assign_device[] @relation("assign_action_update_by_user")
+  inventoryBy     inventory[] @relation("inventory_by_user")
+  inventoryUpdate inventory[] @relation("inventory_update_by_user")
+  device          device[] @relation("assigned_to_user")
+  deviceCreatedBy device[] @relation("created_by_user")
+  deviceUpdatedBy device[] @relation("updated_by_user")
+  userReturn      return_device[] @relation("returned_from_user")
+  returnActionBy  return_device[] @relation("return_action_by_user")
+  updateActionBy  return_device[] @relation("return_action_update_by_user")
+  movingBy        moving[] @relation("moving_by_user")
+  updateMovingBy  moving[] @relation("moving_update_by_user")
 }
-model Password {
-  id              String @id @default(uuid()) @db.Uuid
+model password {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   password        String @db.VarChar(255)
   userId          String @unique @db.Uuid
-  user            User?  @relation(fields: [userId], references: [id])
+  user            user?  @relation(fields: [userId], references: [id])
 }
-model Token {
-  id              String @id @default(uuid()) @db.Uuid
+model token {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   refreshToken    String? @unique @db.VarChar(255)
   userId          String @unique @db.Uuid
-  user            User? @relation(fields: [userId], references: [id])
+  user            user? @relation("token_for_user", fields: [userId], references: [id])
 }
-model Role {
-  id              String @id @default(uuid()) @db.Uuid
+model role {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name            String @unique @db.VarChar(70)
   description     String @db.Text
-  userRole        User_Role?
-  permissionRole  Permission_Role?
+  userRole        user_role[]
+  permissionRole  permission_role[]
 }
-model User_Role {
-  id              String @id @default(uuid()) @db.Uuid
-  roleId          String @unique @db.Uuid
-  userId          String @unique @db.Uuid
-  role            Role?  @relation(fields: [roleId], references: [id])
-  user            User?  @relation(fields: [userId], references: [id])
+model user_role {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId          String @db.Uuid
+  userId          String @db.Uuid
+  role            role  @relation(fields: [roleId], references: [id])
+  user            user  @relation(fields: [userId], references: [id])
 }
-model Permission_Role {
-  id              String @id @default(uuid())  @db.Uuid
+model permission_role {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name            String @unique @db.VarChar(70)
   description     String @db.Text
-  permissionId    String @unique @db.Uuid
-  roleId          String @unique @db.Uuid
-  permission      Permission? @relation(fields: [permissionId], references: [id])
-  role            Role? @relation(fields: [roleId], references: [id])
+  permissionId    String @db.Uuid
+  roleId          String @db.Uuid
+  permission      permission? @relation(fields: [permissionId], references: [id])
+  role            role? @relation(fields: [roleId], references: [id])
 }
-model Permission {
-  id              String @id @default(uuid()) @db.Uuid
+model permission {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name            String @unique @db.VarChar(70)
   description     String @db.Text
-  permissionRole  Permission_Role?
+  permissionRole  permission_role[]
 }
-model Device {
-  id              String @id @default(uuid()) @db.Uuid
+model device {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   serialNumber    String? @unique @db.VarChar(70)
   modelCode       String? @db.VarChar(40)
   inventoryNumber String? @unique @db.VarChar(40)
@@ -105,21 +107,21 @@ model Device {
   media           String? @db.VarChar(100)
   serviceable     Boolean @default(true) @db.Boolean      
   inStock         Boolean @default(true) @db.Boolean
-  locationId      String @unique @db.Uuid
+  locationId      String @db.Uuid
   assignedTo      String @db.Uuid
   createdBy       String @db.Uuid
   updatedBy       String @db.Uuid
   createdAt       DateTime  @default(now()) @db.Timestamp(0)
   updatedAt       DateTime  @default(now()) @db.Timestamp(0)
-  deviceFor       User? @relation("assigned_to_user", fields: [assignedTo], references: [id])
-  location        Location? @relation("device_location", fields: [locationId], references: [id])
-  actionBy        User?  @relation("created_by_user", fields: [createdBy], references: [id])
-  actionUpdate    User? @relation("updated_by_user", fields: [updatedBy], references: [id])
+  deviceFor       user? @relation("assigned_to_user", fields: [assignedTo], references: [id])
+  location        location? @relation("device_location", fields: [locationId], references: [id])
+  actionBy        user?  @relation("created_by_user", fields: [createdBy], references: [id])
+  actionUpdate    user? @relation("updated_by_user", fields: [updatedBy], references: [id])
 
 }
- model Assign_Device {
-   id             String @id @default(uuid()) @db.Uuid
-   devicesId      String[]  @db.Text
+ model assign_device {
+   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+   devicesId      String[]
    locationFrom   String @db.VarChar(100)
    assignedTo     String @db.Uuid
    createdBy      String @db.Uuid
@@ -127,13 +129,14 @@ model Device {
    createdAt      DateTime @default(now()) @db.Timestamp(0)
    updatedAt      DateTime @default(now()) @db.Timestamp(0)
    completedAt    DateTime @default(now()) @db.Timestamp(0)
-   user           User? @relation("device_assigned_to", fields: [assignedTo], references: [id])
-   actionBy       User? @relation("assign_action_by_user", fields: [createdBy], references: [id])
-   actonUpdate    User? @relation("assign_action_update_by_user", fields: [updatedBy], references: [id])
+   assignFrom     location @relation("assign_device_from", fields: [locationFrom], references: [id])        
+   user           user? @relation("device_assigned_to", fields: [assignedTo], references: [id])
+   actionBy       user? @relation("assign_action_by_user", fields: [createdBy], references: [id])
+   actionUpdate   user? @relation("assign_action_update_by_user", fields: [updatedBy], references: [id])
  }
- model Return_Device {
-   id             String @id @default(uuid()) @db.Uuid
-   devicesId      String[] @db.Text
+ model return_device {
+   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+   devicesId      String[]
    locationTo     String @db.VarChar(100)
    userFrom       String @db.Uuid
    createdBy      String @db.Uuid
@@ -141,12 +144,13 @@ model Device {
    createdAt      DateTime @default(now()) @db.Timestamp(0)
    updatedAt      DateTime @default(now()) @db.Timestamp(0)
    completedAt    DateTime @default(now()) @db.Timestamp(0)
-   returnFrom     User? @relation("returned_from_user", fields: [userFrom], references: [id])
-   actionBy       User? @relation("return_action_by_user", fields: [createdBy], references: [id])
-   actionUpdate   User? @relation("return_action_update_by_user", fields: [updatedBy], references: [id])
+   returnTo       location @relation("return_device_to_location", fields: [locationTo], references: [id])
+   returnFrom     user? @relation("returned_from_user", fields: [userFrom], references: [id])
+   actionBy       user? @relation("return_action_by_user", fields: [createdBy], references: [id])
+   actionUpdate   user? @relation("return_action_update_by_user", fields: [updatedBy], references: [id])
  }
- model Inventory {
-   id             String @id @default(uuid()) @db.Uuid
+ model inventory {
+   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
    locationId     String @db.Uuid
    foundDevice    String[]
    lostDevice     String[]
@@ -155,13 +159,13 @@ model Device {
    createdAt      DateTime @default(now()) @db.Timestamp(0)
    updatedAt      DateTime @default(now()) @db.Timestamp(0)
    completedAt    DateTime @default(now()) @db.Timestamp(0)
-   location       Location? @relation("inventory_location", fields: [locationId], references: [id])
-   actionBy       User? @relation("inventory_by_user", fields: [createdBy], references: [id])
-   actionUpdate   User? @relation("inventory_update_by_user", fields: [updatedBy], references: [id])
+   location       location? @relation("inventory_location", fields: [locationId], references: [id])
+   actionBy       user? @relation("inventory_by_user", fields: [createdBy], references: [id])
+   actionUpdate   user? @relation("inventory_update_by_user", fields: [updatedBy], references: [id])
  }
 
- model Moving {
-   id             String @id @default(uuid()) @db.Uuid
+ model moving {
+   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
    locationFrom   String @db.Uuid
    locationTo     String @db.Uuid
    createdBy      String @db.Uuid
@@ -169,8 +173,8 @@ model Device {
    createdAt      DateTime @default(now()) @db.Timestamp(0)
    updatedAt      DateTime @default(now()) @db.Timestamp(0)
    completedAt    DateTime @default(now()) @db.Timestamp(0)
-   from           Location? @relation("moving_location_from", fields: [locationFrom], references: [id])
-   to             Location? @relation("moving_location_to", fields: [locationTo], references: [id])
-   actionBy       User? @relation("moving_by_user", fields: [createdBy], references: [id])
-   updateBy       User? @relation("moving_update_by_user", fields: [updatedBy], references: [id])
+   from           location? @relation("moving_location_from", fields: [locationFrom], references: [id])
+   to             location? @relation("moving_location_to", fields: [locationTo], references: [id])
+   actionBy       user? @relation("moving_by_user", fields: [createdBy], references: [id])
+   updateBy       user? @relation("moving_update_by_user", fields: [updatedBy], references: [id])
  }
