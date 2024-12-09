@@ -1,7 +1,9 @@
+import { IsEmail} from 'class-validator';
 export class UserDto {
     id: string
     workId: string
     login: string
+    @IsEmail()
     email: string 
     firstName: string 
     lastName: string
@@ -11,4 +13,4 @@ export class UserDto {
     updatedAt: Date
 }
 
-export type TUserDto = UserDto;
+export type User = UserDto;

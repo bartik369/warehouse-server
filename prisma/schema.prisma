@@ -27,7 +27,7 @@ model location {
 }
 model user {
   id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  workId          String @unique @db.VarChar(70)
+  workId          String? @unique @db.VarChar(70)
   login           String @unique @db.VarChar(70)
   email           String @unique @db.VarChar(100)
   firstName       String @db.VarChar(70)
@@ -62,7 +62,7 @@ model password {
 }
 model token {
   id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  refreshToken    String? @unique @db.VarChar(255)
+  refreshToken    String?
   userId          String @unique @db.Uuid
   user            user? @relation("token_for_user", fields: [userId], references: [id])
 }
@@ -122,7 +122,7 @@ model device {
  model assign_device {
    id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
    devicesId      String[]
-   locationFrom   String @db.VarChar(100)
+   locationFrom   String @db.Uuid
    assignedTo     String @db.Uuid
    createdBy      String @db.Uuid
    updatedBy      String @db.Uuid
@@ -137,7 +137,7 @@ model device {
  model return_device {
    id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
    devicesId      String[]
-   locationTo     String @db.VarChar(100)
+   locationTo     String @db.Uuid
    userFrom       String @db.Uuid
    createdBy      String @db.Uuid
    updatedBy      String @db.Uuid

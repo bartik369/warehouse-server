@@ -8,4 +8,4 @@ export class AuthDto {
     password: string
 }
 
-export type TAuthDto = AuthDto;
+export type Auth = AuthDto;

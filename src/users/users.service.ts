@@ -14,7 +14,6 @@ export class UsersService {
         email: userDto.email,
       }
     });
-
     if (existUser) throw new ConflictException('Something went wrong', {
       cause: new Error(),
       description:'Please, check your credentials',

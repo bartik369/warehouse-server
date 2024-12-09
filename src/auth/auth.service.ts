@@ -1,5 +1,6 @@
-import { Tokens } from './types/token.types';
+import { Tokens } from 'src/types/user.types';
 import { UserDto } from './../users/dto/user.dto';
+import { GroupAuthData } from 'src/types/user.types';
 import { AuthDto } from './dto/auth.dto';
 import { PrismaService } from './../prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -27,7 +28,7 @@ export class AuthService {
     })
   }
 
-  async signin(authDto: AuthDto): Promise<Tokens> {
+  async signin(authDto: AuthDto): Promise<GroupAuthData> {
     const user = await this.prisma.user.findUnique({
       where: {
         email: authDto.email,
@@ -38,14 +39,16 @@ export class AuthService {
         cause: new Error(),
         description:'Please, check your credentials',
     });
+
     const userDBPassword = await this.prisma.password.findUnique({
         where: {
             userId: user.id
         },
     });
+
     const isMatch = await bcrypt.compare(
         authDto.password,
-        userDBPassword[0].password,
+        userDBPassword.password,
     );
 
     if (!isMatch) throw new UnauthorizedException('Something went wrong', {
@@ -55,8 +58,12 @@ export class AuthService {
 
     const tokens:Tokens = await this.getTokens(user);
     await this.updateRefreshHash(user.id, tokens.refreshToken)
-    return tokens
+    return {
+      user: user,
+      tokens: tokens
+    }
   }
+
 
   async refreshToken(authDto: AuthDto) {
     

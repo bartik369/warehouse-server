@@ -1,22 +1,34 @@
-import { UserDto } from './../users/dto/user.dto';
-import { AuthGuard } from './auth.guard';
-import { AuthDto } from './dto/auth.dto';
-import { Tokens } from './types/token.types';
+import { Auth } from './dto/auth.dto';
+import { GroupAuthData, AuthData } from 'src/types/user.types';
 import { AuthService } from './auth.service';
-import { Get, Body, Controller, Post, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { Response } from 'express';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 
 @Controller('/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/signin')
-  signin(@Body() authDto: AuthDto):Promise<Tokens> {
-    return this.authService.signin(authDto)
+  async signin(
+    @Res({passthrough: true}) res: Response,
+    @Body() authDto: Auth):Promise<AuthData> {
+    const data:GroupAuthData = await this.authService.signin(authDto)
+    res.cookie('refreshToken', data.tokens.refreshToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    })
+    return  {
+      user: data.user,
+      accessToken: data.tokens.accessToken
+    }
   }
+
   @Post('/refresh')
-  refreshToken(@Body() authDto: AuthDto) {
+  refreshToken(@Body() authDto: Auth) {
     return this.authService.refreshToken(authDto)
   }
+  
   @Post('/logout')
   logout(@Body() id: string) {
     return this.authService.logout(id)
