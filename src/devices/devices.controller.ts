@@ -1,25 +1,33 @@
 import { DeviceDto } from './dto/device.dto';
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 
 @Controller('devices')
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
-  // @Get()
-  // async findAll() {
-  //   return this.devicesService.findAll();
-  // }
+  @Get()
+  async findAll() {
+    return this.devicesService.findAll();
+  }
 
   // @Get(':id')
   // async findOne(@Param('id') id: string) {
   //   return this.devicesService.findOne(id);
   // }
 
-  @Post('create')
-  async create(@Body() deviceDto: DeviceDto) {
-    return this.devicesService.create(deviceDto);
-  }
+  // @Post('create')
+  // @HttpCode(HttpStatus.CREATED)
+  // async create(@Body() deviceDto: DeviceDto) {
+  //   return this.devicesService.create(deviceDto);
+  // }
+
+  // @Get(':id')
+  // async getDevice(
+  //   @Param('id') id:string) {
+  //     return this.devicesService.getDevice(id)
+  // }
+
 
   // @Patch(':id')
   // async update(

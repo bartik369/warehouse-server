@@ -10,5 +10,10 @@ export type GroupAuthData = {
 
 export type AuthData = {
     user: User;
-    accessToken: string;
+    token: string;
 }
+export type JwtPayload = {
+    sub: string;
+    email: string;
+};
+export type JwtPayloadWithRt = JwtPayload & { refreshToken: string };

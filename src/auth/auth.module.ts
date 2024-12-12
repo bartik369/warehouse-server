@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 
 import * as dotenv from 'dotenv';
+import { APP_GUARD } from '@nestjs/core';
 dotenv.config();
 
 @Module({
@@ -16,12 +17,17 @@ dotenv.config();
     UsersModule,
     PrismaModule,
     JwtModule.register({
-      global: true,
-      secret: process.env.JWT_ACEESS_SECRET,
-      signOptions: { expiresIn: '60s' },
+      // global: true,
+      // secret: process.env.JWT_ACEESS_SECRET,
+      // signOptions: { expiresIn: '60s' },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtService, AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [
+    AuthService, 
+    JwtService, 
+    AccessTokenStrategy, 
+    RefreshTokenStrategy,
+  ],
 })
 export class AuthModule {}

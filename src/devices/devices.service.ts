@@ -1,27 +1,16 @@
 import { DeviceDto } from './dto/device.dto';
-import { PrismaService } from 'src/prisma.service';
+import { TDeviceDto } from './dto/device.dto';
+import { PrismaService } from '../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class DevicesService {
     constructor (private prisma: PrismaService) {}
     
-    // async findAll():Promise<DeviceDto[]> {
-    //     return this.prisma.device.findMany();
-    // };
-
-    // async findOne(id: string) {
-    //     return this.prisma.device.findUnique({
-    //         where: {device_id: id}
-    //     });
-    // };
-
-    async create(deviceDto:DeviceDto) {
-        console.log(deviceDto);
-        
-        // return this.prisma.device.create({
-        //     data: deviceDto
-        // });
+    async findAll():Promise<any> {
+        console.log('test find devices');
+        const devices = await this.prisma.device.findMany()
+        return devices
     };
 
     // async update(id: string, deviceDto:DeviceDto) {

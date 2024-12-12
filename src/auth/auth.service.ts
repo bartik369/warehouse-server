@@ -2,7 +2,7 @@ import { Tokens } from 'src/types/user.types';
 import { UserDto } from './../users/dto/user.dto';
 import { GroupAuthData } from 'src/types/user.types';
 import { AuthDto } from './dto/auth.dto';
-import { PrismaService } from './../prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -14,19 +14,6 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
-
-  // Updating refresh token in token table
-  async updateRefreshHash(userId: string, refreshToken: string) {
-    const hash = await this.hashData(refreshToken);
-    await this.prisma.token.updateMany({
-      where: {
-        userId: userId
-      },
-      data: {
-        refreshToken: hash
-      }
-    })
-  }
 
   async signin(authDto: AuthDto): Promise<GroupAuthData> {
     const user = await this.prisma.user.findUnique({
@@ -56,7 +43,7 @@ export class AuthService {
         description:'Please, check your credentials',
     });
 
-    const tokens:Tokens = await this.getTokens(user);
+    const tokens:Tokens = await this.getTokens(user.id, user.email, user.login);
     await this.updateRefreshHash(user.id, tokens.refreshToken)
     return {
       user: user,
@@ -65,8 +52,25 @@ export class AuthService {
   }
 
 
-  async refreshToken(authDto: AuthDto) {
-    
+  async refreshToken(id: string, refreshToken: string):Promise<Tokens> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: id
+      }
+    });
+    const token = await this.prisma.token.findUnique({
+      where: {
+        userId: user.id
+      }
+    })
+    if (!user || !token) throw new ForbiddenException();
+
+    const matchRToken = await bcrypt.compare(refreshToken, token.refreshToken)
+    if (!matchRToken) throw new ForbiddenException();
+    const tokens = await this.getTokens(user.id, user.email, user.login);
+    await this.updateRefreshHash(user.id, tokens.refreshToken)
+    return tokens
+
   }
   async logout(id: string) {
     await this.prisma.token.update({
@@ -79,26 +83,40 @@ export class AuthService {
     })
   }
 
+   // Updating refresh token in token table
+   async updateRefreshHash(userId: string, refreshToken: string) {
+    const hash = await this.hashData(refreshToken);
+    await this.prisma.token.updateMany({
+      where: {
+        userId: userId
+      },
+      data: {
+        refreshToken: hash
+      }
+    })
+  }
+
+
     // Utility functions
 
-  async getTokens(data: Pick<UserDto, 'id' | 'email' | 'login'>): Promise<Tokens> {
+  async getTokens(id: string, email:string, login:string): Promise<Tokens> {
     const [access, refresh] = await Promise.all([
       this.jwtService.signAsync(
         {
-            userId: data.id,
-            userEmail: data.email,
-            userLogin: data.login,
+            sub: id,
+            userEmail: email,
+            userLogin: login,
         },
         {
         secret: process.env.JWT_ACCESS_SECRET,
-          expiresIn: 60 * 15,
+          expiresIn: 60 * 1,
         },
       ),
       this.jwtService.signAsync(
         {
-            userId: data.id,
-            userEmail: data.email,
-            userLogin: data.login,
+            sub: id,
+            userEmail: email,
+            userLogin: login,
         },
         {
         secret: process.env.JWT_REFRESH_SECRET,

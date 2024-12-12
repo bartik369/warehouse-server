@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
@@ -18,7 +18,7 @@ export class UsersService {
       cause: new Error(),
       description:'Please, check your credentials',
     });
-    const password = "qazwsx";
+    const password = uuidv4();
     const hash = await bcrypt.hash(password, 9);
     const user = await this.prisma.user.create({
       data: userDto,
