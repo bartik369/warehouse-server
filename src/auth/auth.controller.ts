@@ -1,21 +1,21 @@
-import { ClearCookies } from '@nestjsplus/cookies';
+import { UserDto } from './../users/dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Auth } from './dto/auth.dto';
 import { GroupAuthData, AuthData, Tokens } from 'src/types/user.types';
 import { AuthService } from './auth.service';
-import { response, Response } from 'express';
+import { Request, Response } from 'express';
 import { Public } from './decorators/public.decorator';
-import { GetCurrentUser } from './decorators/get-current-user.decorator';
-import { GetCurrentUserId } from './decorators/get-current-user-id.decorator';
+import { GetUserId } from './decorators/user-id.decorator';
 import { RefreshTokenGuard } from 'src/guards';
-import { Body, Controller, HttpCode, Post, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Get, Req, Res, HttpStatus, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 
-@Controller('/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UsePipes(new ValidationPipe())
   @Public()
-  @Post('/signin')
+  @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signin(
     @Res({passthrough: true}) res: Response,
@@ -32,25 +32,34 @@ export class AuthController {
     }
   }
 
+  // @Public()
+  // @UseGuards(AuthGuard('jwt-refresh'))
+  // @Post('refresh')
+  // @HttpCode(HttpStatus.OK)
+  // refreshToken(
+  //   @GetCurrentUserId() id: string,
+  //   @GetCurrentUser('refreshToken') refreshToken: string): Promise<Tokens> {
+  //   return this.authService.refreshToken(id, refreshToken)
+  // }
+
+  
+
   @Public()
-  @UseGuards(AuthGuard('jwt-refresh'))
-  @Post('/refresh')
+  // @UseGuards(AuthGuard('jwt-refresh'))
+  @Get('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshToken(
-    @GetCurrentUserId() id: string,
-    @GetCurrentUser('refreshToken') refreshToken: string): Promise<Tokens> {
-    console.log('refresh start');
-    return this.authService.refreshToken(id, refreshToken)
+  async refreshToken(
+    @Req() req: Request):Promise<any>{
+    const token:string = req.cookies.refreshToken;
+    return await this.authService.refreshToken(token);
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Post('/logout')
+  @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
-    @GetCurrentUserId() id: string,
+    @GetUserId() userId: string,
     @Res({ passthrough: true }) res:any) {
-    res.clearCookie('refreshToken')
-    return this.authService.logout(id)
+    await this.authService.logout(userId)
+    res.clearCookie('refreshToken');
   }
-
 }

@@ -49,29 +49,38 @@ export class AuthService {
       user: user,
       tokens: tokens
     }
-  }
+  };
 
-
-  async refreshToken(id: string, refreshToken: string):Promise<Tokens> {
-    const user = await this.prisma.user.findUnique({
+  async refreshToken(token:string) {
+    const validToken = await this.jwtService.verifyAsync(
+      token, 
+      {
+        secret: process.env.JWT_REFRESH_SECRET
+      }
+    );
+    
+    const existUser = await this.prisma.user.findUnique({
       where: {
-        id: id
+        id: validToken.sub
       }
     });
-    const token = await this.prisma.token.findUnique({
+    const existToken = await this.prisma.token.findUnique({
       where: {
-        userId: user.id
+        userId: existUser.id,
       }
-    })
-    if (!user || !token) throw new ForbiddenException();
+    });
+    
+    if (!existUser || !existToken) throw new ForbiddenException();
 
-    const matchRToken = await bcrypt.compare(refreshToken, token.refreshToken)
-    if (!matchRToken) throw new ForbiddenException();
-    const tokens = await this.getTokens(user.id, user.email, user.login);
-    await this.updateRefreshHash(user.id, tokens.refreshToken)
-    return tokens
+    const matchRToken = await bcrypt.compare(token, existToken.refreshToken);
 
-  }
+    if(!matchRToken) throw new ForbiddenException();
+
+    const tokens = await this.getTokens(existUser.id, existUser.email, existUser.login);
+    await this.updateRefreshHash(existUser.id, tokens.refreshToken)
+    return {token: tokens.accessToken}
+  };
+
   async logout(id: string) {
     await this.prisma.token.update({
       where: {
@@ -80,7 +89,8 @@ export class AuthService {
       data: {
         refreshToken: ''
       }
-    })
+    });
+    return true
   }
 
    // Updating refresh token in token table

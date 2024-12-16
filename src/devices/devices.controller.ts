@@ -1,11 +1,10 @@
 import { DeviceDto } from './dto/device.dto';
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus, UseGuards } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 
 @Controller('devices')
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}
-
   @Get()
   async findAll() {
     return this.devicesService.findAll();
