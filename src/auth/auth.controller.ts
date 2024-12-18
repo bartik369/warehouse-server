@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { Public } from './decorators/public.decorator';
 import { GetUserId } from './decorators/user-id.decorator';
-import { Body, Controller, HttpCode, Post, Get, Req, Res, HttpStatus, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Get, Req, Res, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
 import { GetAccessToken } from './decorators/access-token.decorator';
 
 @Controller('auth')
@@ -23,7 +23,7 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'none',
       secure: true,
-    })
+    });
     return  {
       user: data.user,
       token: data.tokens.accessToken
@@ -34,7 +34,7 @@ export class AuthController {
   @Get('refresh')
   @HttpCode(HttpStatus.OK)
   async refreshToken(
-    @Req() req: Request):Promise<any>{
+    @Req() req: Request):Promise<any> {
     const token:string = req.cookies.refreshToken;
     return await this.authService.refreshToken(token);
   };
@@ -43,7 +43,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(
     @GetUserId() userId: string,
-    @Res({ passthrough: true }) res:any) {
+    @Res({ passthrough: true }) res: Response) {
     await this.authService.logout(userId)
     res.clearCookie('refreshToken');
   };

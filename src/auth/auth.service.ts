@@ -1,12 +1,11 @@
-import { Tokens } from 'src/types/user.types';
-import { UserDto } from './../users/dto/user.dto';
+import { AuthData, Tokens } from 'src/types/user.types';
+import { User} from './../users/dto/user.dto';
 import { GroupAuthData } from 'src/types/user.types';
 import { AuthDto } from './dto/auth.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +49,7 @@ export class AuthService {
     }
   };
 
-  async refreshToken(token:string) {
+  async refreshToken(token:string):Promise<AuthData> {
     const validToken = await this.jwtService.verifyAsync(
       token, 
       {
@@ -70,16 +69,16 @@ export class AuthService {
     
     if (!existUser || !existToken) throw new ForbiddenException();
 
-    const matchRToken = await bcrypt.compare(token, existToken.refreshToken);
+    const matchRefreshToken = await bcrypt.compare(token, existToken.refreshToken);
 
-    if(!matchRToken) throw new ForbiddenException();
-
+    if(!matchRefreshToken) throw new ForbiddenException();
+    
     const tokens = await this.getTokens(existUser.id, existUser.email, existUser.login);
     await this.updateRefreshHash(existUser.id, tokens.refreshToken)
     return {token: tokens.accessToken, user: existUser}
   };
 
-  async logout(id: string) {
+  async logout(id: string):Promise<boolean> {
     await this.prisma.token.update({
       where: {
         userId: id
@@ -91,7 +90,7 @@ export class AuthService {
     return true;
   }
 
-  async validate(token: string) {
+  async validate(token: string):Promise<User> {
     const payload = await this.jwtService.decode(token);
 
     if (!payload) throw new UnauthorizedException();
@@ -100,7 +99,7 @@ export class AuthService {
         id: payload.sub
       }
     });
-    
+
     if (!user) throw new UnauthorizedException();
     return user;
   }
@@ -129,7 +128,7 @@ export class AuthService {
         },
         {
         secret: process.env.JWT_ACCESS_SECRET,
-          expiresIn: 60 * 1,
+          expiresIn: 60 * 10,
         },
       ),
       this.jwtService.signAsync(
