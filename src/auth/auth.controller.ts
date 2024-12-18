@@ -48,7 +48,7 @@ export class AuthController {
     res.clearCookie('refreshToken');
   };
 
-  @Get('validate')
+  @Post('validate')
   @HttpCode(HttpStatus.OK)
   async validate(
     @GetAccessToken() token: string){
