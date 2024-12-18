@@ -32,7 +32,6 @@ export class AuthService {
             userId: user.id
         },
     });
-
     const isMatch = await bcrypt.compare(
         authDto.password,
         userDBPassword.password,
@@ -58,7 +57,6 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET
       }
     );
-    
     const existUser = await this.prisma.user.findUnique({
       where: {
         id: validToken.sub
@@ -78,7 +76,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(existUser.id, existUser.email, existUser.login);
     await this.updateRefreshHash(existUser.id, tokens.refreshToken)
-    return {token: tokens.accessToken}
+    return {token: tokens.accessToken, user: existUser}
   };
 
   async logout(id: string) {
@@ -87,10 +85,24 @@ export class AuthService {
         userId: id
       },
       data: {
-        refreshToken: ''
+        refreshToken: '',
       }
     });
-    return true
+    return true;
+  }
+
+  async validate(token: string) {
+    const payload = await this.jwtService.decode(token);
+
+    if (!payload) throw new UnauthorizedException();
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: payload.sub
+      }
+    });
+    
+    if (!user) throw new UnauthorizedException();
+    return user;
   }
 
    // Updating refresh token in token table
@@ -106,9 +118,7 @@ export class AuthService {
     })
   }
 
-
     // Utility functions
-
   async getTokens(id: string, email:string, login:string): Promise<Tokens> {
     const [access, refresh] = await Promise.all([
       this.jwtService.signAsync(
