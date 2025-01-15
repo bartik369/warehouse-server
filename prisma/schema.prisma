@@ -1,180 +1,236 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model city {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String @unique @db.VarChar(70)
-  location        location[]
-
-}
-model location {
-  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String  @unique @db.VarChar(70)
-  cityId          String  @db.Uuid
-  city            city?   @relation(fields: [cityId], references: [id])
-  user            user[]
-  device          device[] @relation("device_location")   
-  inventory       inventory[] @relation("inventory_location")
-  movingFrom      moving[] @relation("moving_location_from")
-  movingTo        moving[] @relation("moving_location_to")
-  assignFrom      assign_device[] @relation("assign_device_from")
-  returnTo        return_device[] @relation("return_device_to_location")
-}
 model user {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  workId          String? @unique @db.VarChar(70)
-  login           String @unique @db.VarChar(70)
-  email           String @unique @db.VarChar(100)
-  firstName       String @db.VarChar(70)
-  lastName        String @db.VarChar(70)
-  department      String @db.VarChar(70)
-  locationId      String @db.Uuid
-  createdAt       DateTime  @default(now()) @db.Timestamp(0)
-  updatedAt       DateTime  @default(now()) @db.Timestamp(0)
-  location        location? @relation(fields: [locationId], references: [id])
-  userPassword    password?
-  userToken       token? @relation("token_for_user")
-  userRole        user_role[]
-  userAssign      assign_device[] @relation("device_assigned_to")
-  assignAction    assign_device[] @relation("assign_action_by_user")
-  updateAction    assign_device[] @relation("assign_action_update_by_user")
-  inventoryBy     inventory[] @relation("inventory_by_user")
-  inventoryUpdate inventory[] @relation("inventory_update_by_user")
-  device          device[] @relation("assigned_to_user")
-  deviceCreatedBy device[] @relation("created_by_user")
-  deviceUpdatedBy device[] @relation("updated_by_user")
-  userReturn      return_device[] @relation("returned_from_user")
-  returnActionBy  return_device[] @relation("return_action_by_user")
-  updateActionBy  return_device[] @relation("return_action_update_by_user")
-  movingBy        moving[] @relation("moving_by_user")
-  updateMovingBy  moving[] @relation("moving_update_by_user")
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userName              String    @unique
+  email                 String    @unique
+  workId                String?   @unique  // Персональный номер сотрудника(SAP, 1C и тд)
+  firstName             String
+  lastName              String
+  department            String
+  locationId            String    @db.Uuid
+  createdAt             DateTime  @default(now()) 
+  updatedAt             DateTime  @updatedAt 
+  roles                 user_role[] // Список ролей пользователя (многие ко многим через UserRole)
+  token                 token?
+  password              password? 
+  devicesAdded          device[]  @relation("UserDevicesAdded")
+  devicesUpdated        device[]  @relation("UserDevicesUpdated")
+  Transfer              transfer[]
+  InventoryCreateBy     inventory[] @relation("CreatedInventory")
+  InventoryResponsBy    inventory[] @relation("ResponsibleInventory")
+  deviceIssues          device_issue[] @relation("UserDeviceIssues")
+  deviceReturns         device_return[] @relation("UserDeviceReturns")
+  deviceRepairsSent     device_repair[] @relation("UserDeviceRepairsSent")
+  deviceRepairsReceived device_repair[] @relation("ContractorDeviceRepairsReceived")
+  DeviceIssue           device_issue[]
+  DeviceReturn          device_return[]
 }
-model password {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  password        String @db.VarChar(255)
-  userId          String @unique @db.Uuid
-  user            user?  @relation(fields: [userId], references: [id])
-}
+
 model token {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  refreshToken    String?
-  userId          String @unique @db.Uuid
-  user            user? @relation("token_for_user", fields: [userId], references: [id])
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token                 String     @unique
+  userId                String     @unique @db.Uuid
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  user                  user?      @relation(fields: [userId], references: [id])
 }
+
+model password {
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  password              String
+  userId                String     @unique @db.Uuid
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  user                  user?      @relation(fields: [userId], references: [id])
+}
+
 model role {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String @unique @db.VarChar(70)
-  description     String @db.Text
-  userRole        user_role[]
-  permissionRole  permission_role[]
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String    @unique 
+  permissionRoles       permission_role[] // Связь с промежуточной таблицей
+  users                 user_role[] // Список пользователей, связанных с ролью
 }
-model user_role {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  roleId          String @db.Uuid
-  userId          String @db.Uuid
-  role            role  @relation(fields: [roleId], references: [id])
-  user            user  @relation(fields: [userId], references: [id])
-}
-model permission_role {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String @unique @db.VarChar(70)
-  description     String @db.Text
-  permissionId    String @db.Uuid
-  roleId          String @db.Uuid
-  permission      permission? @relation(fields: [permissionId], references: [id])
-  role            role? @relation(fields: [roleId], references: [id])
-}
+
 model permission {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String @unique @db.VarChar(70)
-  description     String @db.Text
-  permissionRole  permission_role[]
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String    @unique
+  permissionRoles       permission_role[] // Связь с промежуточной таблицей
 }
+
+
+model permission_role {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  permissionId String      @db.Uuid // ID разрешения
+  roleId       String      @db.Uuid // ID роли
+  locationId   String?     @db.Uuid // ID города (NULL на все города)
+  warehouseId  String?     @db.Uuid // ID склада (NULL на все склады в городе или на все склады вообще)
+  createdAt    DateTime    @default(now()) // Дата создания связи
+  permission   permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  location     location?   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  warehouse    warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  @@unique([permissionId, roleId, locationId, warehouseId]) // Уникальность комбинации
+}
+
+model user_role {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String    @db.Uuid  
+  roleId                String    @db.Uuid  
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade) // Связь с таблицей User
+  role                  role      @relation(fields: [roleId], references: [id], onDelete: Cascade) // Связь с таблицей Role
+  @@unique([userId, roleId]) // Уникальность комбинации пользователь-роль
+}
+
+model location {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  city                 String     @unique   
+  warehouses           warehouse[]
+  permission_role      permission_role[]
+}
+
+model warehouse {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String     
+  locationId           String     @db.Uuid       
+  devices              device[]   
+  inventories          inventory[] 
+  location             location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  TransferFrom         transfer[] @relation("FromWarehouse")
+  TransferTo           transfer[] @relation("ToWarehouse")
+  permission_role      permission_role[]
+}
+
 model device {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  serialNumber    String? @unique @db.VarChar(70)
-  modelCode       String? @db.VarChar(40)
-  inventoryNumber String? @unique @db.VarChar(40)
-  title           String @db.VarChar(100)
-  type            String @db.VarChar(40)
-  manufacturer    String? @db.VarChar(40)
-  weight          Int? @db.Integer
-  media           String? @db.VarChar(100)
-  serviceable     Boolean @default(true) @db.Boolean      
-  inStock         Boolean @default(true) @db.Boolean
-  locationId      String @db.Uuid
-  assignedTo      String @db.Uuid
-  createdBy       String @db.Uuid
-  updatedBy       String @db.Uuid
-  createdAt       DateTime  @default(now()) @db.Timestamp(0)
-  updatedAt       DateTime  @default(now()) @db.Timestamp(0)
-  deviceFor       user? @relation("assigned_to_user", fields: [assignedTo], references: [id])
-  location        location? @relation("device_location", fields: [locationId], references: [id])
-  actionBy        user?  @relation("created_by_user", fields: [createdBy], references: [id])
-  actionUpdate    user? @relation("updated_by_user", fields: [updatedBy], references: [id])
-
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String 
+  inventoryNumber      String?     @unique
+  type                 String
+  manufacturer         String?
+  modelCode            String?
+  weight               Float?
+  screenSize           Float?
+  memorySize           Float?
+  isFunctional         Boolean
+  isAssigned           Boolean    // Указывает, назначено ли устройство пользователю
+  warehouseId          String?     @db.Uuid 
+  description          String?
+  addedById            String      @db.Uuid  // Кто добавил 
+  updatedById          String      @db.Uuid  //Кто внес правки
+  lastIssuedAt         DateTime?  // Дата последней выдачи
+  lastReturnedAt       DateTime?  // Дата последнего возврата
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  addedBy              user        @relation("UserDevicesAdded", fields: [addedById], references: [id]) 
+  updatedBy            user        @relation("UserDevicesUpdated", fields: [updatedById], references: [id]) 
+  warehouse            warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  transfers            transfer[] 
+  InventoryDevice      inventory_device[]
+  deviceIssues         device_issue[] 
+  deviceReturns        device_return[] 
+  deviceRepairs        device_repair[]
 }
- model assign_device {
-   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-   devicesId      String[]
-   locationFrom   String @db.Uuid
-   assignedTo     String @db.Uuid
-   createdBy      String @db.Uuid
-   updatedBy      String @db.Uuid
-   createdAt      DateTime @default(now()) @db.Timestamp(0)
-   updatedAt      DateTime @default(now()) @db.Timestamp(0)
-   completedAt    DateTime @default(now()) @db.Timestamp(0)
-   assignFrom     location @relation("assign_device_from", fields: [locationFrom], references: [id])        
-   user           user? @relation("device_assigned_to", fields: [assignedTo], references: [id])
-   actionBy       user? @relation("assign_action_by_user", fields: [createdBy], references: [id])
-   actionUpdate   user? @relation("assign_action_update_by_user", fields: [updatedBy], references: [id])
- }
- model return_device {
-   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-   devicesId      String[]
-   locationTo     String @db.Uuid
-   userFrom       String @db.Uuid
-   createdBy      String @db.Uuid
-   updatedBy      String @db.Uuid
-   createdAt      DateTime @default(now()) @db.Timestamp(0)
-   updatedAt      DateTime @default(now()) @db.Timestamp(0)
-   completedAt    DateTime @default(now()) @db.Timestamp(0)
-   returnTo       location @relation("return_device_to_location", fields: [locationTo], references: [id])
-   returnFrom     user? @relation("returned_from_user", fields: [userFrom], references: [id])
-   actionBy       user? @relation("return_action_by_user", fields: [createdBy], references: [id])
-   actionUpdate   user? @relation("return_action_update_by_user", fields: [updatedBy], references: [id])
- }
- model inventory {
-   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-   locationId     String @db.Uuid
-   foundDevice    String[]
-   lostDevice     String[]
-   createdBy      String @db.Uuid
-   updatedBy      String @db.Uuid
-   createdAt      DateTime @default(now()) @db.Timestamp(0)
-   updatedAt      DateTime @default(now()) @db.Timestamp(0)
-   completedAt    DateTime @default(now()) @db.Timestamp(0)
-   location       location? @relation("inventory_location", fields: [locationId], references: [id])
-   actionBy       user? @relation("inventory_by_user", fields: [createdBy], references: [id])
-   actionUpdate   user? @relation("inventory_update_by_user", fields: [updatedBy], references: [id])
- }
 
- model moving {
-   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-   locationFrom   String @db.Uuid
-   locationTo     String @db.Uuid
-   createdBy      String @db.Uuid
-   updatedBy      String @db.Uuid
-   createdAt      DateTime @default(now()) @db.Timestamp(0)
-   updatedAt      DateTime @default(now()) @db.Timestamp(0)
-   completedAt    DateTime @default(now()) @db.Timestamp(0)
-   from           location? @relation("moving_location_from", fields: [locationFrom], references: [id])
-   to             location? @relation("moving_location_to", fields: [locationTo], references: [id])
-   actionBy       user? @relation("moving_by_user", fields: [createdBy], references: [id])
-   updateBy       user? @relation("moving_update_by_user", fields: [updatedBy], references: [id])
- }
+model device_issue {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId            Int        @default(autoincrement())
+  deviceId             String     @db.Uuid     // ID устройства
+  userId               String     @db.Uuid     // ID пользователя, получившего устройство
+  issuedById           String     @db.Uuid  // ID пользователя, выдавшего устройство
+  issueDate            DateTime   @default(now()) // Дата выдачи
+  status               String     @default("active") // Статус выдачи (active, cancelled)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  device               device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user                 user       @relation("UserDeviceIssues", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy             user       @relation(fields: [issuedById], references: [id], onDelete: Cascade)
+}
+
+model device_return {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId            Int        @default(autoincrement())
+  deviceId             String     @db.Uuid     // ID устройства
+  userId               String     @db.Uuid    // ID пользователя, вернувшего устройство
+  returnedById         String     @db.Uuid     // ID пользователя, зарегистрировавшего возврат
+  returnDate           DateTime   @default(now()) // Дата возврата
+  condition            String?    // Состояние устройства при возврате
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  device               device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user                 user       @relation("UserDeviceReturns", fields: [userId], references: [id], onDelete: Cascade)
+  returnedBy           user       @relation(fields: [returnedById], references: [id], onDelete: Cascade)
+}
+
+model transfer {
+  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId            Int         @default(autoincrement())
+  fromId               String?     @db.Uuid   // Перемещение откуда 
+  toId                 String?     @db.Uuid   // Перемещение куда
+  deviceId             String      @db.Uuid   
+  status               String      @default("in_progress")
+  transferredById      String      @db.Uuid
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  fromWarehouse        warehouse?  @relation("FromWarehouse", fields: [fromId], references: [id], onDelete: SetNull)
+  toWarehouse          warehouse?  @relation("ToWarehouse", fields: [toId], references: [id], onDelete: SetNull)
+  device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  transferredBy        user        @relation(fields: [transferredById], references: [id])
+}
+
+model inventory {
+  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId            Int         @default(autoincrement())
+  warehouseId          String      @db.Uuid     
+  createdById          String      @db.Uuid     
+  responsibleId        String      @db.Uuid  // Ответственный за инвентаризацию  
+  status               String      @default("in_progress") 
+  createdAt            DateTime    @default(now()) 
+  completedAt          DateTime? 
+  warehouse            warehouse   @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  createdBy            user        @relation("CreatedInventory", fields: [createdById], references: [id], onDelete: Cascade)
+  responsible          user        @relation("ResponsibleInventory", fields: [responsibleId], references: [id], onDelete: Cascade)
+  inventoryDevices     inventory_device[] 
+}
+
+model inventory_device {
+  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inventoryId          String      @db.Uuid    
+  deviceId             String      @db.Uuid    
+  isFound              Boolean    
+  inventory            inventory   @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model device_repair {
+  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId            Int         @default(autoincrement())
+  deviceId             String      @db.Uuid // ID устройства
+  contractorId         String      @db.Uuid      // ID подрядчика
+  sentById             String      @db.Uuid      // ID пользователя, отправившего на ремонт
+  receivedById         String?     @db.Uuid   // ID пользователя, принявшего обратно после ремонта
+  sentDate             DateTime    @default(now()) // Дата отправки на ремонт
+  receivedDate         DateTime?   // Дата возврата из ремонта
+  status               String      @default("in_progress") // Статус ремонта (in_progress, completed, failed)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  sentBy               user        @relation("UserDeviceRepairsSent", fields: [sentById], references: [id], onDelete: Cascade)
+  receivedBy           user?       @relation("ContractorDeviceRepairsReceived",fields: [receivedById], references: [id], onDelete: SetNull)
+  contractor           contractor  @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+}
+
+model contractor {
+  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String      // Название подрядчика
+  contactInfo          String?     // Контактная информация
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  deviceRepairs        device_repair[]
+}

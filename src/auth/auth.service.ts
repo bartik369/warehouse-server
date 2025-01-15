@@ -41,7 +41,7 @@ export class AuthService {
         description:'Please, check your credentials',
     });
 
-    const tokens:Tokens = await this.getTokens(user.id, user.email, user.login);
+    const tokens:Tokens = await this.getTokens(user.id, user.email, user.userName);
     await this.updateRefreshHash(user.id, tokens.refreshToken)
     return {
       user: user,
@@ -69,11 +69,11 @@ export class AuthService {
     
     if (!existUser || !existToken) throw new ForbiddenException();
 
-    const matchRefreshToken = await bcrypt.compare(token, existToken.refreshToken);
+    const matchRefreshToken = await bcrypt.compare(token, existToken.token);
 
     if(!matchRefreshToken) throw new ForbiddenException();
     
-    const tokens = await this.getTokens(existUser.id, existUser.email, existUser.login);
+    const tokens = await this.getTokens(existUser.id, existUser.email, existUser.userName);
     await this.updateRefreshHash(existUser.id, tokens.refreshToken)
     return {token: tokens.accessToken, user: existUser}
   };
@@ -84,7 +84,7 @@ export class AuthService {
         userId: id
       },
       data: {
-        refreshToken: '',
+        token: '',
       }
     });
     return true;
@@ -114,7 +114,7 @@ export class AuthService {
         userId: userId
       },
       data: {
-        refreshToken: hash
+        token: hash
       }
     })
   }

@@ -1,9 +1,9 @@
 import { IsEmail} from 'class-validator';
 export class UserDto {
     id: string
-    workId: string
-    login: string
+    userName: string
     email: string 
+    workId: string
     firstName: string 
     lastName: string
     department: string
