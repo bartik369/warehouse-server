@@ -21,7 +21,7 @@ export class ValidateAccessMIddleware implements NestMiddleware {
              secret: process.env.JWT_ACCESS_SECRET
          });
 
-         if (!validate) throw new UnauthorizedException();
+         if (!validate) throw new UnauthorizedException();   
          const user = await this.prisma.user.findUnique({
              where: {
                  id: validate.sub

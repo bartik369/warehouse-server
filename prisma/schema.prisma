@@ -18,7 +18,7 @@ model user {
   locationId            String    @db.Uuid
   createdAt             DateTime  @default(now()) 
   updatedAt             DateTime  @updatedAt 
-  roles                 user_role[] // Список ролей пользователя (многие ко многим через UserRole)
+  roles                 user_role[] // Список ролей пользователя
   token                 token?
   password              password? 
   devicesAdded          device[]  @relation("UserDevicesAdded")
@@ -65,7 +65,6 @@ model permission {
   permissionRoles       permission_role[] // Связь с промежуточной таблицей
 }
 
-
 model permission_role {
   id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   permissionId String      @db.Uuid // ID разрешения
@@ -108,6 +107,14 @@ model warehouse {
   permission_role      permission_role[]
 }
 
+model device_model {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String     @unique
+  manufacturer         String
+  imagePath            String     @unique
+  devices              device[]
+}
+
 model device {
   id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String 
@@ -115,9 +122,13 @@ model device {
   type                 String
   manufacturer         String?
   modelCode            String?
+  modelId              String?      @db.Uuid  //ID модели устройства
+  serialNumber         String?
+  media                String?
   weight               Float?
   screenSize           Float?
   memorySize           Float?
+  inStock              Boolean
   isFunctional         Boolean
   isAssigned           Boolean    // Указывает, назначено ли устройство пользователю
   warehouseId          String?     @db.Uuid 
@@ -131,6 +142,7 @@ model device {
   addedBy              user        @relation("UserDevicesAdded", fields: [addedById], references: [id]) 
   updatedBy            user        @relation("UserDevicesUpdated", fields: [updatedById], references: [id]) 
   warehouse            warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  model                device_model? @relation(fields: [modelId], references: [id])
   transfers            transfer[] 
   InventoryDevice      inventory_device[]
   deviceIssues         device_issue[] 
@@ -139,33 +151,35 @@ model device {
 }
 
 model device_issue {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId            Int        @default(autoincrement())
-  deviceId             String     @db.Uuid     // ID устройства
-  userId               String     @db.Uuid     // ID пользователя, получившего устройство
-  issuedById           String     @db.Uuid  // ID пользователя, выдавшего устройство
-  issueDate            DateTime   @default(now()) // Дата выдачи
-  status               String     @default("active") // Статус выдачи (active, cancelled)
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
-  device               device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user                 user       @relation("UserDeviceIssues", fields: [userId], references: [id], onDelete: Cascade)
-  issuedBy             user       @relation(fields: [issuedById], references: [id], onDelete: Cascade)
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId      Int        @default(autoincrement())
+  deviceId       String     @db.Uuid
+  userId         String     @db.Uuid
+  issuedById     String     @db.Uuid
+  issueDate      DateTime   @default(now())
+  status         String     @default("in_progress")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  device         device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user           user       @relation("UserDeviceIssues", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy       user       @relation(fields: [issuedById], references: [id], onDelete: Cascade)
+  files          file[]     @relation("deviceIssueFiles") // Список файлов, связанных с процессом выдачи
 }
 
 model device_return {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId            Int        @default(autoincrement())
-  deviceId             String     @db.Uuid     // ID устройства
-  userId               String     @db.Uuid    // ID пользователя, вернувшего устройство
-  returnedById         String     @db.Uuid     // ID пользователя, зарегистрировавшего возврат
-  returnDate           DateTime   @default(now()) // Дата возврата
-  condition            String?    // Состояние устройства при возврате
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
-  device               device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user                 user       @relation("UserDeviceReturns", fields: [userId], references: [id], onDelete: Cascade)
-  returnedBy           user       @relation(fields: [returnedById], references: [id], onDelete: Cascade)
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId      Int        @default(autoincrement())
+  deviceId       String     @db.Uuid
+  userId         String     @db.Uuid
+  returnedById   String     @db.Uuid
+  returnDate     DateTime   @default(now())
+  condition      String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  device         device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user           user       @relation("UserDeviceReturns", fields: [userId], references: [id], onDelete: Cascade)
+  returnedBy     user       @relation(fields: [returnedById], references: [id], onDelete: Cascade)
+  files          file[]     @relation("deviceReturnFiles") // Список файлов, связанных с процессом возврата
 }
 
 model transfer {
@@ -197,6 +211,7 @@ model inventory {
   createdBy            user        @relation("CreatedInventory", fields: [createdById], references: [id], onDelete: Cascade)
   responsible          user        @relation("ResponsibleInventory", fields: [responsibleId], references: [id], onDelete: Cascade)
   inventoryDevices     inventory_device[] 
+  files                file[]      @relation("inventoryFiles") // Список файлов, связанных с инвентаризацией
 }
 
 model inventory_device {
@@ -211,19 +226,20 @@ model inventory_device {
 model device_repair {
   id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   processId            Int         @default(autoincrement())
-  deviceId             String      @db.Uuid // ID устройства
-  contractorId         String      @db.Uuid      // ID подрядчика
-  sentById             String      @db.Uuid      // ID пользователя, отправившего на ремонт
-  receivedById         String?     @db.Uuid   // ID пользователя, принявшего обратно после ремонта
-  sentDate             DateTime    @default(now()) // Дата отправки на ремонт
+  deviceId             String      @db.Uuid
+  contractorId         String      @db.Uuid
+  sentById             String      @db.Uuid
+  receivedById         String?     @db.Uuid
+  sentDate             DateTime    @default(now())
   receivedDate         DateTime?   // Дата возврата из ремонта
-  status               String      @default("in_progress") // Статус ремонта (in_progress, completed, failed)
+  status               String      @default("in_progress")
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   sentBy               user        @relation("UserDeviceRepairsSent", fields: [sentById], references: [id], onDelete: Cascade)
-  receivedBy           user?       @relation("ContractorDeviceRepairsReceived",fields: [receivedById], references: [id], onDelete: SetNull)
+  receivedBy           user?       @relation("ContractorDeviceRepairsReceived", fields: [receivedById], references: [id], onDelete: SetNull)
   contractor           contractor  @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  files                file[]      @relation("deviceRepairFiles") // Список файлов, связанных с ремонтом
 }
 
 model contractor {
@@ -233,4 +249,18 @@ model contractor {
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   deviceRepairs        device_repair[]
+}
+
+model file {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fileName    String
+  filePath    String
+  fileType    String
+  size        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deviceIssues device_issue[] @relation("deviceIssueFiles")
+  deviceReturns device_return[] @relation("deviceReturnFiles")
+  inventories inventory[] @relation("inventoryFiles")
+  deviceRepairs device_repair[] @relation("deviceRepairFiles")
 }

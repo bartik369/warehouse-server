@@ -18,7 +18,7 @@ export class UsersService {
       cause: new Error(),
       description:'Please, check your credentials',
     });
-    const password = 'qazwsx';
+    const password = uuidv4();
     const hash = await bcrypt.hash(password, 9);
     const user = await this.prisma.user.create({
       data: userDto,
