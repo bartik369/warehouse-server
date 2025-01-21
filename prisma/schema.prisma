@@ -21,16 +21,16 @@ model user {
   roles                 user_role[] // Список ролей пользователя
   token                 token?
   password              password? 
-  devicesAdded          device[]  @relation("UserDevicesAdded")
-  devicesUpdated        device[]  @relation("UserDevicesUpdated")
+  devicesAdded          device[]  @relation("who_add_device")
+  devicesUpdated        device[]  @relation("who_update_device")
   Transfer              transfer[]
-  InventoryCreateBy     inventory[] @relation("CreatedInventory")
-  InventoryResponsBy    inventory[] @relation("ResponsibleInventory")
-  deviceIssues          device_issue[] @relation("UserDeviceIssues")
-  deviceReturns         device_return[] @relation("UserDeviceReturns")
-  deviceRepairsSent     device_repair[] @relation("UserDeviceRepairsSent")
-  deviceRepairsReceived device_repair[] @relation("ContractorDeviceRepairsReceived")
-  DeviceIssue           device_issue[]
+  InventoryCreateBy     inventory[] @relation("who_created_inventory")
+  InventoryResponsBy    inventory[] @relation("who_responsible_inventory")
+  deviceIssues          device_issue[] @relation("who_device_issues")
+  deviceReturns         device_return[] @relation("user_who_returns_device")
+  deviceRepairsSent     device_repair[] @relation("who_sent_device_for_repair")
+  deviceRepairsReceived device_repair[] @relation("contractor_who_gets_device_for_repair")
+  DeviceIssue           device_issue[] @relation("issue_device_by_user")
   DeviceReturn          device_return[]
 }
 
@@ -102,27 +102,39 @@ model warehouse {
   devices              device[]   
   inventories          inventory[] 
   location             location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  TransferFrom         transfer[] @relation("FromWarehouse")
-  TransferTo           transfer[] @relation("ToWarehouse")
+  TransferFrom         transfer[] @relation("from_warehouse")
+  TransferTo           transfer[] @relation("to_warehouse")
   permission_role      permission_role[]
+}
+model manufacturer {
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String     @unique
+  devices             device[]
 }
 
 model device_model {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                 String     @unique
-  manufacturer         String
-  imagePath            String     @unique
-  devices              device[]
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  typeId               String        @unique
+  name                 String        @unique
+  imagePath            String?       @unique
+  type                 device_type   @relation("device_type", fields: [typeId], references: [id])
+  device               device[]
 }
+model device_type {
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String          @unique
+  value               String          @unique
+  device_model        device_model[]  @relation("device_type")
+}
+
 
 model device {
   id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String 
   inventoryNumber      String?     @unique
-  type                 String
-  manufacturer         String?
+  manufacturerId       String?     @db.Uuid
+  modelId              String?     @db.Uuid  //ID модели устройства
   modelCode            String?
-  modelId              String?      @db.Uuid  //ID модели устройства
   serialNumber         String?
   media                String?
   weight               Float?
@@ -139,8 +151,8 @@ model device {
   lastReturnedAt       DateTime?  // Дата последнего возврата
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
-  addedBy              user        @relation("UserDevicesAdded", fields: [addedById], references: [id]) 
-  updatedBy            user        @relation("UserDevicesUpdated", fields: [updatedById], references: [id]) 
+  addedBy              user        @relation("who_add_device", fields: [addedById], references: [id]) 
+  updatedBy            user        @relation("who_update_device", fields: [updatedById], references: [id]) 
   warehouse            warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
   model                device_model? @relation(fields: [modelId], references: [id])
   transfers            transfer[] 
@@ -148,6 +160,7 @@ model device {
   deviceIssues         device_issue[] 
   deviceReturns        device_return[] 
   deviceRepairs        device_repair[]
+  manufacturer         manufacturer? @relation(fields: [manufacturerId], references: [id])
 }
 
 model device_issue {
@@ -161,9 +174,9 @@ model device_issue {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   device         device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user           user       @relation("UserDeviceIssues", fields: [userId], references: [id], onDelete: Cascade)
-  issuedBy       user       @relation(fields: [issuedById], references: [id], onDelete: Cascade)
-  files          file[]     @relation("deviceIssueFiles") // Список файлов, связанных с процессом выдачи
+  user           user       @relation("who_device_issues", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy       user       @relation("issue_device_by_user", fields: [issuedById], references: [id], onDelete: Cascade)
+  files          file[]     @relation("device_issue_files") // Список файлов, связанных с процессом выдачи
 }
 
 model device_return {
@@ -177,9 +190,9 @@ model device_return {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   device         device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user           user       @relation("UserDeviceReturns", fields: [userId], references: [id], onDelete: Cascade)
+  user           user       @relation("user_who_returns_device", fields: [userId], references: [id], onDelete: Cascade)
   returnedBy     user       @relation(fields: [returnedById], references: [id], onDelete: Cascade)
-  files          file[]     @relation("deviceReturnFiles") // Список файлов, связанных с процессом возврата
+  files          file[]     @relation("device_return_files") // Список файлов, связанных с процессом возврата
 }
 
 model transfer {
@@ -192,8 +205,8 @@ model transfer {
   transferredById      String      @db.Uuid
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
-  fromWarehouse        warehouse?  @relation("FromWarehouse", fields: [fromId], references: [id], onDelete: SetNull)
-  toWarehouse          warehouse?  @relation("ToWarehouse", fields: [toId], references: [id], onDelete: SetNull)
+  fromWarehouse        warehouse?  @relation("from_warehouse", fields: [fromId], references: [id], onDelete: SetNull)
+  toWarehouse          warehouse?  @relation("to_warehouse", fields: [toId], references: [id], onDelete: SetNull)
   device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   transferredBy        user        @relation(fields: [transferredById], references: [id])
 }
@@ -208,10 +221,10 @@ model inventory {
   createdAt            DateTime    @default(now()) 
   completedAt          DateTime? 
   warehouse            warehouse   @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  createdBy            user        @relation("CreatedInventory", fields: [createdById], references: [id], onDelete: Cascade)
-  responsible          user        @relation("ResponsibleInventory", fields: [responsibleId], references: [id], onDelete: Cascade)
+  createdBy            user        @relation("who_created_inventory", fields: [createdById], references: [id], onDelete: Cascade)
+  responsible          user        @relation("who_responsible_inventory", fields: [responsibleId], references: [id], onDelete: Cascade)
   inventoryDevices     inventory_device[] 
-  files                file[]      @relation("inventoryFiles") // Список файлов, связанных с инвентаризацией
+  files                file[]      @relation("inventory_files") // Список файлов, связанных с инвентаризацией
 }
 
 model inventory_device {
@@ -236,10 +249,10 @@ model device_repair {
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  sentBy               user        @relation("UserDeviceRepairsSent", fields: [sentById], references: [id], onDelete: Cascade)
-  receivedBy           user?       @relation("ContractorDeviceRepairsReceived", fields: [receivedById], references: [id], onDelete: SetNull)
+  sentBy               user        @relation("who_sent_device_for_repair", fields: [sentById], references: [id], onDelete: Cascade)
+  receivedBy           user?       @relation("contractor_who_gets_device_for_repair", fields: [receivedById], references: [id], onDelete: SetNull)
   contractor           contractor  @relation(fields: [contractorId], references: [id], onDelete: Cascade)
-  files                file[]      @relation("deviceRepairFiles") // Список файлов, связанных с ремонтом
+  files                file[]      @relation("device_repair_files") // Список файлов, связанных с ремонтом
 }
 
 model contractor {
@@ -259,8 +272,8 @@ model file {
   size        Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  deviceIssues device_issue[] @relation("deviceIssueFiles")
-  deviceReturns device_return[] @relation("deviceReturnFiles")
-  inventories inventory[] @relation("inventoryFiles")
-  deviceRepairs device_repair[] @relation("deviceRepairFiles")
+  deviceIssues device_issue[] @relation("device_issue_files")
+  deviceReturns device_return[] @relation("device_return_files")
+  inventories inventory[] @relation("inventory_files")
+  deviceRepairs device_repair[] @relation("device_repair_files")
 }
