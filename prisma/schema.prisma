@@ -8,272 +8,288 @@ datasource db {
 }
 
 model user {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userName              String    @unique
-  email                 String    @unique
-  workId                String?   @unique  // Персональный номер сотрудника(SAP, 1C и тд)
-  firstName             String
-  lastName              String
-  department            String
-  locationId            String    @db.Uuid
-  createdAt             DateTime  @default(now()) 
-  updatedAt             DateTime  @updatedAt 
-  roles                 user_role[] // Список ролей пользователя
-  token                 token?
-  password              password? 
-  devicesAdded          device[]  @relation("who_add_device")
-  devicesUpdated        device[]  @relation("who_update_device")
-  Transfer              transfer[]
-  InventoryCreateBy     inventory[] @relation("who_created_inventory")
-  InventoryResponsBy    inventory[] @relation("who_responsible_inventory")
-  deviceIssues          device_issue[] @relation("who_device_issues")
-  deviceReturns         device_return[] @relation("user_who_returns_device")
-  deviceRepairsSent     device_repair[] @relation("who_sent_device_for_repair")
-  deviceRepairsReceived device_repair[] @relation("contractor_who_gets_device_for_repair")
-  DeviceIssue           device_issue[] @relation("issue_device_by_user")
-  DeviceReturn          device_return[]
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID пользователя
+  userName              String    @unique // Имя пользователя
+  email                 String    @unique // Адрес электронной почты пользователя
+  workId                String?   @unique // Персональный номер сотрудника (например, из SAP, 1C и т.д.)
+  firstName             String    // Имя пользователя
+  lastName              String    // Фамилия пользователя
+  isActive              Boolean  // Активна ли учетная запись
+  department            String   // Отдел, к которому относится пользователь
+  locationId            String    @db.Uuid // ID местоположения пользователя
+  createdAt             DateTime  @default(now()) // Дата создания пользователя
+  updatedAt             DateTime  @updatedAt // Дата последнего обновления данных пользователя
+  roles                 user_role[] // Список ролей, назначенных пользователю
+  token                 token? // Токен пользователя
+  password              password? // Пароль пользователя
+  devicesAdded          device[]  @relation("who_add_device") // Список устройств, добавленных пользователем
+  devicesUpdated        device[]  @relation("who_update_device") // Список устройств, обновленных пользователем
+  Transfer              transfer[] // Список перемещений оборудования, связанных с пользователем
+  InventoryCreateBy     inventory[] @relation("who_created_inventory") // Список инвентаризаций, созданных пользователем
+  InventoryResponsBy    inventory[] @relation("who_responsible_inventory") // Список инвентаризаций, за которые отвечает пользователь
+  deviceIssues          device_issue[] @relation("who_device_issues") // Список заявок на устройства, созданных пользователем
+  deviceReturns         device_return[] @relation("user_who_returns_device") // Список возвратов устройств пользователем
+  deviceRepairsSent     device_repair[] @relation("who_sent_device_for_repair") // Список устройств, отправленных на ремонт пользователем
+  deviceRepairsReceived device_repair[] @relation("contractor_who_gets_device_for_repair") // Список устройств, полученных из ремонта пользователем
+  DeviceIssue           device_issue[] @relation("issue_device_by_user") // Список заявок на устройства, созданных пользователем
+  DeviceReturn          device_return[] // Список возвратов устройств пользователем
 }
 
 model token {
-  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  token                 String     @unique
-  userId                String     @unique @db.Uuid
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
-  user                  user?      @relation(fields: [userId], references: [id])
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID токена
+  token                 String     @unique // Строка токена
+  userId                String     @unique @db.Uuid // ID пользователя, к которому относится токен
+  createdAt             DateTime   @default(now()) // Дата создания токена
+  updatedAt             DateTime   @updatedAt // Дата последнего обновления токена
+  user                  user?      @relation(fields: [userId], references: [id]) // Связь с моделью пользователя
 }
 
 model password {
-  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  password              String
-  userId                String     @unique @db.Uuid
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
-  user                  user?      @relation(fields: [userId], references: [id])
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID пароля
+  password              String     // Строка пароля
+  userId                String     @unique @db.Uuid // ID пользователя, к которому относится пароль
+  createdAt             DateTime   @default(now()) // Дата создания пароля
+  updatedAt             DateTime   @updatedAt // Дата последнего обновления пароля
+  user                  user?      @relation(fields: [userId], references: [id]) // Связь с моделью пользователя
 }
 
 model role {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                  String    @unique 
-  permissionRoles       permission_role[] // Связь с промежуточной таблицей
-  users                 user_role[] // Список пользователей, связанных с ролью
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID роли
+  name                  String    @unique // Имя роли
+  comment               String?  // Описание роли
+  permissionRoles       permission_role[] // Связь с промежуточной таблицей, содержащей разрешения для роли
+  users                 user_role[] // Связь с таблицей пользователей, которые обладают данной ролью
 }
 
 model permission {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                  String    @unique
-  permissionRoles       permission_role[] // Связь с промежуточной таблицей
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID разрешения
+  name                  String    @unique // Имя разрешения
+  comment               String? // Что позволяет делать(чтение, запись)
+  permissionRoles       permission_role[] // Связь с промежуточной таблицей, содержащей разрешения для роли
 }
 
 model permission_role {
-  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID связи
   permissionId String      @db.Uuid // ID разрешения
   roleId       String      @db.Uuid // ID роли
-  locationId   String?     @db.Uuid // ID города (NULL на все города)
-  warehouseId  String?     @db.Uuid // ID склада (NULL на все склады в городе или на все склады вообще)
+  locationId   String?     @db.Uuid // ID города (если NULL, то разрешение действует на все города)
+  warehouseId  String?     @db.Uuid // ID склада (если NULL, то разрешение действует на все склады)
+  comment      String?     // Что позволяет делать связка роль + разрешение
   createdAt    DateTime    @default(now()) // Дата создания связи
-  permission   permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  role         role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  location     location?   @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  warehouse    warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  @@unique([permissionId, roleId, locationId, warehouseId]) // Уникальность комбинации
+  permission   permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade) // Связь с моделью разрешения
+  role         role        @relation(fields: [roleId], references: [id], onDelete: Cascade) // Связь с моделью роли
+  location     location?   @relation(fields: [locationId], references: [id], onDelete: Cascade) // Связь с моделью местоположения (если указано)
+  warehouse    warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: Cascade) // Связь с моделью склада (если указано)
+  @@unique([permissionId, roleId, locationId, warehouseId]) // Уникальность комбинации разрешения, роли, местоположения и склада
 }
 
 model user_role {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                String    @db.Uuid  
-  roleId                String    @db.Uuid  
-  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade) // Связь с таблицей User
-  role                  role      @relation(fields: [roleId], references: [id], onDelete: Cascade) // Связь с таблицей Role
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID связи
+  userId                String    @db.Uuid  // ID пользователя
+  roleId                String    @db.Uuid  // ID роли
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade) // Связь с моделью пользователя
+  role                  role      @relation(fields: [roleId], references: [id], onDelete: Cascade) // Связь с моделью роли
   @@unique([userId, roleId]) // Уникальность комбинации пользователь-роль
 }
 
 model location {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  city                 String     @unique   
-  warehouses           warehouse[]
-  permission_role      permission_role[]
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID местоположения
+  city                 String     @unique // Название города
+  slug                 String     @unique   // slug для города (для использования в URL)
+  comment              String?  // Описание локации
+  warehouses           warehouse[] // Связь с моделью складов, которые находятся в этом местоположении
+  permission_role      permission_role[] // Связь с таблицей разрешений для местоположения
 }
 
 model warehouse {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                 String     
-  locationId           String     @db.Uuid       
-  devices              device[]   
-  inventories          inventory[] 
-  location             location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  TransferFrom         transfer[] @relation("from_warehouse")
-  TransferTo           transfer[] @relation("to_warehouse")
-  permission_role      permission_role[]
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID склада
+  name                 String     @unique // Уникальное имя склада
+  slug                 String     @unique // slug для склада (для использования в URL)
+  locationId           String?     @db.Uuid  // ID местоположения склада
+  comment              String?    // Детали по складу (какой этаж, где находится)
+  devices              device[]   // Список устройств, находящихся на складе
+  inventories          inventory[] // Список инвентаризаций, связанных со складом
+  location             location?   @relation(fields: [locationId], references: [id], onDelete: SetNull) // Связь с местоположением склада
+  TransferFrom         transfer[] @relation("from_warehouse") // Список трансферов, связанных с исходящими перемещениями со склада
+  TransferTo           transfer[] @relation("to_warehouse") // Список трансферов, связанных с входящими перемещениями на склад
+  permission_role      permission_role[] // Связь с таблицей разрешений для склада
 }
+
 model manufacturer {
-  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                String     @unique
-  devices             device[]
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID производителя
+  name                String     @unique // Название производителя
+  slug                String     @unique // slug для производителя (для использования в URL)
+  devices             device[]   // Список устройств, произведенных этим производителем
 }
 
 model device_model {
-  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  typeId               String        @unique
-  name                 String        @unique
-  imagePath            String?       @unique
-  type                 device_type   @relation("device_type", fields: [typeId], references: [id])
-  device               device[]
-}
-model device_type {
-  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                String          @unique
-  value               String          @unique
-  device_model        device_model[]  @relation("device_type")
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid    // ID модели устройства
+  name                 String        @unique // Название модели устройства
+  slug                 String        @unique // slug для модели устройства (для использования в URL)
+  imagePath            String?       @unique // Путь к изображению модели устройства (опционально)
+  typeId               String        @db.Uuid   // ID типа устройства
+  type                 device_type   @relation("device_type", fields: [typeId], references: [id]) // Связь с моделью типа устройства
+  device               device[]      // Список устройств, принадлежащих этой модели
 }
 
+model device_type {
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID типа устройства
+  name                String          @unique // Название типа устройства
+  slug                String          @unique // slug для типа устройства (для использования в URL)
+  device_model        device_model[]  @relation("device_type") // Связь с моделями устройств этого типа
+}
 
 model device {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                 String 
-  inventoryNumber      String?     @unique
-  manufacturerId       String?     @db.Uuid
-  modelId              String?     @db.Uuid  //ID модели устройства
-  modelCode            String?
-  serialNumber         String?
-  media                String?
-  weight               Float?
-  screenSize           Float?
-  memorySize           Float?
-  inStock              Boolean
-  isFunctional         Boolean
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID устройства
+  name                 String      // Название устройства
+  inventoryNumber      String?     @unique // Инвентарный номер устройства 
+  manufacturerId       String?     @db.Uuid // ID производителя устройства
+  modelId              String?     @db.Uuid  // ID модели устройства
+  modelCode            String? // Код модели устройства
+  serialNumber         String? // Серийный номер устройства
+  media                String? // Информация о изображении
+  weight               Float? // Вес устройства
+  screenSize           Float? // Размер экрана устройства
+  memorySize           Float? // Размер памяти устройства
+  inStock              Boolean // Указывает, в наличии ли устройство
+  isFunctional         Boolean // Указывает, работает ли устройство
   isAssigned           Boolean    // Указывает, назначено ли устройство пользователю
-  warehouseId          String?     @db.Uuid 
-  description          String?
-  addedById            String      @db.Uuid  // Кто добавил 
-  updatedById          String      @db.Uuid  //Кто внес правки
-  lastIssuedAt         DateTime?  // Дата последней выдачи
-  lastReturnedAt       DateTime?  // Дата последнего возврата
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  addedBy              user        @relation("who_add_device", fields: [addedById], references: [id]) 
-  updatedBy            user        @relation("who_update_device", fields: [updatedById], references: [id]) 
-  warehouse            warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
-  model                device_model? @relation(fields: [modelId], references: [id])
-  transfers            transfer[] 
-  InventoryDevice      inventory_device[]
-  deviceIssues         device_issue[] 
-  deviceReturns        device_return[] 
-  deviceRepairs        device_repair[]
-  manufacturer         manufacturer? @relation(fields: [manufacturerId], references: [id])
+  warehouseId          String?     @db.Uuid // ID склада, на котором хранится устройство
+  description          String? // Описание устройства
+  addedById            String      @db.Uuid  // ID пользователя, который добавил устройство
+  updatedById          String      @db.Uuid  // ID пользователя, который обновил устройство
+  lastIssuedAt         DateTime?  // Дата последней выдачи устройства
+  lastReturnedAt       DateTime?  // Дата последнего возврата устройства
+  createdAt            DateTime    @default(now()) // Дата создания записи устройства
+  updatedAt            DateTime    @updatedAt // Дата последнего обновления устройства
+  addedBy              user        @relation("who_add_device", fields: [addedById], references: [id]) // Связь с пользователем, который добавил устройство
+  updatedBy            user        @relation("who_update_device", fields: [updatedById], references: [id]) // Связь с пользователем, который обновил устройство
+  warehouse            warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull) // Связь с моделью склада устройства
+  model                device_model? @relation(fields: [modelId], references: [id]) // Связь с моделью устройства
+  transfers            transfer[] // Список трансферов, связанных с устройством
+  InventoryDevice      inventory_device[] // Список инвентаризаций, связанных с устройством
+  deviceIssues         device_issue[] // Список заявок на устройства
+  deviceReturns        device_return[] // Список возвратов устройств
+  deviceRepairs        device_repair[] // Список ремонтов устройства
+  manufacturer         manufacturer? @relation(fields: [manufacturerId], references: [id]) // Связь с моделью производителя устройства
 }
 
 model device_issue {
-  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId      Int        @default(autoincrement())
-  deviceId       String     @db.Uuid
-  userId         String     @db.Uuid
-  issuedById     String     @db.Uuid
-  issueDate      DateTime   @default(now())
-  status         String     @default("in_progress")
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  device         device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user           user       @relation("who_device_issues", fields: [userId], references: [id], onDelete: Cascade)
-  issuedBy       user       @relation("issue_device_by_user", fields: [issuedById], references: [id], onDelete: Cascade)
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID заявки на устройство
+  processId      Int        @default(autoincrement()) // Номер процесса выдачи устройства
+  deviceId       String?    @db.Uuid // ID устройства, для которого создается заявка
+  userId         String?    @db.Uuid // ID пользователя, который создает заявку
+  issuedById     String?    @db.Uuid // ID пользователя, который выдает устройство
+  issueDate      DateTime   @default(now()) // Дата выдачи устройства
+  status         String     @default("in_progress") // Статус заявки
+  comment        String?    // Детали выдачи оборудования
+  createdAt      DateTime   @default(now()) // Дата создания заявки
+  updatedAt      DateTime   @updatedAt // Дата последнего обновления заявки
+  device         device?    @relation(fields: [deviceId], references: [id], onDelete: SetNull) // Связь с моделью устройства
+  user           user?      @relation("who_device_issues", fields: [userId], references: [id], onDelete: SetNull) // Связь с моделью пользователя, создавшего заявку
+  issuedBy       user?      @relation("issue_device_by_user", fields: [issuedById], references: [id], onDelete: SetNull) // Связь с пользователем, выдавшим устройство
   files          file[]     @relation("device_issue_files") // Список файлов, связанных с процессом выдачи
 }
 
 model device_return {
-  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId      Int        @default(autoincrement())
-  deviceId       String     @db.Uuid
-  userId         String     @db.Uuid
-  returnedById   String     @db.Uuid
-  returnDate     DateTime   @default(now())
-  condition      String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  device         device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user           user       @relation("user_who_returns_device", fields: [userId], references: [id], onDelete: Cascade)
-  returnedBy     user       @relation(fields: [returnedById], references: [id], onDelete: Cascade)
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID возврата устройства
+  processId      Int        @default(autoincrement()) // Номер процесса возврата устройства
+  deviceId       String?    @db.Uuid // ID устройства, которое возвращается
+  userId         String?    @db.Uuid // ID пользователя, который возвращает устройство
+  returnedById   String?    @db.Uuid // ID пользователя, который принял возврат
+  returnDate     DateTime   @default(now()) // Дата возврата устройства
+  condition      String?    // Состояние устройства на момент возврата
+  comment        String?    // Детали приема оборудования
+  createdAt      DateTime   @default(now()) // Дата создания записи о возврате устройства
+  updatedAt      DateTime   @updatedAt // Дата последнего обновления записи о возврате устройства
+  device         device?    @relation(fields: [deviceId], references: [id], onDelete: SetNull) // Связь с моделью устройства
+  user           user?      @relation("user_who_returns_device", fields: [userId], references: [id], onDelete: SetNull) // Связь с пользователем, возвращающим устройство
+  returnedBy     user?      @relation(fields: [returnedById], references: [id], onDelete: SetNull) // Связь с пользователем, который принял возврат
   files          file[]     @relation("device_return_files") // Список файлов, связанных с процессом возврата
 }
 
 model transfer {
   id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId            Int         @default(autoincrement())
-  fromId               String?     @db.Uuid   // Перемещение откуда 
-  toId                 String?     @db.Uuid   // Перемещение куда
-  deviceId             String      @db.Uuid   
-  status               String      @default("in_progress")
-  transferredById      String      @db.Uuid
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  fromWarehouse        warehouse?  @relation("from_warehouse", fields: [fromId], references: [id], onDelete: SetNull)
-  toWarehouse          warehouse?  @relation("to_warehouse", fields: [toId], references: [id], onDelete: SetNull)
-  device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  transferredBy        user        @relation(fields: [transferredById], references: [id])
+  processId            Int         @default(autoincrement()) // Автоматически увеличиваемый идентификатор процесса перемещения
+  fromId               String?     @db.Uuid   // ID склада, откуда производится перемещение (опционально)
+  toId                 String?     @db.Uuid   // ID склада, куда производится перемещение (опционально)
+  deviceId             String?     @db.Uuid   // ID устройства, которое перемещается
+  status               String      @default("in_progress") // Статус перемещения (по умолчанию "in_progress")
+  transferredById      String      @db.Uuid   // ID пользователя, который осуществил перемещение
+  comment              String?     // Детали перемещения оборудования
+  createdAt            DateTime    @default(now()) // Дата и время создания записи о перемещении
+  updatedAt            DateTime    @updatedAt // Дата и время последнего обновления записи
+  fromWarehouse        warehouse?  @relation("from_warehouse", fields: [fromId], references: [id], onDelete: SetNull) // Связь с исходным складом
+  toWarehouse          warehouse?  @relation("to_warehouse", fields: [toId], references: [id], onDelete: SetNull) // Связь с целевым складом
+  device               device?     @relation(fields: [deviceId], references: [id], onDelete: SetNull) // Связь с перемещаемым устройством
+  transferredBy        user        @relation(fields: [transferredById], references: [id]) // Связь с пользователем, осуществившим перемещение
 }
 
 model inventory {
   id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId            Int         @default(autoincrement())
-  warehouseId          String      @db.Uuid     
-  createdById          String      @db.Uuid     
-  responsibleId        String      @db.Uuid  // Ответственный за инвентаризацию  
-  status               String      @default("in_progress") 
-  createdAt            DateTime    @default(now()) 
-  completedAt          DateTime? 
-  warehouse            warehouse   @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  createdBy            user        @relation("who_created_inventory", fields: [createdById], references: [id], onDelete: Cascade)
-  responsible          user        @relation("who_responsible_inventory", fields: [responsibleId], references: [id], onDelete: Cascade)
-  inventoryDevices     inventory_device[] 
+  processId            Int         @default(autoincrement()) // Автоматически увеличиваемый идентификатор инвентаризации
+  warehouseId          String?     @db.Uuid   // ID склада, для которого выполняется инвентаризация
+  createdById          String?     @db.Uuid   // ID пользователя, который создал инвентаризацию
+  responsibleId        String?     @db.Uuid   // ID пользователя, который отвечает за инвентаризацию
+  status               String      @default("in_progress") // Статус инвентаризации (по умолчанию "in_progress")
+  comment              String?     // Детали инвентаризации
+  createdAt            DateTime    @default(now()) // Дата и время создания записи о инвентаризации
+  completedAt          DateTime?   // Дата и время завершения инвентаризации (если применимо)
+  warehouse            warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull) // Связь с конкретным складом
+  createdBy            user?       @relation("who_created_inventory", fields: [createdById], references: [id], onDelete: SetNull) // Связь с пользователем, создавшим инвентаризацию
+  responsible          user?       @relation("who_responsible_inventory", fields: [responsibleId], references: [id], onDelete: SetNull) // Связь с ответственным за инвентаризацию
+  inventoryDevices     inventory_device[] // Связь с устройствами, участвующими в инвентаризации
   files                file[]      @relation("inventory_files") // Список файлов, связанных с инвентаризацией
 }
 
 model inventory_device {
   id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  inventoryId          String      @db.Uuid    
-  deviceId             String      @db.Uuid    
-  isFound              Boolean    
-  inventory            inventory   @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-  device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  inventoryId          String?     @db.Uuid   // ID инвентаризации, к которой относится устройство
+  deviceId             String?     @db.Uuid   // ID устройства, участвующего в инвентаризации
+  isFound              Boolean     // Статус нахождения устройства (найдено или нет)
+  inventory            inventory?  @relation(fields: [inventoryId], references: [id], onDelete: SetNull) // Связь с инвентаризацией
+  device               device?     @relation(fields: [deviceId], references: [id], onDelete: SetNull) // Связь с устройством
 }
 
 model device_repair {
   id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId            Int         @default(autoincrement())
-  deviceId             String      @db.Uuid
-  contractorId         String      @db.Uuid
-  sentById             String      @db.Uuid
-  receivedById         String?     @db.Uuid
-  sentDate             DateTime    @default(now())
-  receivedDate         DateTime?   // Дата возврата из ремонта
-  status               String      @default("in_progress")
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  device               device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  sentBy               user        @relation("who_sent_device_for_repair", fields: [sentById], references: [id], onDelete: Cascade)
-  receivedBy           user?       @relation("contractor_who_gets_device_for_repair", fields: [receivedById], references: [id], onDelete: SetNull)
-  contractor           contractor  @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  processId            Int         @default(autoincrement()) // Автоматически увеличиваемый идентификатор процесса ремонта
+  deviceId             String?      @db.Uuid   // ID устройства, которое на ремонте
+  contractorId         String?      @db.Uuid   // ID подрядчика, который выполняет ремонт
+  sentById             String?     @db.Uuid   // ID пользователя, который отправил устройство на ремонт
+  receivedById         String?     @db.Uuid   // ID пользователя, который принял устройство после ремонта
+  sentDate             DateTime    @default(now()) // Дата отправки устройства на ремонт
+  receivedDate         DateTime?   // Дата возврата устройства после ремонта (если применимо)
+  status               String      @default("in_progress") // Статус ремонта (по умолчанию "in_progress")
+  comment              String?     // Детали по процессу передачи оборудования на ремонт
+  createdAt            DateTime    @default(now()) // Дата и время создания записи о ремонте
+  updatedAt            DateTime    @updatedAt // Дата и время последнего обновления записи
+  device               device?      @relation(fields: [deviceId], references: [id], onDelete: SetNull) // Связь с устройством
+  sentBy               user?       @relation("who_sent_device_for_repair", fields: [sentById], references: [id], onDelete: SetNull) // Связь с пользователем, который отправил устройство на ремонт
+  receivedBy           user?       @relation("contractor_who_gets_device_for_repair", fields: [receivedById], references: [id], onDelete: SetNull) // Связь с пользователем, который принял устройство после ремонта
+  contractor           contractor?  @relation(fields: [contractorId], references: [id], onDelete: SetNull) // Связь с подрядчиком, выполняющим ремонт
   files                file[]      @relation("device_repair_files") // Список файлов, связанных с ремонтом
 }
 
 model contractor {
   id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String      // Название подрядчика
-  contactInfo          String?     // Контактная информация
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  deviceRepairs        device_repair[]
+  contactInfo          String?     // Контактная информация подрядчика
+  createdAt            DateTime    @default(now()) // Дата и время создания записи о подрядчике
+  updatedAt            DateTime    @updatedAt // Дата и время последнего обновления записи
+  deviceRepairs        device_repair[] // Связь с ремонтами, которые были выполнены этим подрядчиком
 }
 
 model file {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fileName    String
-  filePath    String
-  fileType    String
-  size        Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deviceIssues device_issue[] @relation("device_issue_files")
-  deviceReturns device_return[] @relation("device_return_files")
-  inventories inventory[] @relation("inventory_files")
-  deviceRepairs device_repair[] @relation("device_repair_files")
+  fileName    String    // Имя файла
+  filePath    String    // Путь к файлу
+  fileType    String    // Тип файла (например, изображение, документ)
+  size        Int       // Размер файла в байтах
+  createdAt   DateTime  @default(now()) // Дата и время создания файла
+  updatedAt   DateTime  @updatedAt // Дата и время последнего обновления файла
+  deviceIssues device_issue[] @relation("device_issue_files") // Список файлов, связанных с проблемами устройства
+  deviceReturns device_return[] @relation("device_return_files") // Список файлов, связанных с возвратом устройства
+  inventories inventory[] @relation("inventory_files") // Список файлов, связанных с инвентаризацией
+  deviceRepairs device_repair[] @relation("device_repair_files") // Список файлов, связанных с ремонтом устройства
 }

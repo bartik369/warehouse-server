@@ -22,24 +22,53 @@ export class DevicesService {
     const existingModel = await this.prisma.device_model.findUnique({
       where: {
         name: deviceModelDto.name,
-        manufacturer: deviceModelDto.manufacturer,
       },
     });
 
     if (existingModel) {
-      throw new ConflictException('Модель уже существует');
+      throw new ConflictException('Что-то пошло не так', {
+        cause: new Error,
+        description: 'Модель уже существует!'
+      });
     }
     const savedFilePath = await this.saveFile(file);
 
-    const model = await this.prisma.device_model.create({
-      data: {
-        name: deviceModelDto.name,
-        manufacturer: deviceModelDto.manufacturer,
-        imagePath: savedFilePath,
-      },
-    });
+    // const model = await this.prisma.device_model.create({
+    //   data: {
+    //     name: deviceModelDto.name,
+    //     slug: deviceModelDto.slug,
+    //     imagePath: savedFilePath,
+    //     typeId: deviceModelDto.typeId,
+    //   },
+    // });
 
-    return model;
+    // return model;
+  }
+
+  async createManufacturer(manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
+    const existingManufacturer = await this.prisma.manufacturer.findUnique({
+      where: {
+        name: manufacturerDto.name,
+      }
+    });
+    if (existingManufacturer) {
+      throw new ConflictException('Что-то пошло не так', {
+        cause: new Error,
+        description: 'Производитель уже существует'
+      })
+    }
+    const manufacturer = await this.prisma.manufacturer.create({
+      data: {
+        name: manufacturerDto.name,
+        slug: manufacturerDto.slug,
+      }
+    });
+    return manufacturer;
+  }
+
+  async getManufacturers() {
+    const manufacturers = await this.prisma.manufacturer.findMany();
+    return manufacturers
   }
 
   private async saveFile(file: Express.Multer.File): Promise<string> {

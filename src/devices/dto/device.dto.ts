@@ -25,7 +25,9 @@ export class DeviceDto {
 }
 export class DeviceModelDto {
     name:               string
-    manufacturer:       string
+    slug:               string
+    imagePath:          string
+    typeId:             string
 }
 
 export type TDeviceDto = DeviceDto;
