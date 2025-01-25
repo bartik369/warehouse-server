@@ -27,6 +27,7 @@ export class DeviceModelDto {
     name:               string
     slug:               string
     imagePath:          string
+    manufacturerId:     string
     typeId:             string
 }
 

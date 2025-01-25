@@ -1,10 +1,24 @@
 import { DeviceDto, DeviceModelDto } from './dto/device.dto';
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus, 
-  UseGuards, UploadedFile, UseInterceptors, HttpException, BadRequestException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  HttpStatus,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  HttpException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage } from 'multer';
-import { extname, join} from 'path';
+import { extname, join } from 'path';
 
 @Controller('devices')
 export class DevicesController {
@@ -13,11 +27,6 @@ export class DevicesController {
   async findAll() {
     return this.devicesService.findAll();
   }
-
-  // @Get(':id')
-  // async findOne(@Param('id') id: string) {
-  //   return this.devicesService.findOne(id);
-  // }
 
   @Post()
   @UseInterceptors(
@@ -29,23 +38,28 @@ export class DevicesController {
           const newFileName = `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`;
           callback(null, newFileName);
         },
-      })
+      }),
     }),
   )
   @HttpCode(HttpStatus.CREATED)
   async create(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: DeviceDto,
-  ): Promise<void> {
+  ): Promise<void> {}
 
+  @Get('/models/:manufacturer/:type')
+  async getModel(
+      @Param('manufacturer') manufacturer: string,
+      @Param('type') type: string) {
+      return await this.devicesService.getModels(manufacturer, type);
   }
 
-  @Post('/model')
+  @Post('/models')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
       limits: {
-        fileSize: 1 * 1024 * 1024
+        fileSize: 1 * 1024 * 1024,
       },
       fileFilter: (req, file, callback) => {
         const allowedTypes = ['image/jpg', 'image/jpeg', 'image/png'];
@@ -53,8 +67,9 @@ export class DevicesController {
         if (!allowedTypes.includes(file.mimetype)) {
           return callback(
             new BadRequestException('Что-то пошло не так!', {
-              cause: new Error,
-              description: 'Недопустимый формат файла! Разрешены(jpg, jpeg, png)'
+              cause: new Error(),
+              description:
+                'Недопустимый формат файла! Разрешены(jpg, jpeg, png)',
             }),
             false,
           );
@@ -63,41 +78,49 @@ export class DevicesController {
       },
     }),
   )
-
   async createModel(
     @UploadedFile() file: Express.Multer.File,
-    @Body() deviceModelDto: DeviceModelDto){
+    @Body() deviceModelDto: DeviceModelDto,
+  ) {
     if (file.size > 1 * 1024 * 1024) {
-      return new  BadRequestException('Что-то пошло не так!', {
-        cause: new Error,
-        description: 'Вес файла превышает 1МБ'
-      })}
-    console.log(file);
-    console.log(deviceModelDto);
-    
+      return new BadRequestException('Что-то пошло не так!', {
+        cause: new Error(),
+        description: 'Вес файла превышает 1МБ',
+      });
+    }
     const model = await this.devicesService.createModel(deviceModelDto, file);
     return {
       message: 'Модель добавлена!',
-      model
-    }
+      model,
+    };
+  }
+
+  @Post('/types')
+  async createType(@Body() typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
+    const type = await this.devicesService.createType(typeDto);
+    return {
+      message: 'Тип добавлен!',
+      type,
+    };
+  }
+  @Get('/types')
+  async getTypes() {
+    return await this.devicesService.getTypes();
+  }
+
+  @Post('/manufacturers')
+  async createManufacturer(
+    @Body() manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
+    const manufacturer =
+      await this.devicesService.createManufacturer(manufacturerDto);
+    return {
+      message: 'Производитель добавлен!',
+      manufacturer,
+    };
   }
 
   @Get('/manufacturers')
   async getManufacturers() {
-    const manu =  await this.devicesService.getManufacturers();
-    console.log(manu);
-    
+    return await this.devicesService.getManufacturers();
   }
-
-  @Post('/manufacturer')
-  async createManufacturer(
-    @Body()manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
-      const manufacturer = await this.devicesService.createManufacturer(manufacturerDto);
-
-      return {
-        message: 'Производитель добавлен!',
-        manufacturer
-      }
-    }
-
 }

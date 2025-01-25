@@ -6,6 +6,7 @@ export class UserDto {
     workId: string
     firstName: string 
     lastName: string
+    isActive: boolean
     department: string
     locationId: string
     createdAt: Date

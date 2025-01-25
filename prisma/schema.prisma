@@ -19,6 +19,7 @@ model user {
   locationId            String    @db.Uuid // ID местоположения пользователя
   createdAt             DateTime  @default(now()) // Дата создания пользователя
   updatedAt             DateTime  @updatedAt // Дата последнего обновления данных пользователя
+  location              location @relation("user_assigned_to_location", fields: [locationId], references: [id]) // Связь пользователя с локацией
   roles                 user_role[] // Список ролей, назначенных пользователю
   token                 token? // Токен пользователя
   password              password? // Пароль пользователя
@@ -33,6 +34,16 @@ model user {
   deviceRepairsReceived device_repair[] @relation("contractor_who_gets_device_for_repair") // Список устройств, полученных из ремонта пользователем
   DeviceIssue           device_issue[] @relation("issue_device_by_user") // Список заявок на устройства, созданных пользователем
   DeviceReturn          device_return[] // Список возвратов устройств пользователем
+}
+
+model location {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID местоположения
+  city                 String     @unique // Название города
+  slug                 String     @unique   // slug для города (для использования в URL)
+  comment              String?    // Описание локации
+  user                 user[]      @relation("user_assigned_to_location") //Связь с таблицей пользователя для присвоения локации
+  warehouses           warehouse[] // Связь с моделью складов, которые находятся в этом местоположении
+  permission_role      permission_role[] // Связь с таблицей разрешений для местоположения
 }
 
 model token {
@@ -92,15 +103,6 @@ model user_role {
   @@unique([userId, roleId]) // Уникальность комбинации пользователь-роль
 }
 
-model location {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID местоположения
-  city                 String     @unique // Название города
-  slug                 String     @unique   // slug для города (для использования в URL)
-  comment              String?  // Описание локации
-  warehouses           warehouse[] // Связь с моделью складов, которые находятся в этом местоположении
-  permission_role      permission_role[] // Связь с таблицей разрешений для местоположения
-}
-
 model warehouse {
   id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID склада
   name                 String     @unique // Уникальное имя склада
@@ -119,17 +121,19 @@ model manufacturer {
   id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID производителя
   name                String     @unique // Название производителя
   slug                String     @unique // slug для производителя (для использования в URL)
-  devices             device[]   // Список устройств, произведенных этим производителем
+  device_model        device_model[] @relation("device_manufacturer")
 }
 
 model device_model {
   id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid    // ID модели устройства
   name                 String        @unique // Название модели устройства
   slug                 String        @unique // slug для модели устройства (для использования в URL)
+  manufacturerId       String        @db.Uuid
   imagePath            String?       @unique // Путь к изображению модели устройства (опционально)
   typeId               String        @db.Uuid   // ID типа устройства
   type                 device_type   @relation("device_type", fields: [typeId], references: [id]) // Связь с моделью типа устройства
-  device               device[]      // Список устройств, принадлежащих этой модели
+  device               device[]     // Список устройств, принадлежащих этой модели
+  manufacturer         manufacturer  @relation("device_manufacturer", fields: [manufacturerId], references: [id])
 }
 
 model device_type {
@@ -143,7 +147,6 @@ model device {
   id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID устройства
   name                 String      // Название устройства
   inventoryNumber      String?     @unique // Инвентарный номер устройства 
-  manufacturerId       String?     @db.Uuid // ID производителя устройства
   modelId              String?     @db.Uuid  // ID модели устройства
   modelCode            String? // Код модели устройства
   serialNumber         String? // Серийный номер устройства
@@ -171,7 +174,7 @@ model device {
   deviceIssues         device_issue[] // Список заявок на устройства
   deviceReturns        device_return[] // Список возвратов устройств
   deviceRepairs        device_repair[] // Список ремонтов устройства
-  manufacturer         manufacturer? @relation(fields: [manufacturerId], references: [id]) // Связь с моделью производителя устройства
+  // manufacturer         manufacturer? @relation(fields: [manufacturerId], references: [id]) // Связь с моделью производителя устройства
 }
 
 model device_issue {
