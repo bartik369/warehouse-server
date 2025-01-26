@@ -56,9 +56,7 @@ export class DevicesController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
-      limits: {
-        fileSize: 1 * 1024 * 1024,
-      },
+      limits: { fileSize: 1 * 2048 * 2048},
       fileFilter: (req, file, callback) => {
         const allowedTypes = ['image/jpg', 'image/jpeg', 'image/png'];
 
@@ -80,7 +78,7 @@ export class DevicesController {
     @UploadedFile() file: Express.Multer.File,
     @Body() deviceModelDto: DeviceModelDto,
   ) {
-    if (file.size > 1 * 1024 * 1024) {
+    if (file.size > 1 * 2048 * 2048) {
       return new BadRequestException('Что-то пошло не так!', {
         cause: new Error(),
         description: 'Вес файла превышает 1МБ',
@@ -109,8 +107,9 @@ export class DevicesController {
   @Post('/manufacturers')
   async createManufacturer(
     @Body() manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
-    const manufacturer =
-      await this.devicesService.createManufacturer(manufacturerDto);
+      console.log(manufacturerDto);
+      
+    const manufacturer = await this.devicesService.createManufacturer(manufacturerDto);
     return {
       message: 'Производитель добавлен!',
       manufacturer,

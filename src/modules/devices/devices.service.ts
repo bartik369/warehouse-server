@@ -1,5 +1,8 @@
 import { DeviceDto } from './dtos/device.dto';
 import { DeviceModelDto } from './dtos/device.dto';
+import { ManufacturerExistsException, TypeExistsException,
+  ModelExistsException,
+ } from 'src/exceptions/device.exceptions';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
@@ -35,13 +38,7 @@ export class DevicesService {
         manufacturerId: deviceModelDto.manufacturerId,
       },
     });
-
-    if (existingModel) {
-      throw new ConflictException('Что-то пошло не так', {
-        cause: new Error(),
-        description: 'Модель уже существует!',
-      });
-    }
+    if (existingModel) throw new ModelExistsException();
 
     const savedFilePath = await this.saveFile(file);
     const model = await this.prisma.device_model.create({
@@ -76,18 +73,15 @@ export class DevicesService {
     return models;
   }
 
-  async createManufacturer(
-    manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>,
-  ) {
-    const existingManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { name: manufacturerDto.name },
+  async createManufacturer(manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
+    const existingManufacturer = await this.prisma.manufacturer.findFirst({
+      where: { 
+        name: manufacturerDto.name,
+        slug: manufacturerDto.slug,
+       },
     });
-    if (existingManufacturer) {
-      throw new ConflictException('Что-то пошло не так', {
-        cause: new Error(),
-        description: 'Производитель уже существует',
-      });
-    }
+    if (existingManufacturer) throw new ManufacturerExistsException();
+
     const manufacturer = await this.prisma.manufacturer.create({
       data: {
         name: manufacturerDto.name,
@@ -104,13 +98,8 @@ export class DevicesService {
         slug: typeDto.slug,
       },
     });
+    if (existingType) throw new TypeExistsException();
 
-    if (existingType) {
-      throw new ConflictException('Что-то пошло не так', {
-        cause: new Error(),
-        description: 'Тип уже существует',
-      });
-    }
     const type = await this.prisma.device_type.create({
       data: {
         name: typeDto.name,
