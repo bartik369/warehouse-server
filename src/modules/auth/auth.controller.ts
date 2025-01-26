@@ -1,5 +1,5 @@
-import { Auth } from './dto/auth.dto';
-import { GroupAuthData, AuthData} from 'src/types/user.types';
+import { Auth } from './dtos/auth.dto';
+import { GroupAuthData, AuthData} from 'src/common/types/user.types';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { Public } from './decorators/public.decorator';

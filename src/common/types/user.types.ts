@@ -1,4 +1,4 @@
-import { User } from "src/users/dto/user.dto";
+import { User } from "src/modules/users/dtos/user.dto";
 export type Tokens = {
     accessToken: string;
     refreshToken: string;

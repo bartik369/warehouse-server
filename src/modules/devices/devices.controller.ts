@@ -1,4 +1,4 @@
-import { DeviceDto, DeviceModelDto } from './dto/device.dto';
+import { DeviceDto, DeviceModelDto } from './dtos/device.dto';
 import {
   Body,
   Controller,
@@ -9,10 +9,8 @@ import {
   Patch,
   Post,
   HttpStatus,
-  UseGuards,
   UploadedFile,
   UseInterceptors,
-  HttpException,
   BadRequestException,
 } from '@nestjs/common';
 import { DevicesService } from './devices.service';

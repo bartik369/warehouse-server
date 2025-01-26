@@ -144,25 +144,25 @@ model device_type {
 }
 
 model device {
-  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID устройства
+  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // ID устройства
   name                 String      // Название устройства
   inventoryNumber      String?     @unique // Инвентарный номер устройства 
   modelId              String?     @db.Uuid  // ID модели устройства
-  modelCode            String? // Код модели устройства
-  serialNumber         String? // Серийный номер устройства
-  media                String? // Информация о изображении
-  weight               Float? // Вес устройства
-  screenSize           Float? // Размер экрана устройства
-  memorySize           Float? // Размер памяти устройства
-  inStock              Boolean // Указывает, в наличии ли устройство
-  isFunctional         Boolean // Указывает, работает ли устройство
-  isAssigned           Boolean    // Указывает, назначено ли устройство пользователю
+  modelCode            String?     // Код модели устройства
+  serialNumber         String?     // Серийный номер устройства
+  media                String?     // Информация о изображении
+  weight               Float?      // Вес устройства
+  screenSize           Float?      // Размер экрана устройства
+  memorySize           Float?      // Размер памяти устройства
+  inStock              Boolean     // Указывает, в наличии ли устройство
+  isFunctional         Boolean     // Указывает, работает ли устройство
+  isAssigned           Boolean     // Указывает, назначено ли устройство пользователю
   warehouseId          String?     @db.Uuid // ID склада, на котором хранится устройство
-  description          String? // Описание устройства
+  description          String?     // Описание устройства
   addedById            String      @db.Uuid  // ID пользователя, который добавил устройство
   updatedById          String      @db.Uuid  // ID пользователя, который обновил устройство
-  lastIssuedAt         DateTime?  // Дата последней выдачи устройства
-  lastReturnedAt       DateTime?  // Дата последнего возврата устройства
+  lastIssuedAt         DateTime?   // Дата последней выдачи устройства
+  lastReturnedAt       DateTime?   // Дата последнего возврата устройства
   createdAt            DateTime    @default(now()) // Дата создания записи устройства
   updatedAt            DateTime    @updatedAt // Дата последнего обновления устройства
   addedBy              user        @relation("who_add_device", fields: [addedById], references: [id]) // Связь с пользователем, который добавил устройство
@@ -174,7 +174,6 @@ model device {
   deviceIssues         device_issue[] // Список заявок на устройства
   deviceReturns        device_return[] // Список возвратов устройств
   deviceRepairs        device_repair[] // Список ремонтов устройства
-  // manufacturer         manufacturer? @relation(fields: [manufacturerId], references: [id]) // Связь с моделью производителя устройства
 }
 
 model device_issue {

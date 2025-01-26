@@ -1,10 +1,10 @@
-import { PrismaService } from './../../../prisma/prisma.service';
-import { JwtPayload } from 'src/types/user.types';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { JwtPayload } from 'src/common/types/user.types';
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { JwtService } from "@nestjs/jwt";
 import { UnauthorizedException } from "@nestjs/common";
-import { UsersService } from "src/users/users.service";
+import { UsersService } from 'src/modules/users/users.service';
 
 @Injectable()
 export class ValidateAccessMIddleware implements NestMiddleware {

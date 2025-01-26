@@ -1,7 +1,7 @@
-import { AuthData, Tokens } from 'src/types/user.types';
-import { User} from './../users/dto/user.dto';
-import { GroupAuthData } from 'src/types/user.types';
-import { AuthDto } from './dto/auth.dto';
+import { AuthData, Tokens } from 'src/common/types/user.types';
+import { User} from '../users/dtos/user.dto';
+import { GroupAuthData } from 'src/common/types/user.types';
+import { AuthDto } from './dtos/auth.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, UnauthorizedException, Injectable } from '@nestjs/common';
