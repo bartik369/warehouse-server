@@ -2,7 +2,7 @@ import { AuthData, Tokens } from 'src/common/types/user.types';
 import { User} from '../users/dtos/user.dto';
 import { GroupAuthData } from 'src/common/types/user.types';
 import { AuthDto } from './dtos/auth.dto';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { DeniedAccessExeption } from 'src/exceptions/auth.exceptions';
 import { Injectable } from '@nestjs/common';

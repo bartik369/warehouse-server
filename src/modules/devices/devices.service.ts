@@ -3,7 +3,7 @@ import { extname } from 'path';
 import { Injectable} from '@nestjs/common';
 import { DeviceDto } from './dtos/device.dto';
 import { DeviceModelDto } from './dtos/device.dto';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { ManufacturerExistsException, TypeExistsException,ModelExistsException,
   ManufacturerNotFoundException, ModelNotFoundException } from 'src/exceptions/device.exceptions';
 

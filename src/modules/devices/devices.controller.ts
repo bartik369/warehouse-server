@@ -6,28 +6,32 @@ import { DevicesService } from './devices.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+import { allowedPictureOptions } from 'src/common/utils/constants';
 
 @Controller('devices')
 export class DevicesController {
-  constructor(private devicesService: DevicesService) {}
+  constructor(
+    private devicesService: DevicesService,
+    ) {}
   @Get()
   async findAll() {
     return this.devicesService.findAll();
   }
 
   @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'uploads/devices'),
-        filename: (_req, file, callback) => {
-          const uniqueSuffix = Date.now();
-          const newFileName = `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`;
-          callback(null, newFileName);
-        },
-      }),
-    }),
-  )
+  @FileUploadInterceptor(allowedPictureOptions)
+  // @UseInterceptors(
+  //   FileInterceptor('file', {
+  //     storage: diskStorage({
+  //       destination: join(process.cwd(), 'uploads/devices'),
+  //       filename: (_req, file, callback) => {
+  //         const uniqueSuffix = Date.now();
+  //         const newFileName = `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`;
+  //         callback(null, newFileName);
+  //       },
+  //     }),
+  //   }),
+  // )
   @HttpCode(HttpStatus.CREATED)
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -40,12 +44,9 @@ export class DevicesController {
       @Param('type') type: string) {
       return await this.devicesService.getModels(manufacturer, type);
   }
-  // Add device model
+  // Create device model
   @Post('/models')
-  @FileUploadInterceptor({
-    allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],
-    maxSize: 1 * 1024 * 1024, 
-  })
+  @FileUploadInterceptor(allowedPictureOptions)
   async createModel(
     @UploadedFile() file: Express.Multer.File,
     @Body() deviceModelDto: DeviceModelDto) {
@@ -55,7 +56,7 @@ export class DevicesController {
       model,
     };
   }
-
+  // Create device type
   @Post('/types')
   async createType(@Body() typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
     const type = await this.devicesService.createType(typeDto);

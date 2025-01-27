@@ -2,7 +2,6 @@ import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WrongFileSize, WrongFileType } from 'src/exceptions/device.exceptions';
 import { applyDecorators, UseInterceptors } from "@nestjs/common";
-import e from 'express';
 
 interface IFileUploadOptions {
     allowedTypes?: string[];

@@ -10,6 +10,11 @@ export const manufacturerNotFound = 'Производитель не найде�
 export const modelNotFound = 'Модель не найдена!';
 export const typeNotFound = 'Тип не найден!';
 
+export const allowedPictureOptions = {
+    allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],
+    maxSize: 1 * 1024 * 1024
+}
+
 
 // auth
 

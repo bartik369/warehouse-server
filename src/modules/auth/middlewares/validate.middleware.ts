@@ -1,4 +1,4 @@
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { JwtPayload } from 'src/common/types/user.types';
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
