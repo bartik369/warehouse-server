@@ -1,52 +1,62 @@
-import {
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, ConflictException, BadRequestException} from '@nestjs/common';
+import { deviceAlreadyExists, manufacturerAlreadyExists, modelAlreadyExists, 
+  typeAlreadyExists, deviceNotFound, manufacturerNotFound, modelNotFound, typeNotFound, 
+} from 'src/common/utils/constants';
 
 export class DeviceNotFoundException extends NotFoundException {
   constructor() {
-    super(`Устройство не найдено`);
+    super(deviceNotFound);
   }
 }
 
 export class DeviceExistsException extends ConflictException {
   constructor() {
-    super(`Устройство уже существует`);
+    super(deviceAlreadyExists);
   }
 }
 
 export class ModelNotFoundException extends NotFoundException {
   constructor() {
-    super(`Модель не найдена`);
+    super(modelNotFound);
   }
 }
 
 export class ModelExistsException extends ConflictException {
   constructor() {
-    super(`Модель уже существует`);
+    super(modelAlreadyExists);
   }
 }
 
 export class TypeNotFoundException extends NotFoundException {
   constructor() {
-    super(`Тип не найден`);
+    super(typeNotFound);
   }
 }
 
 export class TypeExistsException extends ConflictException {
   constructor() {
-    super(`Тип уже существует`);
+    super(typeAlreadyExists);
   }
 }
 export class ManufacturerNotFoundException extends NotFoundException {
   constructor() {
-    super(`Производитель не найден`);
+    super(manufacturerNotFound);
   }
 }
 
 export class ManufacturerExistsException extends ConflictException {
   constructor() {
-    super(`Производитель уже существует`);
+    super(manufacturerAlreadyExists);
+  }
+}
+
+export class WrongFileSize extends ConflictException {
+  constructor() {
+    super(`Недопустимый размер файла! (Max 2mb)`)
+  }
+}
+export class WrongFileType extends ConflictException {
+  constructor() {
+    super(`Недопустимый формат файла! Разрешены: jpg, png, jpeg`)
   }
 }

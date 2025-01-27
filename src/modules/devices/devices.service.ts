@@ -1,12 +1,11 @@
-import { DeviceDto } from './dtos/device.dto';
-import { DeviceModelDto } from './dtos/device.dto';
-import { ManufacturerExistsException, TypeExistsException,
-  ModelExistsException,
- } from 'src/exceptions/device.exceptions';
-import { PrismaService } from '../../prisma/prisma.service';
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import { extname } from 'path';
+import { Injectable} from '@nestjs/common';
+import { DeviceDto } from './dtos/device.dto';
+import { DeviceModelDto } from './dtos/device.dto';
+import { PrismaService } from '../../prisma/prisma.service';
+import { ManufacturerExistsException, TypeExistsException,ModelExistsException,
+  ManufacturerNotFoundException, ModelNotFoundException } from 'src/exceptions/device.exceptions';
 
 @Injectable()
 export class DevicesService {
@@ -25,13 +24,8 @@ export class DevicesService {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: deviceModelDto.manufacturerId },
     });
+    if (!existingManufacturer) throw new ManufacturerNotFoundException();
 
-    if (!existingManufacturer) {
-      throw new NotFoundException('Производитель не найден', {
-        cause: new Error(),
-        description: `Производитель с id ${deviceModelDto.manufacturerId} не существует.`,
-      });
-    }
     const existingModel = await this.prisma.device_model.findFirst({
       where: {
         name: deviceModelDto.name,
@@ -60,10 +54,8 @@ export class DevicesService {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { slug: manufacturer },
     });
+    if (!existingType || !existingManufacturer) throw new ModelNotFoundException();
 
-    if (!existingType || !existingManufacturer) {
-      throw new ConflictException();
-    }
     const models = await this.prisma.device_model.findMany({
       where: {
         manufacturerId: existingManufacturer.id,

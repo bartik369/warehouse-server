@@ -1,21 +1,10 @@
 import { DeviceDto, DeviceModelDto } from './dtos/device.dto';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Patch,
-  Post,
-  HttpStatus,
-  UploadedFile,
-  UseInterceptors,
-  BadRequestException,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus,
+  UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage, memoryStorage } from 'multer';
+import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 
 @Controller('devices')
@@ -51,39 +40,15 @@ export class DevicesController {
       @Param('type') type: string) {
       return await this.devicesService.getModels(manufacturer, type);
   }
-
+  // Add device model
   @Post('/models')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: memoryStorage(),
-      limits: { fileSize: 1 * 2048 * 2048},
-      fileFilter: (req, file, callback) => {
-        const allowedTypes = ['image/jpg', 'image/jpeg', 'image/png'];
-
-        if (!allowedTypes.includes(file.mimetype)) {
-          return callback(
-            new BadRequestException('Что-то пошло не так!', {
-              cause: new Error(),
-              description:
-                'Недопустимый формат файла! Разрешены(jpg, jpeg, png)',
-            }),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @FileUploadInterceptor({
+    allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],
+    maxSize: 1 * 1024 * 1024, 
+  })
   async createModel(
     @UploadedFile() file: Express.Multer.File,
-    @Body() deviceModelDto: DeviceModelDto,
-  ) {
-    if (file.size > 1 * 2048 * 2048) {
-      return new BadRequestException('Что-то пошло не так!', {
-        cause: new Error(),
-        description: 'Вес файла превышает 1МБ',
-      });
-    }
+    @Body() deviceModelDto: DeviceModelDto) {
     const model = await this.devicesService.createModel(deviceModelDto, file);
     return {
       message: 'Модель добавлена!',

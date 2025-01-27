@@ -4,8 +4,8 @@ import { Response } from 'express';
 @Catch()
  export class ExeptionsFilter implements ExceptionFilter {
     catch(exeption: unknown, host: ArgumentsHost) {
-        const ctx = host.switchToHttp();
-        const response = ctx.getResponse<Response>();
+        const context = host.switchToHttp();
+        const response = context.getResponse<Response>();
         let status = HttpStatus.INTERNAL_SERVER_ERROR;
         let message = 'Internal server error';
 

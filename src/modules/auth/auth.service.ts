@@ -4,7 +4,9 @@ import { GroupAuthData } from 'src/common/types/user.types';
 import { AuthDto } from './dtos/auth.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { ForbiddenException, UnauthorizedException, Injectable } from '@nestjs/common';
+import { DeniedAccessExeption } from 'src/exceptions/auth.exceptions';
+import { Injectable } from '@nestjs/common';
+import { UserNotFoundExeption } from 'src/exceptions/auth.exceptions';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -20,11 +22,7 @@ export class AuthService {
         email: authDto.email,
       },
     });
-
-    if (!user) throw new ForbiddenException('Something went wrong', {
-        cause: new Error(),
-        description:'Please, check your credentials',
-    });
+    if (!user) throw new UserNotFoundExeption();
 
     const userDBPassword = await this.prisma.password.findUnique({
         where: {
@@ -35,11 +33,7 @@ export class AuthService {
         authDto.password,
         userDBPassword.password,
     );
-
-    if (!isMatch) throw new UnauthorizedException('Something went wrong', {
-        cause: new Error(),
-        description:'Please, check your credentials',
-    });
+    if (!isMatch) throw new UserNotFoundExeption();
 
     const tokens:Tokens = await this.getTokens(user.id, user.email, user.userName);
     await this.updateRefreshHash(user.id, tokens.refreshToken)
@@ -66,15 +60,13 @@ export class AuthService {
         userId: existUser.id,
       }
     });
-    
-    if (!existUser || !existToken) throw new ForbiddenException();
+    if (!existUser || !existToken) throw new DeniedAccessExeption();
 
     const matchRefreshToken = await bcrypt.compare(token, existToken.token);
-
-    if(!matchRefreshToken) throw new ForbiddenException();
+    if(!matchRefreshToken) throw new DeniedAccessExeption();
     
     const tokens = await this.getTokens(existUser.id, existUser.email, existUser.userName);
-    await this.updateRefreshHash(existUser.id, tokens.refreshToken)
+    await this.updateRefreshHash(existUser.id, tokens.refreshToken);
     return {token: tokens.accessToken, user: existUser}
   };
 
@@ -92,17 +84,15 @@ export class AuthService {
 
   async validate(token: string):Promise<User> {
     const payload = await this.jwtService.decode(token);
+    if (!payload) throw new DeniedAccessExeption();
 
-    if (!payload) throw new UnauthorizedException();
     const user = await this.prisma.user.findUnique({
       where: {
         id: payload.sub
       }
     });
+    if (!user) throw new DeniedAccessExeption();
 
-    if (!user) throw new UnauthorizedException();
-    console.log(user);
-    
     return user;
   }
 
