@@ -11,11 +11,14 @@ import { ConfigModule } from '@nestjs/config';
 import { AccessTokenGuard } from './modules/auth/guards';
 import { APP_GUARD } from '@nestjs/core'
 
+console.log('Static files rootPath:', join(__dirname, '..', 'uploads', 'models'));
+
+
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads', 'models'),
-      serveRoot: '/api/models',
+      rootPath: join(__dirname, '..', '..', 'uploads', 'models'),
+      serveRoot: '/api/models/',
     }),
     ConfigModule.forRoot({
       isGlobal: true,
