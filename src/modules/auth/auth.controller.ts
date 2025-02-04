@@ -52,6 +52,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async validate(
     @GetAccessToken() token: string){
-      return await this.authService.validate(token);
+    return await this.authService.validate(token);
   };
 }

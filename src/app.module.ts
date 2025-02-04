@@ -1,3 +1,4 @@
+import { WarehousesModule } from './modules/warehouse/warehouses.module';
 import { join } from 'path';
 import { PrismaService } from 'prisma/prisma.service';
 import { UsersService } from './modules/users/users.service';
@@ -25,7 +26,8 @@ console.log('Static files rootPath:', join(__dirname, '..', 'uploads', 'models')
       envFilePath: '.env',
     }),
     DevicesModule, 
-    UsersModule, 
+    UsersModule,
+    WarehousesModule,
     AuthModule,
   ],
   providers: [{

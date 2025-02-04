@@ -5,19 +5,87 @@ import { DeviceDto } from './dtos/device.dto';
 import { DeviceModelDto } from './dtos/device.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ManufacturerExistsException, TypeExistsException,ModelExistsException,
-  ManufacturerNotFoundException, ModelNotFoundException } from 'src/exceptions/device.exceptions';
+  ManufacturerNotFoundException, ModelNotFoundException, DeviceExistsException } from 'src/exceptions/device.exceptions';
 
 @Injectable()
 export class DevicesService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(): Promise<any> {
-    const devices = await this.prisma.device.findMany();
-    return devices;
+    return this.prisma.device.findMany({
+      select: {
+        id: true,
+        name: true,
+        screenSize: true,
+        memorySize: true,
+        isFunctional: true,
+        isAssigned: true,
+        inventoryNumber: true,
+        serialNumber: true,
+        warehouse: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+        model: {
+          select: {
+            name: true,
+            slug: true,
+            type: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+            manufacturer: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
-  async create(deviceDto: DeviceDto) {
-    console.log(deviceDto);
+  async createDevice(deviceDto: DeviceDto) {
+    if (deviceDto.serialNumber || deviceDto.inventoryNumber) {
+
+      const existingDevice = await this.prisma.device.findUnique({
+        where: {
+          serialNumber: deviceDto.serialNumber,
+          inventoryNumber: deviceDto.inventoryNumber,
+        }
+      });
+      if (existingDevice) throw new DeviceExistsException();
+    }
+    const device = await this.prisma.device.create({
+      data: {
+        name:            deviceDto.name,
+        inventoryNumber: deviceDto.inventoryNumber && deviceDto.inventoryNumber.trim() !== ''
+        ? deviceDto.inventoryNumber
+        : null,  
+        modelId:         deviceDto.modelId && deviceDto.modelId.trim() !== ''
+        ? deviceDto.modelId
+        : null,
+        modelCode:       deviceDto.modelCode,
+        serialNumber:    deviceDto.serialNumber,
+        weight:          deviceDto.weight === 0 ? null : deviceDto.weight,
+        screenSize:      deviceDto.screenSize === 0 ? null : deviceDto.screenSize,
+        memorySize:      deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
+        inStock:         deviceDto.inStock,
+        isFunctional:    deviceDto.isFunctional,
+        isAssigned:      deviceDto.isAssigned,
+        warehouseId:     deviceDto.warehouseId,
+        description:     deviceDto.description,
+        addedById:       deviceDto.addedById,
+        updatedById:     deviceDto.addedById,
+      }
+    });
+
+    if (device) return device
   }
 
   async createModel(deviceModelDto: DeviceModelDto, file: Express.Multer.File) {
@@ -66,6 +134,7 @@ export class DevicesService {
   }
 
   async createManufacturer(manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
+    
     const existingManufacturer = await this.prisma.manufacturer.findFirst({
       where: { 
         name: manufacturerDto.name,

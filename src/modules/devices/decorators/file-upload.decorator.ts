@@ -8,8 +8,9 @@ interface IFileUploadOptions {
     maxSize: number;
 }
 export const FileUploadInterceptor = (options: IFileUploadOptions) => {
-    console.log(options.maxSize);
-    
+
+  console.log('start');
+  
     return applyDecorators(
         UseInterceptors(
             FileInterceptor('file', {
@@ -22,6 +23,8 @@ export const FileUploadInterceptor = (options: IFileUploadOptions) => {
                     false,
                   );
                 }
+                console.log(file);
+                
                 if (file.size > options.maxSize) {
                     return callback(
                         new WrongFileSize(),

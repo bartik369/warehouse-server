@@ -1,42 +1,36 @@
 import { DeviceDto, DeviceModelDto } from './dtos/device.dto';
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus,
-  UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+  UploadedFile, 
+  UseInterceptors} from '@nestjs/common';
 import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import { allowedPictureOptions } from 'src/common/utils/constants';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('devices')
 export class DevicesController {
   constructor(
     private devicesService: DevicesService,
     ) {}
-  @Get()
-  async findAll() {
-    return this.devicesService.findAll();
+
+  @Get('')
+  async findAll(
+    // @Param('manufacturer') manufacturer: string,
+    // @Param('model') model: string,
+  ) {
+
+    return await this.devicesService.findAll();
   }
 
   @Post()
-  @FileUploadInterceptor(allowedPictureOptions)
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: join(process.cwd(), 'uploads/devices'),
-  //       filename: (_req, file, callback) => {
-  //         const uniqueSuffix = Date.now();
-  //         const newFileName = `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`;
-  //         callback(null, newFileName);
-  //       },
-  //     }),
-  //   }),
-  // )
-  @HttpCode(HttpStatus.CREATED)
-  async create(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: DeviceDto,
-  ): Promise<void> {}
+  async createDevice(
+    @Body() deviceDto: DeviceDto) {
+    const device = await this.devicesService.createDevice(deviceDto);
+    return {
+      message: 'Устройство добавлено!',
+      device,
+    };
+  }
 
   @Get('/models/:manufacturer/:type')
   async getModel(
@@ -44,8 +38,10 @@ export class DevicesController {
       @Param('type') type: string) {
       return await this.devicesService.getModels(manufacturer, type);
   }
+
   // Create device model
   @Post('/models')
+  @HttpCode(HttpStatus.CREATED)
   @FileUploadInterceptor(allowedPictureOptions)
   async createModel(
     @UploadedFile() file: Express.Multer.File,
@@ -56,8 +52,11 @@ export class DevicesController {
       model,
     };
   }
+
   // Create device type
   @Post('/types')
+  @UseInterceptors(AnyFilesInterceptor())
+  @HttpCode(HttpStatus.CREATED)
   async createType(@Body() typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
     const type = await this.devicesService.createType(typeDto);
     return {
@@ -65,16 +64,19 @@ export class DevicesController {
       type,
     };
   }
+
+  // Get devices types
   @Get('/types')
   async getTypes() {
     return await this.devicesService.getTypes();
   }
 
+ // Create device manufacturer
   @Post('/manufacturers')
+  @UseInterceptors(AnyFilesInterceptor())
+  @HttpCode(HttpStatus.CREATED)
   async createManufacturer(
-    @Body() manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
-      console.log(manufacturerDto);
-      
+    @Body() manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>) { 
     const manufacturer = await this.devicesService.createManufacturer(manufacturerDto);
     return {
       message: 'Производитель добавлен!',
@@ -82,6 +84,7 @@ export class DevicesController {
     };
   }
 
+  // Get devices manufacturers
   @Get('/manufacturers')
   async getManufacturers() {
     return await this.devicesService.getManufacturers();

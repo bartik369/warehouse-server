@@ -150,7 +150,6 @@ model device {
   modelId              String?     @db.Uuid  // ID модели устройства
   modelCode            String?     // Код модели устройства
   serialNumber         String?     // Серийный номер устройства
-  media                String?     // Информация о изображении
   weight               Float?      // Вес устройства
   screenSize           Float?      // Размер экрана устройства
   memorySize           Float?      // Размер памяти устройства

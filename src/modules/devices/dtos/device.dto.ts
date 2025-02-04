@@ -4,14 +4,13 @@ export class DeviceDto {
     id:                 string
     name:               string
     inventoryNumber:    string
-    type:               string
-    manufacturer:       string
+    modelId:            string
     modelCode:          string
     serialNumber:       string
-    media:              string
-    weight:             string
+    weight:             number
     screenSize:         number
     memorySize:         number
+    inStock:            boolean
     isFunctional:       boolean
     isAssigned:         boolean
     warehouseId:        string
