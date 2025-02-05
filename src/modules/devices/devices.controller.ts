@@ -1,11 +1,13 @@
 import { DeviceDto, DeviceModelDto } from './dtos/device.dto';
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, HttpStatus,
   UploadedFile, 
-  UseInterceptors} from '@nestjs/common';
+  UseInterceptors,
+  Query} from '@nestjs/common';
 import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
 import { allowedPictureOptions } from 'src/common/utils/constants';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { query } from 'express';
 
 @Controller('devices')
 export class DevicesController {
@@ -15,11 +17,16 @@ export class DevicesController {
 
   @Get('')
   async findAll(
-    // @Param('manufacturer') manufacturer: string,
-    // @Param('model') model: string,
-  ) {
+    @Query() query: Record<string, string>) {
+    console.log(query);
+    
+    const devices = await this.devicesService.findAll(query);
+    return devices
+  }
 
-    return await this.devicesService.findAll();
+  @Get('/options')
+  async  getOptions() {
+    return await this.devicesService.getOptions();
   }
 
   @Post()
