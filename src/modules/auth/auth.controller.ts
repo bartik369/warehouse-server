@@ -18,11 +18,14 @@ export class AuthController {
   async signin(
     @Res({passthrough: true}) res: Response,
     @Body() authDto: Auth):Promise<AuthData> {
+      console.log(authDto);
+      
     const data:GroupAuthData = await this.authService.signin(authDto)
     res.cookie('refreshToken', data.tokens.refreshToken, {
       httpOnly: true,
-      sameSite: 'none',
+      sameSite: 'lax',
       secure: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return  {
       user: data.user,

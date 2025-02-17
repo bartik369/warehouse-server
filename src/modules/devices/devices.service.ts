@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import { extname } from 'path';
-import { Injectable} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { DeviceDto } from './dtos/device.dto';
 import { DeviceModelDto } from './dtos/device.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { IDeviceOptions, IDevice } from 'src/common/types/device.types';
 import { ManufacturerExistsException, TypeExistsException,ModelExistsException,
   ManufacturerNotFoundException, ModelNotFoundException, DeviceExistsException } from 'src/exceptions/device.exceptions';
 
@@ -11,29 +12,43 @@ import { ManufacturerExistsException, TypeExistsException,ModelExistsException,
 export class DevicesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(query: Record<string, string>) {
+  async findAll(query: Record<string, string>, city:string):Promise<any> {
     const where: Record<string, any> = {};
+    if (city) {
+      where.warehouse = {
+        location: {
+          slug: city
+        }
+      }
+    };
 
     if (query?.manufacturer) {
       const manufacturers = Array.isArray(query.manufacturer)
         ? query.manufacturer
         : query.manufacturer.split(',').map((item) => item.trim());
-      where.model = {
-        manufacturer: {
-          slug: { in: manufacturers },
-        },
-      };
+      where.model = where.model || {}
+      where.model.manufacturer = { slug: { in: manufacturers } };
     }
 
+    if (query?.model) {
+      const models = Array.isArray(query.model)
+        ? query.model
+        : query.model.split(',').map((item) => item.trim());
+      where.model = where.model || {}
+      where.model = { slug: { in: models } };
+    }
     if (query?.type) {
       const types = Array.isArray(query.type)
         ? query.type
         : query.type.split(',').map((item) => item.trim());
-      where.model = {
-        type: {
-          slug: { in: types },
-        },
-      };
+      where.model = where.model || {}
+      where.model.type = { slug: { in: types } };
+    }
+    if (query?.warehouse) {
+      const warehouses = Array.isArray(query.warehouse)
+        ? query.warehouse
+        : query.warehouse.split(',').map((item) => item.trim());
+      where.warehouse = {slug: {in: warehouses }};
     }
 
     if (query.memorySize) {
@@ -61,15 +76,20 @@ export class DevicesService {
         ? query.isAssigned
         : query.isAssigned.split(',').map((item) => item.trim() === 'true');
       
-      if (isAssignedArray.length === 1) {
-        where.OR = [
-          {
-            isAssigned: isAssignedArray[0],
-          }
-        ]
+        if (isAssignedArray.length === 1) {
+          where.isAssigned = isAssignedArray[0];
       }
     }
-    return this.prisma.device.findMany({
+    const limit = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
+
+    if (limit <= 0 || page <= 0) {
+      throw new BadRequestException();
+    }
+    const skip = (page - 1) * limit;
+
+    const [devices, total] = await Promise.all([
+    this.prisma.device.findMany({
       where,
       select: {
         id: true,
@@ -105,34 +125,46 @@ export class DevicesService {
           },
         },
       },
-    });
+      take: limit,
+      skip: skip,
+    }),
+    this.prisma.device.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return { devices, totalPages };
   }
 
-  async getOptions() {
+  async getOptions():Promise<IDeviceOptions> {
     const manufacturers = await this.prisma.manufacturer.findMany({
       select: {
         name: true,
         slug: true,
-      },
-    });
+      }
+    }) as {name: string; slug: string}[];
+
     const types = await this.prisma.device_type.findMany({
       select: {
         name: true,
         slug: true,
       },
-    });
+    }) as {name: string; slug: string}[];
+
     const models = await this.prisma.device_model.findMany({
       select: {
         name: true,
         slug: true,
       },
-    });
+    }) as {name: string; slug: string}[];
+
     const warehouses = await this.prisma.warehouse.findMany({
       select: {
         name: true,
         slug: true,
       },
-    });
+    }) as {name: string; slug: string}[];
+
     const screenSizes = await this.prisma.device.findMany({
       where: {
         screenSize: {
@@ -143,7 +175,8 @@ export class DevicesService {
         screenSize: true,
       },
       distinct: ['screenSize'],
-    });
+    }) as {screenSize: number}[];
+
     const memorySizes = await this.prisma.device.findMany({
       where: {
         memorySize: {
@@ -154,32 +187,35 @@ export class DevicesService {
         memorySize: true,
       },
       distinct: ['memorySize'],
-    });
+    })as {memorySize: number}[];
+
     const isFunctional = await this.prisma.device.findMany({
       select: {
         isFunctional: true,
       },
       distinct: ['isFunctional'],
-    });
+    }) as { isFunctional: boolean}[];
+
     const isAssigned = await this.prisma.device.findMany({
       select: {
         isAssigned: true,
       },
       distinct: ['isAssigned'],
-    });
+    }) as { isAssigned: boolean}[];
+    
     return {
-      manufacturers: manufacturers,
-      types: types,
-      models: models,
-      warehouses: warehouses,
-      screenSizes: screenSizes,
-      memorySizes: memorySizes,
+      manufacturer: manufacturers,
+      type: types,
+      model: models,
+      warehouse: warehouses,
+      screenSize: screenSizes,
+      memorySize: memorySizes,
       isFunctional: isFunctional,
       isAssigned: isAssigned,
     };
   }
 
-  async createDevice(deviceDto: DeviceDto) {
+  async createDevice(deviceDto: DeviceDto):Promise<Partial<IDevice>> {
     if (deviceDto.serialNumber || deviceDto.inventoryNumber) {
       const existingDevice = await this.prisma.device.findUnique({
         where: {
