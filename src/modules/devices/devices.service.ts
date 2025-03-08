@@ -11,13 +11,13 @@ import { ManufacturerExistsException, TypeExistsException,ModelExistsException,
 @Injectable()
 export class DevicesService {
   constructor(private prisma: PrismaService) {}
-
+  
+  //GET DEVICES
   async findAll(query: Record<string, string>, city:string):Promise<any> {
     const where: Record<string, any> = {};
     if (city) {
       where.warehouse = {
-        location: {
-          slug: city
+        location: {  slug: city
         }
       }
     };
@@ -80,7 +80,7 @@ export class DevicesService {
           where.isAssigned = isAssignedArray[0];
       }
     }
-    const limit = Number(query.limit) || 10;
+    const limit = Number(query.limit) || 20;
     const page = Number(query.page) || 1;
 
     if (limit <= 0 || page <= 0) {
@@ -101,20 +101,12 @@ export class DevicesService {
         inventoryNumber: true,
         serialNumber: true,
         warehouse: {
-          select: {
-            name: true,
-            slug: true,
-          },
+          select: { name: true, slug: true},
         },
         model: {
-          select: {
-            name: true,
-            slug: true,
+          select: { name: true, slug: true,
             type: {
-              select: {
-                name: true,
-                slug: true,
-              },
+              select: { name: true, slug: true},
             },
             manufacturer: {
               select: {
@@ -130,79 +122,107 @@ export class DevicesService {
     }),
     this.prisma.device.count({ where }),
   ]);
-
   const totalPages = Math.ceil(total / limit);
-
   return { devices, totalPages };
   }
+  
+  // GET DEVICE OPTIONS
+  async getOptions(city: string):Promise<IDeviceOptions> {
+    const where: Record<string, any> = city
+      ? {
+          warehouse: {
+            location: { slug: city },
+          },
+        }
+      : {};
 
-  async getOptions():Promise<IDeviceOptions> {
-    const manufacturers = await this.prisma.manufacturer.findMany({
+    const devicesByLocation = await this.prisma.device.findMany({
+      where,
       select: {
-        name: true,
-        slug: true,
-      }
-    }) as {name: string; slug: string}[];
-
-    const types = await this.prisma.device_type.findMany({
-      select: {
-        name: true,
-        slug: true,
-      },
-    }) as {name: string; slug: string}[];
-
-    const models = await this.prisma.device_model.findMany({
-      select: {
-        name: true,
-        slug: true,
-      },
-    }) as {name: string; slug: string}[];
-
-    const warehouses = await this.prisma.warehouse.findMany({
-      select: {
-        name: true,
-        slug: true,
-      },
-    }) as {name: string; slug: string}[];
-
-    const screenSizes = await this.prisma.device.findMany({
-      where: {
-        screenSize: {
-          not: null,
+        model: {
+          select: {
+            manufacturer: { select: { name: true, slug: true}},
+            type: {select: {name: true, slug: true}},
+            name: true,
+            slug: true,
+          }
         },
-      },
-      select: {
+        warehouse: { select: { name: true, slug: true}},
         screenSize: true,
-      },
-      distinct: ['screenSize'],
-    }) as {screenSize: number}[];
-
-    const memorySizes = await this.prisma.device.findMany({
-      where: {
-        memorySize: {
-          not: null,
-        },
-      },
-      select: {
         memorySize: true,
-      },
-      distinct: ['memorySize'],
-    })as {memorySize: number}[];
-
-    const isFunctional = await this.prisma.device.findMany({
-      select: {
-        isFunctional: true,
-      },
-      distinct: ['isFunctional'],
-    }) as { isFunctional: boolean}[];
-
-    const isAssigned = await this.prisma.device.findMany({
-      select: {
         isAssigned: true,
-      },
-      distinct: ['isAssigned'],
-    }) as { isAssigned: boolean}[];
+        isFunctional: true,
+      }
+    }) as {
+      model: {
+        manufacturer: { name: string; slug: string };
+        type: { name: string; slug: string };
+        name: string;
+        slug: string;
+      };
+      warehouse?: { name: string; slug: string };
+      screenSize?: number;
+      memorySize?: number;
+      isFunctional: boolean;
+      isAssigned: boolean;
+    }[];
     
+    const manufacturers = Array.from(
+      new Map(
+        devicesByLocation
+        .filter((items) => items.model?.manufacturer)
+        .map((items) => [items.model.manufacturer.slug, items.model.manufacturer]),
+      ).values()
+    );
+  
+    const types = Array.from(
+      new Map(
+        devicesByLocation
+        .filter((items) => items.model?.type)
+        .map((items) => [items.model.type.slug, items.model.type])
+      ).values()
+    );
+  
+    const models = Array.from(
+      new Map(
+        devicesByLocation
+        .filter((items) => items.model)
+        .map((items) => [items.model.slug, { name: items.model.name, slug: items.model.slug }])
+      ).values()
+    );
+  
+    const warehouses = Array.from(
+      new Map(
+        devicesByLocation
+        .map((item) => [item.warehouse?.slug, item.warehouse])).values()
+    );
+  
+    const screenSizes = Array.from(
+      new Set(
+        devicesByLocation
+        .filter((item) => item.screenSize != null)
+        .map((item) => item.screenSize))
+    ).map((size) => ({ screenSize: size }));
+  
+    const memorySizes = Array.from(
+      new Set(
+        devicesByLocation
+        .filter((item) => item.memorySize != null)
+        .map((item) => item.memorySize))
+    ).map((size) => ({ memorySize: size }));
+  
+    const isFunctional = Array.from(
+      new Set(
+        devicesByLocation
+        .map((item) => item.isFunctional))
+    ).map((status) => ({ isFunctional: status }));
+  
+    const isAssigned = Array.from(
+      new Set(
+        devicesByLocation
+        .map((item) => item.isAssigned))
+    ).map((status) => ({ isAssigned: status }));
+  
     return {
       manufacturer: manufacturers,
       type: types,
@@ -213,8 +233,10 @@ export class DevicesService {
       isFunctional: isFunctional,
       isAssigned: isAssigned,
     };
+    
   }
 
+ // CREATE DEVICE
   async createDevice(deviceDto: DeviceDto):Promise<Partial<IDevice>> {
     if (deviceDto.serialNumber || deviceDto.inventoryNumber) {
       const existingDevice = await this.prisma.device.findUnique({
@@ -254,6 +276,7 @@ export class DevicesService {
     if (device) return device;
   }
 
+  // CREATE DEVICE MODEL
   async createModel(deviceModelDto: DeviceModelDto, file: Express.Multer.File) {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: deviceModelDto.manufacturerId },
@@ -281,6 +304,7 @@ export class DevicesService {
     return model;
   }
 
+  // GET DEVICE MODELS
   async getModels(manufacturer: string, type: string) {
     const existingType = await this.prisma.device_type.findUnique({
       where: { slug: type },
@@ -300,6 +324,7 @@ export class DevicesService {
     return models;
   }
 
+  //CREATE DEVICE MANUFACTURER
   async createManufacturer(
     manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>,
   ) {
@@ -320,6 +345,7 @@ export class DevicesService {
     return manufacturer;
   }
 
+  // CREATE DEVICE TYPE
   async createType(typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
     const existingType = await this.prisma.device_type.findUnique({
       where: {
@@ -338,10 +364,13 @@ export class DevicesService {
     return type;
   }
 
+  // GET DEVICE MANUFACTURERS
   async getManufacturers() {
     const manufacturers = await this.prisma.manufacturer.findMany();
     return manufacturers;
   }
+
+  //GET DEVICE TYPES
   async getTypes() {
     const types = await this.prisma.device_type.findMany();
     return types;

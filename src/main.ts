@@ -9,7 +9,6 @@ import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -40,7 +39,7 @@ async function bootstrap() {
     credentials: true,
     origin: 'http://localhost:5173',
     methods: ['GET','HEAD','PUT','PATCH','POST','DELETE'],
-    // allowedHeaders: "Content-Type, Authorization",
+    allowedHeaders: "Content-Type, Authorization",
   });
   
   app.use('/uploads', express.static(__dirname + '/uploads'));

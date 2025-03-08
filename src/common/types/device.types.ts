@@ -55,6 +55,9 @@ export interface IDeviceOptions {
         isAssigned: boolean;
     }[];
   }
+  export interface IDeviceOptionsModel {
+    model:IDeviceOptions[]
+  }
 
   export interface IDevice {
     id: string;

@@ -12,7 +12,6 @@ import {
   UploadedFile,
   UseInterceptors,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
@@ -26,14 +25,16 @@ export class DevicesController {
   @Get('/locations/:city')
   async findAll(
     @Param('city') city: string,
-    @Query() query: Record<string, string>,
-  ) {
+    @Query() query: Record<string, string>) {
     return this.devicesService.findAll(query, city);
   }
 
-  @Get('/options')
-  async getOptions() {
-    return await this.devicesService.getOptions();
+  @Get('/options/:city')
+  async getOptions(
+    @Param('city') city: string) {
+    console.log(city);
+    
+    return await this.devicesService.getOptions(city);
   }
 
   @Post()
