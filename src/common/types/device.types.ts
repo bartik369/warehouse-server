@@ -84,3 +84,4 @@ export interface IDeviceOptions {
     createdAt?: Date;
     updatedAt?: Date;
   }
+

@@ -1,6 +1,15 @@
-import { NotFoundException, ConflictException, BadRequestException} from '@nestjs/common';
-import { deviceAlreadyExists, manufacturerAlreadyExists, modelAlreadyExists, 
-  typeAlreadyExists, deviceNotFound, manufacturerNotFound, modelNotFound, typeNotFound, 
+import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  deviceAlreadyExists,
+  manufacturerAlreadyExists,
+  modelAlreadyExists,
+  typeAlreadyExists,
+  deviceNotFound,
+  manufacturerNotFound,
+  modelNotFound,
+  typeNotFound,
+  contractorAlreadyExists,
+  validateWarrantyInputs,
 } from 'src/common/utils/constants';
 
 export class DeviceNotFoundException extends NotFoundException {
@@ -52,11 +61,21 @@ export class ManufacturerExistsException extends ConflictException {
 
 export class WrongFileSize extends ConflictException {
   constructor() {
-    super(`Недопустимый размер файла! (Max 2mb)`)
+    super(`Недопустимый размер файла! (Max 2mb)`);
   }
 }
 export class WrongFileType extends ConflictException {
   constructor() {
-    super(`Недопустимый формат файла! Разрешены: jpg, png, jpeg`)
+    super(`Недопустимый формат файла! Разрешены: jpg, png, jpeg`);
+  }
+}
+export class ContactorExistsException extends ConflictException {
+  constructor() {
+    super(contractorAlreadyExists);
+  }
+}
+export class WarrantyValidateException extends ConflictException {
+  constructor() {
+    super(validateWarrantyInputs);
   }
 }

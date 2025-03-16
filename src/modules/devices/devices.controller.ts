@@ -2,11 +2,9 @@ import { DeviceDto, DeviceModelDto } from './dtos/device.dto';
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Param,
-  Patch,
   Post,
   HttpStatus,
   UploadedFile,
@@ -15,33 +13,24 @@ import {
 } from '@nestjs/common';
 import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
-import { allowedPictureOptions } from 'src/common/utils/constants';
+import {
+  allowedPictureOptions,
+  deviceCreated,
+  manufacturerCreated,
+  modelCreated,
+  typeCreated,
+} from 'src/common/utils/constants';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('devices')
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
-  @Get('/locations/:city')
-  async findAll(
-    @Param('city') city: string,
-    @Query() query: Record<string, string>) {
-    return this.devicesService.findAll(query, city);
-  }
-
-  @Get('/options/:city')
-  async getOptions(
-    @Param('city') city: string) {
-    console.log(city);
-    
-    return await this.devicesService.getOptions(city);
-  }
-
   @Post()
   async createDevice(@Body() deviceDto: DeviceDto) {
     const device = await this.devicesService.createDevice(deviceDto);
     return {
-      message: 'Устройство добавлено!',
+      message: deviceCreated,
       device,
     };
   }
@@ -51,7 +40,7 @@ export class DevicesController {
     @Param('manufacturer') manufacturer: string,
     @Param('type') type: string,
   ) {
-    const models = this.devicesService.getModels(manufacturer, type);
+    const models = await this.devicesService.getModels(manufacturer, type);
     return models;
   }
 
@@ -65,7 +54,7 @@ export class DevicesController {
   ) {
     const model = await this.devicesService.createModel(deviceModelDto, file);
     return {
-      message: 'Модель добавлена!',
+      message: modelCreated,
       model,
     };
   }
@@ -77,7 +66,7 @@ export class DevicesController {
   async createType(@Body() typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
     const type = await this.devicesService.createType(typeDto);
     return {
-      message: 'Тип добавлен!',
+      message: typeCreated,
       type,
     };
   }
@@ -98,7 +87,7 @@ export class DevicesController {
     const manufacturer =
       await this.devicesService.createManufacturer(manufacturerDto);
     return {
-      message: 'Производитель добавлен!',
+      message: manufacturerCreated,
       manufacturer,
     };
   }
@@ -107,5 +96,24 @@ export class DevicesController {
   @Get('/manufacturers')
   async getManufacturers() {
     return await this.devicesService.getManufacturers();
+  }
+
+  @Get('/locations/:city')
+  async findAll(
+    @Param('city') city: string,
+    @Query() query: Record<string, string>,
+  ) {
+    return this.devicesService.findAll(query, city);
+  }
+
+  @Get('/options/:city')
+  async getOptions(@Param('city') city: string) {
+    return await this.devicesService.getOptions(city);
+  }
+
+  @Get(':id')
+  async getDevice(@Param('id') id: string) {
+    const device = await this.devicesService.getDevice(id);
+    return device;
   }
 }
