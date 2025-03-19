@@ -19,8 +19,17 @@ export class ContractorsService {
     const contractor = await this.prisma.contractor.create({
       data: {
         name: contractorDto.name,
+        slug: contractorDto.slug,
         phoneNumber: contractorDto.phoneNumber,
         address: contractorDto.address,
+      },
+    });
+    return contractor;
+  }
+  async getContractor(id: string) {
+    const contractor = await this.prisma.contractor.findUnique({
+      where: {
+        id: id,
       },
     });
     return contractor;

@@ -1,5 +1,5 @@
 import { WarehouseDto } from './dtos/warehouseDto';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Param } from '@nestjs/common';
 import { Get } from '@nestjs/common';
 import { WarehousesService } from './warehouses.service';
 
@@ -12,7 +12,10 @@ export class WarehousesController {
   }
   @Post()
   async createWarehouse(@Body() warehouseDto: WarehouseDto) {
-    const result = await this.warehousesService.createWarehouse(warehouseDto);
-    console.log(result);
+    return await this.warehousesService.createWarehouse(warehouseDto);
+  }
+  @Get(':id')
+  async getWarehouse(@Param('id') id: string) {
+    return await this.warehousesService.getWarehouse(id);
   }
 }

@@ -39,4 +39,19 @@ export class WarehousesService {
     });
     return warehouse;
   }
+  async getWarehouse(id: string) {
+    const warehouse = await this.prisma.warehouse.findUnique({
+      where: {
+        id: id,
+      },
+      include: {
+        location: {
+          select: { name: true },
+        },
+      },
+    });
+    if (!warehouse) return null;
+    const { location, ...rest } = warehouse;
+    return { ...rest, locationName: location?.name || null };
+  }
 }
