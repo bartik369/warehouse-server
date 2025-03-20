@@ -61,6 +61,12 @@ export class DeviceModelDto {
   manufacturerId: string;
   typeId: string;
 }
+export class ManufacturerDto {
+  id: string;
+  name: string;
+  slug: string;
+  comment: string;
+}
 
 export type TDeviceDto = DeviceDto;
 export type TDeviceModelDto = DeviceModelDto;

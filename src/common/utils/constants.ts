@@ -10,6 +10,7 @@ export const deviceNotFound = 'Устройство не найдено!';
 export const manufacturerNotFound = 'Производитель не найден!';
 export const modelNotFound = 'Модель не найдена!';
 export const typeNotFound = 'Тип не найден!';
+export const contractorNotFound = 'Подрядчик не найден!';
 
 export const allowedPictureOptions = {
   allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],

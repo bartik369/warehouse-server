@@ -5,6 +5,11 @@ export class WarehouseExistException extends ConflictException {
     super('Склад уже существует');
   }
 }
+export class WarehouseNotFoundException extends NotFoundException {
+  constructor() {
+    super('Склада не существует');
+  }
+}
 export class DepartmentExistException extends ConflictException {
   constructor() {
     super('Отдел уже существует');

@@ -4,6 +4,7 @@ import { WarehouseDto } from './dtos/warehouseDto';
 import {
   CityExistException,
   WarehouseExistException,
+  WarehouseNotFoundException,
 } from 'src/exceptions/location.exceptions';
 import { ILocation } from 'src/common/types/location.types';
 
@@ -53,5 +54,20 @@ export class WarehousesService {
     if (!warehouse) return null;
     const { location, ...rest } = warehouse;
     return { ...rest, locationName: location?.name || null };
+  }
+  async updateWarehouse(id: string, warehouseDto: WarehouseDto) {
+    const existWarehouse = await this.prisma.warehouse.findUnique({
+      where: { id: id },
+    });
+    if (!existWarehouse) throw new WarehouseNotFoundException();
+    const updatedWarehouse = await this.prisma.warehouse.update({
+      where: { id: id },
+      data: {
+        name: warehouseDto.name?.trim() || existWarehouse.name,
+        slug: warehouseDto.slug?.trim() || existWarehouse.slug,
+        comment: warehouseDto.comment || existWarehouse.comment,
+      },
+    });
+    return updatedWarehouse;
   }
 }

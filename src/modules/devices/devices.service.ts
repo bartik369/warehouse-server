@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { extname } from 'path';
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { DeviceDto } from './dtos/device.dto';
+import { DeviceDto, ManufacturerDto } from './dtos/device.dto';
 import { DeviceModelDto } from './dtos/device.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { IDeviceOptions, IDevice } from 'src/common/types/device.types';
@@ -321,8 +321,8 @@ export class DevicesService {
     if (deviceDto.serialNumber || deviceDto.inventoryNumber) {
       const existingDevice = await this.prisma.device.findUnique({
         where: {
-          serialNumber: deviceDto.serialNumber,
-          inventoryNumber: deviceDto.inventoryNumber,
+          serialNumber: deviceDto.serialNumber?.trim(),
+          inventoryNumber: deviceDto.inventoryNumber?.trim(),
         },
       });
       if (existingDevice) throw new DeviceExistsException();
@@ -338,7 +338,7 @@ export class DevicesService {
     // Create device
     const device = await this.prisma.device.create({
       data: {
-        name: deviceDto.name,
+        name: deviceDto.name?.trim(),
         inventoryNumber:
           deviceDto.inventoryNumber && deviceDto.inventoryNumber.trim() !== ''
             ? deviceDto.inventoryNumber
@@ -440,9 +440,7 @@ export class DevicesService {
   }
 
   //CREATE DEVICE MANUFACTURER
-  async createManufacturer(
-    manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>,
-  ) {
+  async createManufacturer(manufacturerDto: ManufacturerDto) {
     const existingManufacturer = await this.prisma.manufacturer.findFirst({
       where: {
         name: manufacturerDto.name,
@@ -464,16 +462,16 @@ export class DevicesService {
   async createType(typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
     const existingType = await this.prisma.device_type.findUnique({
       where: {
-        name: typeDto.name,
-        slug: typeDto.slug,
+        name: typeDto.name?.trim(),
+        slug: typeDto.slug?.trim(),
       },
     });
     if (existingType) throw new TypeExistsException();
 
     const type = await this.prisma.device_type.create({
       data: {
-        name: typeDto.name,
-        slug: typeDto.slug,
+        name: typeDto.name?.trim(),
+        slug: typeDto.slug?.trim(),
       },
     });
     return type;
@@ -483,6 +481,30 @@ export class DevicesService {
   async getManufacturers() {
     const manufacturers = await this.prisma.manufacturer.findMany();
     return manufacturers;
+  }
+  // GET MANUFACTURER
+  async getManufacturer(id: string) {
+    const manufacturer = await this.prisma.manufacturer.findUnique({
+      where: { id: id },
+    });
+    if (!manufacturer) return null;
+    return manufacturer;
+  }
+  // UPDATE MANUFACTURER
+  async updateManufacturer(id: string, manufacturerDto: ManufacturerDto) {
+    const existManufacturer = await this.prisma.manufacturer.findUnique({
+      where: { id: id },
+    });
+    if (!existManufacturer) throw new ManufacturerNotFoundException();
+    const updatedManufacturer = await this.prisma.manufacturer.update({
+      where: { id: id },
+      data: {
+        name: manufacturerDto.name?.trim() || existManufacturer.name,
+        slug: manufacturerDto.slug?.trim() || existManufacturer.slug,
+        comment: manufacturerDto.comment || existManufacturer.comment,
+      },
+    });
+    return updatedManufacturer;
   }
 
   //GET DEVICE TYPES

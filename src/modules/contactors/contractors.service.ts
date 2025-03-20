@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { ContractorDto } from './dtos/contactor.dto';
-import { contractorAlreadyExists } from 'src/common/utils/constants';
+import {
+  ContactorExistsException,
+  ContactorNotFoundException,
+} from 'src/exceptions/device.exceptions';
 
 @Injectable()
 export class ContractorsService {
@@ -12,15 +15,15 @@ export class ContractorsService {
   async createContractor(contractorDto: ContractorDto) {
     const existContractor = await this.prisma.contractor.findUnique({
       where: {
-        name: contractorDto.name.trim(),
+        name: contractorDto.name?.trim(),
       },
     });
-    if (existContractor) return contractorAlreadyExists;
+    if (existContractor) throw new ContactorExistsException();
     const contractor = await this.prisma.contractor.create({
       data: {
-        name: contractorDto.name,
-        slug: contractorDto.slug,
-        phoneNumber: contractorDto.phoneNumber,
+        name: contractorDto.name?.trim(),
+        slug: contractorDto.slug?.trim(),
+        phoneNumber: contractorDto.phoneNumber?.trim(),
         address: contractorDto.address,
       },
     });
@@ -33,5 +36,22 @@ export class ContractorsService {
       },
     });
     return contractor;
+  }
+  async updateContractor(id: string, contractorDto: ContractorDto) {
+    const existContractor = await this.prisma.contractor.findUnique({
+      where: { id: id },
+    });
+    if (!existContractor) throw new ContactorNotFoundException();
+    const updatedContractor = await this.prisma.contractor.update({
+      where: { id },
+      data: {
+        name: contractorDto.name?.trim() || existContractor.name,
+        slug: contractorDto.slug?.trim() || existContractor.slug,
+        phoneNumber:
+          contractorDto.phoneNumber?.trim() || existContractor.phoneNumber,
+        address: contractorDto.address || existContractor.address,
+      },
+    });
+    return updatedContractor;
   }
 }

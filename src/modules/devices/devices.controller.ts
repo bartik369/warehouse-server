@@ -1,4 +1,4 @@
-import { DeviceDto, DeviceModelDto } from './dtos/device.dto';
+import { DeviceDto, DeviceModelDto, ManufacturerDto } from './dtos/device.dto';
 import {
   Body,
   Controller,
@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Query,
+  Put,
 } from '@nestjs/common';
 import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
@@ -81,9 +82,7 @@ export class DevicesController {
   @Post('/manufacturers')
   @UseInterceptors(AnyFilesInterceptor())
   @HttpCode(HttpStatus.CREATED)
-  async createManufacturer(
-    @Body() manufacturerDto: Pick<DeviceModelDto, 'name' | 'slug'>,
-  ) {
+  async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
     const manufacturer =
       await this.devicesService.createManufacturer(manufacturerDto);
     return {
@@ -96,6 +95,18 @@ export class DevicesController {
   @Get('/manufacturers')
   async getManufacturers() {
     return await this.devicesService.getManufacturers();
+  }
+  // Get  manufacturers
+  @Get('/manufacturers/:id')
+  async getManufacturer(@Param('id') id: string) {
+    return await this.devicesService.getManufacturer(id);
+  }
+
+  @Put('/manufacturers/:id')
+  async updateManufacturer(
+    @Param('id') id: string,
+    @Body() manufacturerDto: ManufacturerDto) {
+    return await this.devicesService.updateManufacturer(id, manufacturerDto);
   }
 
   @Get('/locations/:city')

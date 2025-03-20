@@ -9,6 +9,7 @@ import {
   modelNotFound,
   typeNotFound,
   contractorAlreadyExists,
+  contractorNotFound,
   validateWarrantyInputs,
 } from 'src/common/utils/constants';
 
@@ -72,6 +73,11 @@ export class WrongFileType extends ConflictException {
 export class ContactorExistsException extends ConflictException {
   constructor() {
     super(contractorAlreadyExists);
+  }
+}
+export class ContactorNotFoundException extends NotFoundException {
+  constructor() {
+    super(contractorNotFound);
   }
 }
 export class WarrantyValidateException extends ConflictException {
