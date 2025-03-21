@@ -1,60 +1,64 @@
-import { Auth } from './dtos/auth.dto';
-import { GroupAuthData, AuthData} from 'src/common/types/user.types';
+import { AuthDto } from './dtos/auth.dto';
+import { GroupAuthData, AuthData } from 'src/common/types/user.types';
 import { AuthService } from './auth.service';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { Public } from './decorators/public.decorator';
 import { GetUserId } from './decorators/user-id.decorator';
-import { Body, Controller, HttpCode, Post, Get, Req, Res, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Get,
+  Req,
+  HttpStatus,
+  UsePipes,
+  ValidationPipe,
+  UseInterceptors,
+} from '@nestjs/common';
 import { GetAccessToken } from './decorators/access-token.decorator';
+import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
+import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // SIGNIN
+  @UseInterceptors(SetCookiesInterceptor)
   @UsePipes(new ValidationPipe())
   @Public()
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  async signin(
-    @Res({passthrough: true}) res: Response,
-    @Body() authDto: Auth):Promise<AuthData> {
-      console.log(authDto);
-      
-    const data:GroupAuthData = await this.authService.signin(authDto)
-    res.cookie('refreshToken', data.tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    return  {
-      user: data.user,
-      token: data.tokens.accessToken
-    };
+  async signin(@Body() authDto: AuthDto): Promise<AuthData> {
+    const data: GroupAuthData = await this.authService.signin(authDto);
+    if (data?.tokens?.refreshToken) {
+      return {
+        user: data.user,
+        accessToken: data.tokens.accessToken,
+        refreshToken: data.tokens.refreshToken,
+      };
+    }
   }
-  
+
   @Public()
   @Get('refresh')
   @HttpCode(HttpStatus.OK)
-  async refreshToken(
-    @Req() req: Request):Promise<any> {
-    const token:string = req.cookies.refreshToken;
+  async refreshToken(@Req() req: Request): Promise<any> {
+    const token: string = req.cookies.refreshToken;
     return await this.authService.refreshToken(token);
-  };
+  }
 
   @Post('logout')
+  @UseInterceptors(ClearCookiesInterceptor)
   @HttpCode(HttpStatus.OK)
-  async logout(
-    @GetUserId() userId: string,
-    @Res({ passthrough: true }) res: Response) {
-    await this.authService.logout(userId)
-    res.clearCookie('refreshToken');
-  };
+  async logout(@GetUserId() userId: string) {
+    await this.authService.logout(userId);
+  }
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
-  async validate(
-    @GetAccessToken() token: string){
+  async validate(@GetAccessToken() token: string) {
     return await this.authService.validate(token);
-  };
+  }
 }

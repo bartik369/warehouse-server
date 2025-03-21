@@ -1,22 +1,28 @@
+import {
+  warehouseAlreadyExist,
+  departmentAlreadyExist,
+  warehouseNotFound,
+  locationNotFound,
+} from './../common/utils/constants';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class WarehouseExistException extends ConflictException {
   constructor() {
-    super('Склад уже существует');
+    super(warehouseAlreadyExist);
   }
 }
 export class WarehouseNotFoundException extends NotFoundException {
   constructor() {
-    super('Склада не существует');
+    super(warehouseNotFound);
   }
 }
 export class DepartmentExistException extends ConflictException {
   constructor() {
-    super('Отдел уже существует');
+    super(departmentAlreadyExist);
   }
 }
 export class CityExistException extends NotFoundException {
   constructor() {
-    super('Города не существует');
+    super(locationNotFound);
   }
 }

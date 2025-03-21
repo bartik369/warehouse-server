@@ -1,3 +1,7 @@
+import {
+  unacceptableDataFormat,
+  unacceptableDataSize,
+} from 'src/common/utils/constants';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import {
   deviceAlreadyExists,
@@ -62,12 +66,12 @@ export class ManufacturerExistsException extends ConflictException {
 
 export class WrongFileSize extends ConflictException {
   constructor() {
-    super(`Недопустимый размер файла! (Max 2mb)`);
+    super(unacceptableDataSize);
   }
 }
 export class WrongFileType extends ConflictException {
   constructor() {
-    super(`Недопустимый формат файла! Разрешены: jpg, png, jpeg`);
+    super(unacceptableDataFormat);
   }
 }
 export class ContactorExistsException extends ConflictException {
