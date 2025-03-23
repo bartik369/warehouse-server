@@ -12,7 +12,7 @@ export class DepartmentsService {
     const departments = await this.prisma.department.findMany({});
     return departments;
   }
-  async getDepartment(id: string) {
+  async getDepartment(id: string): Promise<ILocation> {
     const department = await this.prisma.department.findUnique({
       where: { id: id },
     });

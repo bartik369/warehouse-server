@@ -1,4 +1,9 @@
-import { DeviceDto, DeviceModelDto, ManufacturerDto } from './dtos/device.dto';
+import {
+  DeviceDto,
+  DeviceModelDto,
+  DeviceTypeDto,
+  ManufacturerDto,
+} from './dtos/device.dto';
 import {
   Body,
   Controller,
@@ -8,9 +13,10 @@ import {
   Post,
   HttpStatus,
   UploadedFile,
-  UseInterceptors,
   Query,
   Put,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileUploadInterceptor } from './decorators/file-upload.decorator';
 import { DevicesService } from './devices.service';
@@ -21,13 +27,13 @@ import {
   modelCreated,
   typeCreated,
 } from 'src/common/utils/constants';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('devices')
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
   @Post()
+  @UsePipes(new ValidationPipe())
   async createDevice(@Body() deviceDto: DeviceDto) {
     const device = await this.devicesService.createDevice(deviceDto);
     return {
@@ -47,6 +53,7 @@ export class DevicesController {
 
   // Create device model
   @Post('/models')
+  @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.CREATED)
   @FileUploadInterceptor(allowedPictureOptions)
   async createModel(
@@ -62,9 +69,9 @@ export class DevicesController {
 
   // Create device type
   @Post('/types')
-  @UseInterceptors(AnyFilesInterceptor())
+  @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.CREATED)
-  async createType(@Body() typeDto: Pick<DeviceModelDto, 'name' | 'slug'>) {
+  async createType(@Body() typeDto: DeviceTypeDto) {
     const type = await this.devicesService.createType(typeDto);
     return {
       message: typeCreated,
@@ -80,7 +87,7 @@ export class DevicesController {
 
   // Create device manufacturer
   @Post('/manufacturers')
-  @UseInterceptors(AnyFilesInterceptor())
+  @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.CREATED)
   async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
     const manufacturer =
@@ -103,9 +110,12 @@ export class DevicesController {
   }
 
   @Put('/manufacturers/:id')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
   async updateManufacturer(
     @Param('id') id: string,
-    @Body() manufacturerDto: ManufacturerDto) {
+    @Body() manufacturerDto: ManufacturerDto,
+  ) {
     return await this.devicesService.updateManufacturer(id, manufacturerDto);
   }
 
@@ -124,7 +134,6 @@ export class DevicesController {
 
   @Get(':id')
   async getDevice(@Param('id') id: string) {
-    const device = await this.devicesService.getDevice(id);
-    return device;
+    return await this.devicesService.getDevice(id);
   }
 }

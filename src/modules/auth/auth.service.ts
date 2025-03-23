@@ -1,12 +1,11 @@
-import { AuthData, Tokens } from 'src/common/types/user.types';
 import { User } from '../users/dtos/user.dto';
-import { GroupAuthData } from 'src/common/types/user.types';
 import { AuthDto } from './dtos/auth.dto';
+import { AuthData, Tokens, GroupAuthData } from 'src/common/types/user.types';
 import { PrismaService } from 'prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
 import { DeniedAccessException } from 'src/exceptions/auth.exceptions';
-import { Injectable } from '@nestjs/common';
 import { UserNotFoundException } from 'src/exceptions/auth.exceptions';
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -15,11 +14,11 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
-
+  // SIGNIN
   async signin(authDto: AuthDto): Promise<GroupAuthData> {
     const user = await this.prisma.user.findUnique({
       where: {
-        email: authDto.email,
+        email: authDto.email?.trim(),
       },
     });
     if (!user) throw new UserNotFoundException();
@@ -46,7 +45,7 @@ export class AuthService {
       tokens: tokens,
     };
   }
-
+  // REFRESH TOKEN
   async refreshToken(token: string): Promise<AuthData> {
     const validToken = await this.jwtService.verifyAsync(token, {
       secret: process.env.JWT_REFRESH_SECRET,

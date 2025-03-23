@@ -1,7 +1,9 @@
-import { IsNumber, IsString, IsOptional } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class DeviceDto {
   id: string;
+  @IsNotEmpty()
+  @IsString()
   name: string;
   @IsOptional()
   @IsString()
@@ -26,15 +28,24 @@ export class DeviceDto {
   memorySize?: number;
   inStock: boolean;
   isFunctional: boolean;
+  @IsOptional()
+  @IsNumber()
   price_with_vat: number;
+  @IsOptional()
+  @IsNumber()
   price_without_vat: number;
+  @IsOptional()
+  @IsNumber()
   residual_price: number;
   contractorId: string;
   isAssigned: boolean;
+  @IsString()
   warehouseId: string;
   @IsOptional()
   @IsString()
   description?: string;
+  @IsNotEmpty()
+  @IsString()
   addedById: string;
   updatedById: string;
   lastIssuedAt: Date;
@@ -55,16 +66,41 @@ export class DeviceDto {
   endWarrantyDate?: string;
 }
 export class DeviceModelDto {
+  id: string;
+  @IsNotEmpty()
+  @IsString()
   name: string;
+  @IsNotEmpty()
+  @IsString()
   slug: string;
+  @IsNotEmpty()
+  @IsString()
   imagePath: string;
+  @IsNotEmpty()
+  @IsString()
   manufacturerId: string;
+  @IsNotEmpty()
+  @IsString()
   typeId: string;
+}
+export class DeviceTypeDto {
+  id: string;
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+  @IsNotEmpty()
+  @IsString()
+  slug: string;
 }
 export class ManufacturerDto {
   id: string;
+  @IsNotEmpty()
+  @IsString()
   name: string;
+  @IsNotEmpty()
+  @IsString()
   slug: string;
+  @IsOptional()
   comment: string;
 }
 

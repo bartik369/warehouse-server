@@ -2,7 +2,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { WarehouseDto } from './dtos/warehouseDto';
 import {
-  CityExistException,
+  LocationNotFoundException,
   WarehouseExistException,
   WarehouseNotFoundException,
 } from 'src/exceptions/location.exceptions';
@@ -29,7 +29,7 @@ export class WarehousesService {
     ]);
 
     if (existWarehouse) throw new WarehouseExistException();
-    if (!existLocation) throw new CityExistException();
+    if (!existLocation) throw new LocationNotFoundException();
     const warehouse = await this.prisma.warehouse.create({
       data: {
         name: warehouseDto.name,

@@ -12,17 +12,12 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 @Module({
-  imports: [
-    UsersModule,
-    PrismaModule,
-    JwtModule.register({
-    }),
-  ],
+  imports: [UsersModule, PrismaModule, JwtModule.register({})],
   controllers: [AuthController],
   providers: [
-    AuthService, 
-    JwtService, 
-    AccessTokenStrategy, 
+    AuthService,
+    JwtService,
+    AccessTokenStrategy,
     RefreshTokenStrategy,
   ],
 })

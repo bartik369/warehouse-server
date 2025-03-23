@@ -17,6 +17,8 @@ export const warehouseNotFound = 'Склад не найден';
 export const departmentNotFound = 'Отдел не найден';
 export const locationNotFound = 'Город не найден';
 
+export const userAlreadyExist = 'Пожалуйста, проверьте данные';
+
 export const allowedPictureOptions = {
   allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],
   maxSize: 1 * 1024 * 1024,

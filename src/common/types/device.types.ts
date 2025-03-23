@@ -1,3 +1,5 @@
+import { Decimal } from '@prisma/client/runtime/library';
+
 export interface IFilteredDevices {
   id: string;
   name: string;
@@ -83,4 +85,38 @@ export interface IDevice {
   updatedById: string;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface IAggregatedDeviceInfo {
+  lastIssuedAt: Date;
+  lastReturnedAt: Date;
+  price_without_vat: Decimal;
+  price_with_vat: Decimal;
+  residual_price: Decimal;
+  warehouse: {
+    name: string;
+  };
+  model: {
+    name: string;
+    imagePath: string;
+    manufacturer: {
+      name: string;
+    };
+  };
+  warranty: {
+    warrantyNumber: string;
+    startWarrantyDate: Date;
+    endWarrantyDate: Date;
+    warrantyStatus: string;
+    isExpired: boolean;
+    contractor: {
+      name: string;
+    };
+  };
+  deviceIssues: {
+    firstNameEn: string;
+    lastNameEn: string;
+  }[];
+  addedBy: { firstNameEn: string; lastNameEn: string };
+  updatedBy: { firstNameEn: string; lastNameEn: string };
 }

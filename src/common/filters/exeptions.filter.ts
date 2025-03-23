@@ -8,16 +8,16 @@ import {
 import { Response } from 'express';
 
 @Catch()
-export class ExeptionsFilter implements ExceptionFilter {
-  catch(exeption: unknown, host: ArgumentsHost) {
+export class ExceptionsFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
 
-    if (exeption instanceof HttpException) {
-      status = exeption.getStatus();
-      const responseMessage = exeption.getResponse();
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const responseMessage = exception.getResponse();
 
       if (typeof responseMessage === 'object' && responseMessage !== null) {
         message = responseMessage['message'] || message;

@@ -21,7 +21,7 @@ export class DepartmentExistException extends ConflictException {
     super(departmentAlreadyExist);
   }
 }
-export class CityExistException extends NotFoundException {
+export class LocationNotFoundException extends NotFoundException {
   constructor() {
     super(locationNotFound);
   }

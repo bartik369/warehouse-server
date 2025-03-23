@@ -2,11 +2,13 @@ import {
   wrongAuthData,
   deniedAccess,
   unauthorized,
+  userAlreadyExist,
 } from 'src/common/utils/constants';
 import {
   NotFoundException,
   ForbiddenException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 
 export class UserNotFoundException extends NotFoundException {
@@ -22,5 +24,10 @@ export class DeniedAccessException extends ForbiddenException {
 export class UnauthorizeException extends UnauthorizedException {
   constructor() {
     super(unauthorized);
+  }
+}
+export class ConflictUserException extends ConflictException {
+  constructor() {
+    super(userAlreadyExist);
   }
 }

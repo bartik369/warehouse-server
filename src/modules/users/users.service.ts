@@ -1,8 +1,9 @@
-import { PrismaService } from 'prisma/prisma.service';
-import { ConflictException, Injectable } from '@nestjs/common';
-import { UserDto } from './dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import { UserDto } from './dtos/user.dto';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
+import { ConflictUserException } from 'src/exceptions/auth.exceptions';
 
 @Injectable()
 export class UsersService {
@@ -11,14 +12,10 @@ export class UsersService {
   async create(userDto: UserDto) {
     const existUser = await this.prisma.user.findUnique({
       where: {
-        email: userDto.email,
+        email: userDto.email?.trim(),
       },
     });
-    if (existUser)
-      throw new ConflictException('Something went wrong', {
-        cause: new Error(),
-        description: 'Please, check your credentials',
-      });
+    if (existUser) throw new ConflictUserException();
     const password = uuidv4();
     const hash = await bcrypt.hash(password, 9);
     const user = await this.prisma.user.create({

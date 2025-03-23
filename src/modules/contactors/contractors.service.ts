@@ -9,10 +9,12 @@ import {
 @Injectable()
 export class ContractorsService {
   constructor(private prisma: PrismaService) {}
-  async getContractors() {
+  // GET CONTRACTORS
+  async getContractors(): Promise<ContractorDto[]> {
     return this.prisma.contractor.findMany({});
   }
-  async createContractor(contractorDto: ContractorDto) {
+  // CREATE CONTRACTORS
+  async createContractor(contractorDto: ContractorDto): Promise<ContractorDto> {
     const existContractor = await this.prisma.contractor.findUnique({
       where: {
         name: contractorDto.name?.trim(),
@@ -29,15 +31,18 @@ export class ContractorsService {
     });
     return contractor;
   }
-  async getContractor(id: string) {
+  // GET CONTRACTOR BY ID
+  async getContractor(id: string): Promise<ContractorDto> {
     const contractor = await this.prisma.contractor.findUnique({
-      where: {
-        id: id,
-      },
+      where: { id: id },
     });
     return contractor;
   }
-  async updateContractor(id: string, contractorDto: ContractorDto) {
+  // UPDATE CONTRACTOR
+  async updateContractor(
+    id: string,
+    contractorDto: ContractorDto,
+  ): Promise<ContractorDto> {
     const existContractor = await this.prisma.contractor.findUnique({
       where: { id: id },
     });

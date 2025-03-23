@@ -20,7 +20,7 @@ export class ClearCookiesInterceptor implements NestInterceptor {
       tap(() => {
         response.clearCookie('refreshToken', {
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: 'strict',
         });
       }),
     );
