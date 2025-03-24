@@ -14,6 +14,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ContractorsModule } from './modules/contactors/contrators.module';
 import { LocationModule } from './modules/locations/locations.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
+import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
 
 console.log(
   'Static files rootPath:',
@@ -37,6 +38,7 @@ console.log(
     ContractorsModule,
     LocationModule,
     DepartmentsModule,
+    ManufacturersModule,
   ],
   providers: [
     {

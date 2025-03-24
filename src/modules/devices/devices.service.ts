@@ -1,14 +1,11 @@
 import * as fs from 'fs';
 import { extname } from 'path';
-import { PrismaService } from 'prisma/prisma.service';
-import { Injectable, BadRequestException } from '@nestjs/common';
 import {
   IDeviceOptions,
   IDevice,
   IAggregatedDeviceInfo,
 } from 'src/common/types/device.types';
 import {
-  ManufacturerExistsException,
   TypeExistsException,
   ModelExistsException,
   ManufacturerNotFoundException,
@@ -16,12 +13,9 @@ import {
   DeviceExistsException,
   WarrantyValidateException,
 } from 'src/exceptions/device.exceptions';
-import {
-  DeviceDto,
-  ManufacturerDto,
-  DeviceModelDto,
-  DeviceTypeDto,
-} from './dtos/device.dto';
+import { PrismaService } from 'prisma/prisma.service';
+import { DeviceDto, DeviceModelDto, DeviceTypeDto } from './dtos/device.dto';
+import { Injectable, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class DevicesService {
@@ -38,25 +32,25 @@ export class DevicesService {
       if (Array.isArray(query[field])) {
         return query[field];
       } else {
-        return query[field].split(',').map((item) => item.trim());
+        return query[field]?.split(',').map((item) => item.trim());
       }
     };
     if (query?.manufacturer) {
       where.model = where.model || {};
       where.model.manufacturer = {
-        slug: { in: checkQueryArray('manufacturers') },
+        slug: { in: checkQueryArray('manufacturer') },
       };
     }
     if (query?.model) {
       where.model = where.model || {};
-      where.model = { slug: { in: checkQueryArray('models') } };
+      where.model = { slug: { in: checkQueryArray('model') } };
     }
     if (query?.type) {
       where.model = where.model || {};
-      where.model.type = { slug: { in: checkQueryArray('types') } };
+      where.model.type = { slug: { in: checkQueryArray('type') } };
     }
     if (query?.warehouse) {
-      where.warehouse = { slug: { in: checkQueryArray('warehouses') } };
+      where.warehouse = { slug: { in: checkQueryArray('warehouse') } };
     }
     if (query.memorySize) where.memorySize = Number(query.memorySize);
     if (query.screenSize) where.screenSize = { in: query.screenSize.split(',').map(Number) };
@@ -429,26 +423,6 @@ export class DevicesService {
     });
     return models;
   }
-
-  //CREATE DEVICE MANUFACTURER
-  async createManufacturer(manufacturerDto: ManufacturerDto) {
-    const existingManufacturer = await this.prisma.manufacturer.findFirst({
-      where: {
-        name: manufacturerDto.name,
-        slug: manufacturerDto.slug,
-      },
-    });
-    if (existingManufacturer) throw new ManufacturerExistsException();
-
-    const manufacturer = await this.prisma.manufacturer.create({
-      data: {
-        name: manufacturerDto.name,
-        slug: manufacturerDto.slug,
-      },
-    });
-    return manufacturer;
-  }
-
   // CREATE DEVICE TYPE
   async createType(typeDto: DeviceTypeDto) {
     const existingType = await this.prisma.device_type.findUnique({
@@ -466,36 +440,6 @@ export class DevicesService {
       },
     });
     return type;
-  }
-
-  // GET DEVICE MANUFACTURERS
-  async getManufacturers() {
-    const manufacturers = await this.prisma.manufacturer.findMany();
-    return manufacturers;
-  }
-  // GET MANUFACTURER
-  async getManufacturer(id: string) {
-    const manufacturer = await this.prisma.manufacturer.findUnique({
-      where: { id: id },
-    });
-    if (!manufacturer) return null;
-    return manufacturer;
-  }
-  // UPDATE MANUFACTURER
-  async updateManufacturer(id: string, manufacturerDto: ManufacturerDto) {
-    const existManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { id: id },
-    });
-    if (!existManufacturer) throw new ManufacturerNotFoundException();
-    const updatedManufacturer = await this.prisma.manufacturer.update({
-      where: { id: id },
-      data: {
-        name: manufacturerDto.name?.trim() || existManufacturer.name,
-        slug: manufacturerDto.slug?.trim() || existManufacturer.slug,
-        comment: manufacturerDto.comment || existManufacturer.comment,
-      },
-    });
-    return updatedManufacturer;
   }
 
   //GET DEVICE TYPES

@@ -1,9 +1,4 @@
-import {
-  DeviceDto,
-  DeviceModelDto,
-  DeviceTypeDto,
-  ManufacturerDto,
-} from './dtos/device.dto';
+import { DeviceDto, DeviceModelDto, DeviceTypeDto } from './dtos/device.dto';
 import {
   Body,
   Controller,
@@ -14,7 +9,6 @@ import {
   HttpStatus,
   UploadedFile,
   Query,
-  Put,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -23,7 +17,6 @@ import { DevicesService } from './devices.service';
 import {
   allowedPictureOptions,
   deviceCreated,
-  manufacturerCreated,
   modelCreated,
   typeCreated,
 } from 'src/common/utils/constants';
@@ -83,40 +76,6 @@ export class DevicesController {
   @Get('/types')
   async getTypes() {
     return await this.devicesService.getTypes();
-  }
-
-  // Create device manufacturer
-  @Post('/manufacturers')
-  @UsePipes(new ValidationPipe())
-  @HttpCode(HttpStatus.CREATED)
-  async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
-    const manufacturer =
-      await this.devicesService.createManufacturer(manufacturerDto);
-    return {
-      message: manufacturerCreated,
-      manufacturer,
-    };
-  }
-
-  // Get devices manufacturers
-  @Get('/manufacturers')
-  async getManufacturers() {
-    return await this.devicesService.getManufacturers();
-  }
-  // Get  manufacturers
-  @Get('/manufacturers/:id')
-  async getManufacturer(@Param('id') id: string) {
-    return await this.devicesService.getManufacturer(id);
-  }
-
-  @Put('/manufacturers/:id')
-  @UsePipes(new ValidationPipe())
-  @HttpCode(HttpStatus.OK)
-  async updateManufacturer(
-    @Param('id') id: string,
-    @Body() manufacturerDto: ManufacturerDto,
-  ) {
-    return await this.devicesService.updateManufacturer(id, manufacturerDto);
   }
 
   @Get('/locations/:city')
