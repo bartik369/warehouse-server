@@ -92,17 +92,6 @@ export class DeviceTypeDto {
   @IsString()
   slug: string;
 }
-export class ManufacturerDto {
-  id: string;
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-  @IsNotEmpty()
-  @IsString()
-  slug: string;
-  @IsOptional()
-  comment: string;
-}
 
 export type TDeviceDto = DeviceDto;
 export type TDeviceModelDto = DeviceModelDto;
