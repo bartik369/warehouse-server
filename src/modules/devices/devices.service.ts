@@ -1,20 +1,14 @@
-import * as fs from 'fs';
-import { extname } from 'path';
 import {
   IDeviceOptions,
   IDevice,
   IAggregatedDeviceInfo,
 } from 'src/common/types/device.types';
 import {
-  TypeExistsException,
-  ModelExistsException,
-  ManufacturerNotFoundException,
-  ModelNotFoundException,
   DeviceExistsException,
   WarrantyValidateException,
 } from 'src/exceptions/device.exceptions';
 import { PrismaService } from 'prisma/prisma.service';
-import { DeviceDto, DeviceModelDto, DeviceTypeDto } from './dtos/device.dto';
+import { DeviceDto } from './dtos/device.dto';
 import { Injectable, BadRequestException } from '@nestjs/common';
 
 @Injectable()
@@ -374,93 +368,5 @@ export class DevicesService {
     }
 
     if (device) return device;
-  }
-
-  // CREATE DEVICE MODEL
-  async createModel(deviceModelDto: DeviceModelDto, file: Express.Multer.File) {
-    const existingManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { id: deviceModelDto.manufacturerId },
-    });
-    if (!existingManufacturer) throw new ManufacturerNotFoundException();
-
-    const existingModel = await this.prisma.device_model.findFirst({
-      where: {
-        name: deviceModelDto.name,
-        manufacturerId: deviceModelDto.manufacturerId,
-      },
-    });
-    if (existingModel) throw new ModelExistsException();
-
-    const savedFilePath = await this.saveFile(file);
-    const model = await this.prisma.device_model.create({
-      data: {
-        name: deviceModelDto.name,
-        slug: deviceModelDto.slug,
-        imagePath: savedFilePath,
-        manufacturerId: existingManufacturer.id,
-        typeId: deviceModelDto.typeId,
-      },
-    });
-    return model;
-  }
-
-  // GET DEVICE MODELS
-  async getModels(manufacturer: string, type: string) {
-    const existingType = await this.prisma.device_type.findUnique({
-      where: { slug: type },
-    });
-    const existingManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { slug: manufacturer },
-    });
-    if (!existingType || !existingManufacturer)
-      throw new ModelNotFoundException();
-
-    const models = await this.prisma.device_model.findMany({
-      where: {
-        manufacturerId: existingManufacturer.id,
-        typeId: existingType.id,
-      },
-    });
-    return models;
-  }
-  // CREATE DEVICE TYPE
-  async createType(typeDto: DeviceTypeDto) {
-    const existingType = await this.prisma.device_type.findUnique({
-      where: {
-        name: typeDto.name?.trim(),
-        slug: typeDto.slug?.trim(),
-      },
-    });
-    if (existingType) throw new TypeExistsException();
-
-    const type = await this.prisma.device_type.create({
-      data: {
-        name: typeDto.name?.trim(),
-        slug: typeDto.slug?.trim(),
-      },
-    });
-    return type;
-  }
-
-  //GET DEVICE TYPES
-  async getTypes() {
-    const types = await this.prisma.device_type.findMany();
-    return types;
-  }
-
-  private async saveFile(file: Express.Multer.File): Promise<string> {
-    const uniqueSuffix = Date.now();
-    const fileName = `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`;
-    const filePath = `uploads/models/${fileName}`;
-
-    // Save file to uploads/models/
-    return new Promise((resolve, reject) => {
-      fs.writeFile(filePath, file.buffer, (err) => {
-        if (err) {
-          reject(new Error('Failed to save file'));
-        }
-        resolve(fileName);
-      });
-    });
   }
 }

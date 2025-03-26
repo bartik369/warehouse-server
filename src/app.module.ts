@@ -1,4 +1,4 @@
-import { WarehousesModule } from './modules/warehouse/warehouses.module';
+import { WarehousesModule } from './modules/warehouses/warehouses.module';
 import { join } from 'path';
 import { PrismaService } from 'prisma/prisma.service';
 import { UsersService } from './modules/users/users.service';
@@ -15,6 +15,8 @@ import { ContractorsModule } from './modules/contactors/contrators.module';
 import { LocationModule } from './modules/locations/locations.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
+import { TypesModule } from './modules/types/types.module';
+import { ModelsModule } from './modules/models/models.module';
 
 console.log(
   'Static files rootPath:',
@@ -39,6 +41,8 @@ console.log(
     LocationModule,
     DepartmentsModule,
     ManufacturersModule,
+    TypesModule,
+    ModelsModule,
   ],
   providers: [
     {

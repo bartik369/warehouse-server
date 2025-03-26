@@ -13,7 +13,6 @@ import {
 import { ManufacturersService } from './manufacturers.service';
 import { ManufacturerDto } from './dto/manufacturer.dto';
 import { manufacturerCreated } from 'src/common/utils/constants';
-import { plainToInstance } from 'class-transformer';
 
 @Controller('manufacturers')
 export class ManufacturersController {
@@ -22,8 +21,7 @@ export class ManufacturersController {
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.CREATED)
-  async createManufacturer(@Body() body: Record<string, any>) {
-    const manufacturerDto = plainToInstance(ManufacturerDto, body);
+  async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
     const manufacturer =
       await this.manufacturersService.createManufacturer(manufacturerDto);
     return {
@@ -37,7 +35,7 @@ export class ManufacturersController {
   async getManufacturers() {
     return await this.manufacturersService.getManufacturers();
   }
-  // Get  manufacturers
+  // Get  manufacturer
   @Get(':id')
   async getManufacturer(@Param('id') id: string) {
     return await this.manufacturersService.getManufacturer(id);
@@ -48,7 +46,8 @@ export class ManufacturersController {
   @HttpCode(HttpStatus.OK)
   async updateManufacturer(
     @Param('id') id: string,
-    @Body() manufacturerDto: ManufacturerDto) {
+    @Body() manufacturerDto: ManufacturerDto,
+  ) {
     return await this.manufacturersService.updateManufacturer(
       id,
       manufacturerDto,
