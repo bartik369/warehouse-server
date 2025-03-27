@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -22,9 +23,17 @@ export class DepartmentsController {
     return await this.departmentsService.getDepartment(id);
   }
 
-  @UsePipes(new ValidationPipe())
   @Post()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   async createDepartment(@Body() departmentDto: DepartmentDto) {
     return this.departmentsService.createDepartment(departmentDto);
+  }
+  @Put(':id')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async updateDepartment(
+    @Body() departmentDto: DepartmentDto,
+    @Param('id') id: string,
+  ) {
+    return await this.departmentsService.updateDepartment(id, departmentDto);
   }
 }

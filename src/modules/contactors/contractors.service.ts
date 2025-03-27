@@ -50,8 +50,8 @@ export class ContractorsService {
     const updatedContractor = await this.prisma.contractor.update({
       where: { id },
       data: {
-        name: contractorDto.name?.trim() || existContractor.name,
-        slug: contractorDto.slug?.trim() || existContractor.slug,
+        name: contractorDto.name?.trim() || undefined,
+        slug: contractorDto.slug?.trim() || undefined,
         phoneNumber:
           contractorDto.phoneNumber?.trim() || existContractor.phoneNumber,
         address: contractorDto.address || existContractor.address,

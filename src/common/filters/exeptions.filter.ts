@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Response } from 'express';
 
 @Catch()
@@ -24,6 +25,12 @@ export class ExceptionsFilter implements ExceptionFilter {
       } else {
         message = responseMessage as string;
       }
+    } else if (
+      exception instanceof Prisma.PrismaClientKnownRequestError &&
+      exception.code === 'P2025'
+    ) {
+      status = HttpStatus.NOT_FOUND;
+      message = 'Resource not found';
     }
     response.status(status).json({
       statusCode: status,

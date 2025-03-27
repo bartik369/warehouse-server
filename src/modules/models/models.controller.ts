@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   UploadedFile,
   UsePipes,
   ValidationPipe,
@@ -55,5 +56,16 @@ export class ModelsController {
       message: modelCreated,
       model,
     };
+  }
+  @Put(':id')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  @HttpCode(HttpStatus.OK)
+  @FileUploadInterceptor(allowedPictureOptions)
+  async updateModel(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: Record<string, string>,
+  ) {
+    const modelDto = plainToInstance(ModelDto, body);
+    return await this.modelsService.updateModel(modelDto, file);
   }
 }

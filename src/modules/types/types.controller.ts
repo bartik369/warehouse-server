@@ -4,7 +4,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
+  Put,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -30,5 +32,16 @@ export class TypesController {
       message: typeCreated,
       type,
     };
+  }
+  // GET DEVICE TYPE BY ID
+  @Get(':id')
+  async getType(@Param('id') id: string) {
+    return await this.typesService.getType(id);
+  }
+  // UPDATE DEVICE TYPE
+  @Put(':id')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async updateType(@Body() typeDto: TypeDto, @Param('id') id: string) {
+    await this.typesService.updateType(typeDto, id);
   }
 }

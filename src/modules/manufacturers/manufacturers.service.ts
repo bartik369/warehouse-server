@@ -31,9 +31,9 @@ export class ManufacturersService {
     const updatedManufacturer = await this.prisma.manufacturer.update({
       where: { id: id },
       data: {
-        name: manufacturerDto.name?.trim() || existManufacturer.name,
-        slug: manufacturerDto.slug?.trim() || existManufacturer.slug,
-        comment: manufacturerDto.comment || existManufacturer.comment,
+        name: manufacturerDto.name?.trim() || undefined,
+        slug: manufacturerDto.slug?.trim() || undefined,
+        comment: manufacturerDto.comment || undefined,
       },
     });
     return updatedManufacturer;

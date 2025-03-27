@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { DepartmentDto } from './dtos/department.dto';
-import { DepartmentExistException } from 'src/exceptions/location.exceptions';
+import {
+  DepartmentExistException,
+  DepartmentNotFoundException,
+} from 'src/exceptions/location.exceptions';
 import { ILocation } from 'src/common/types/location.types';
 
 @Injectable()
@@ -34,5 +37,20 @@ export class DepartmentsService {
       },
     });
     return department;
+  }
+  async updateDepartment(id: string, departmentDto: DepartmentDto) {
+    const existDepartment = await this.prisma.department.findUnique({
+      where: { id: id },
+    });
+    if (!existDepartment) throw new DepartmentNotFoundException();
+    const updatedDepartment = await this.prisma.department.update({
+      where: { id: existDepartment.id },
+      data: {
+        name: departmentDto.name?.trim() || undefined,
+        slug: departmentDto.slug?.trim() || undefined,
+        comment: departmentDto.comment || undefined,
+      },
+    });
+    return updatedDepartment;
   }
 }

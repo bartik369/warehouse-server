@@ -63,9 +63,9 @@ export class WarehousesService {
     const updatedWarehouse = await this.prisma.warehouse.update({
       where: { id: id },
       data: {
-        name: warehouseDto.name?.trim() || existWarehouse.name,
-        slug: warehouseDto.slug?.trim() || existWarehouse.slug,
-        comment: warehouseDto.comment || existWarehouse.comment,
+        name: warehouseDto.name?.trim() || undefined,
+        slug: warehouseDto.slug?.trim() || undefined,
+        comment: warehouseDto.comment || undefined,
       },
     });
     return updatedWarehouse;

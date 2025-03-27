@@ -31,9 +31,9 @@ export class LocationsService {
     const updatedLocation = await this.prisma.location.update({
       where: { id: existLocation.id },
       data: {
-        name: locationDto.name?.trim() || existLocation.name,
-        slug: locationDto.slug?.trim() || existLocation.slug,
-        comment: locationDto.comment || existLocation.comment,
+        name: locationDto.name?.trim() || undefined,
+        slug: locationDto.slug?.trim() || undefined,
+        comment: locationDto.comment || undefined,
       },
     });
     return updatedLocation;

@@ -59,42 +59,66 @@ export class ModelsService {
     return models;
   }
   // CREATE DEVICE MODEL
-  async createModel(deviceModelDto: ModelDto, file: Express.Multer.File) {
+  async createModel(modelDto: ModelDto, file: Express.Multer.File) {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { id: deviceModelDto.manufacturerId },
+      where: { id: modelDto.manufacturerId },
     });
     if (!existingManufacturer) throw new ManufacturerNotFoundException();
     const existingModel = await this.prisma.device_model.findFirst({
       where: {
-        name: deviceModelDto.name,
-        manufacturerId: deviceModelDto.manufacturerId,
+        name: modelDto.name,
+        manufacturerId: modelDto.manufacturerId,
       },
     });
     if (existingModel) throw new ModelExistsException();
-    const savedFilePath = await this.saveFile(file);
+    const savedFilePath = await this.saveFile(modelDto.imagePath, file);
     const model = await this.prisma.device_model.create({
       data: {
-        name: deviceModelDto.name,
-        slug: deviceModelDto.slug,
+        name: modelDto.name,
+        slug: modelDto.slug,
         imagePath: savedFilePath,
         manufacturerId: existingManufacturer.id,
-        typeId: deviceModelDto.typeId,
+        typeId: modelDto.typeId,
       },
     });
     return model;
   }
-  private async saveFile(file: Express.Multer.File): Promise<string> {
+  // UPDATE MODEL
+  async updateModel(modelDto: ModelDto, file: Express.Multer.File) {
+    const existModel = await this.prisma.device_model.findUnique({
+      where: { id: modelDto.id },
+    });
+    if (!existModel) throw new ModelNotFoundException();
+    const model = await this.prisma.device_model.update({
+      where: { id: existModel.id },
+      data: {
+        name: modelDto.name?.trim() || undefined,
+        slug: modelDto.slug?.trim() || undefined,
+        imagePath: file
+          ? await this.saveFile(existModel.imagePath, file)
+          : existModel.imagePath,
+        manufacturerId: modelDto.manufacturerId?.trim() || undefined,
+        typeId: modelDto.typeId?.trim() || undefined,
+      },
+    });
+    return model;
+  }
+  private async saveFile(
+    existFileName: string,
+    file: Express.Multer.File,
+  ): Promise<string> {
     const uniqueSuffix = Date.now();
     const fileName = `${file?.fieldname}-${uniqueSuffix}${extname(file?.originalname)}`;
     const filePath = `uploads/models/${fileName}`;
-    // Save file to uploads/models/
-    return new Promise((resolve, reject) => {
-      fs.writeFile(filePath, file.buffer, (err) => {
-        if (err) {
-          reject(new Error('Failed to save file'));
-        }
-        resolve(fileName);
-      });
-    });
+    const existFilePath = `uploads/models/${existFileName}`;
+    try {
+      if (fs.existsSync(existFilePath)) {
+        await fs.promises.unlink(existFilePath);
+      }
+      await fs.promises.writeFile(filePath, file.buffer);
+      return fileName;
+    } catch (error) {
+      throw new Error(`Failed to process file: ${error.message}`);
+    }
   }
 }
