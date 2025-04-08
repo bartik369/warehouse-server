@@ -43,6 +43,7 @@ export class AuthController {
 
   @Public()
   @Get('refresh')
+  @UseInterceptors(ClearCookiesInterceptor)
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Req() req: Request): Promise<any> {
     const token: string = req.cookies.refreshToken;

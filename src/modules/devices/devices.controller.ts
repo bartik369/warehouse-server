@@ -4,7 +4,9 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
+  Put,
   Query,
   UsePipes,
   ValidationPipe,
@@ -42,5 +44,12 @@ export class DevicesController {
   @Get(':id')
   async getDevice(@Param('id') id: string) {
     return await this.devicesService.getDevice(id);
+  }
+  @Put(':id')
+  @UsePipes(new ValidationPipe())
+  async updateDevice(@Param('id') id: string, @Body() deviceDto: DeviceDto) {
+    console.log(id);
+    console.log(deviceDto);
+    return await this.devicesService.updateDevice(id, deviceDto);
   }
 }

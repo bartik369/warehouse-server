@@ -101,6 +101,11 @@ export interface IAggregatedDeviceInfo {
     imagePath: string;
     manufacturer: {
       name: string;
+      slug: string;
+    };
+    type: {
+      name: string;
+      slug: string;
     };
   };
   warranty: {

@@ -54,7 +54,7 @@ export class DeviceDto {
   updatedAt: Date;
   @IsOptional()
   @IsString()
-  provider?: string;
+  providerName?: string;
   @IsOptional()
   @IsString()
   warrantyNumber?: string;

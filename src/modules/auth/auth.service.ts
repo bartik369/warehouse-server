@@ -2,7 +2,10 @@ import { User } from '../users/dtos/user.dto';
 import { AuthDto } from './dtos/auth.dto';
 import { AuthData, Tokens, GroupAuthData } from 'src/common/types/user.types';
 import { PrismaService } from 'prisma/prisma.service';
-import { DeniedAccessException } from 'src/exceptions/auth.exceptions';
+import {
+  DeniedAccessException,
+  UnauthorizeException,
+} from 'src/exceptions/auth.exceptions';
 import { UserNotFoundException } from 'src/exceptions/auth.exceptions';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -45,38 +48,6 @@ export class AuthService {
       tokens: tokens,
     };
   }
-  // REFRESH TOKEN
-  async refreshToken(token: string): Promise<AuthData> {
-    const validToken = await this.jwtService.verifyAsync(token, {
-      secret: process.env.JWT_REFRESH_SECRET,
-    });
-    const existUser = await this.prisma.user.findUnique({
-      where: {
-        id: validToken.sub,
-      },
-    });
-    const existToken = await this.prisma.token.findUnique({
-      where: {
-        userId: existUser.id,
-      },
-    });
-    if (!existUser || !existToken) throw new DeniedAccessException();
-
-    const matchRefreshToken = await bcrypt.compare(token, existToken.token);
-    if (!matchRefreshToken) throw new DeniedAccessException();
-
-    const tokens = await this.getTokens(
-      existUser.id,
-      existUser.email,
-      existUser.userName,
-    );
-    await this.updateRefreshHash(existUser.id, tokens.refreshToken);
-    return {
-      accessToken: tokens.accessToken,
-      user: existUser,
-      refreshToken: tokens.refreshToken,
-    };
-  }
 
   async logout(id: string): Promise<boolean> {
     await this.prisma.token.update({
@@ -88,6 +59,40 @@ export class AuthService {
       },
     });
     return true;
+  }
+  // REFRESH TOKEN
+  async refreshToken(token: string): Promise<AuthData> {
+    try {
+      const validToken = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+      const existUser = await this.prisma.user.findUnique({
+        where: { id: validToken.sub },
+      });
+      const existToken = await this.prisma.token.findUnique({
+        where: { userId: existUser.id },
+      });
+      if (!existUser || !existToken) throw new DeniedAccessException();
+
+      const matchRefreshToken = await bcrypt.compare(token, existToken.token);
+      if (!matchRefreshToken) throw new DeniedAccessException();
+      const tokens = await this.getTokens(
+        existUser.id,
+        existUser.email,
+        existUser.userName,
+      );
+      await this.updateRefreshHash(existUser.id, tokens.refreshToken);
+      return {
+        accessToken: tokens.accessToken,
+        user: existUser,
+        refreshToken: tokens.refreshToken,
+      };
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new UnauthorizeException();
+      }
+      throw new DeniedAccessException();
+    }
   }
 
   async validate(token: string): Promise<User> {
@@ -128,7 +133,7 @@ export class AuthService {
         },
         {
           secret: process.env.JWT_ACCESS_SECRET,
-          expiresIn: 60 * 10,
+          expiresIn: 60 * 60 * 24,
         },
       ),
       this.jwtService.signAsync(
@@ -139,7 +144,7 @@ export class AuthService {
         },
         {
           secret: process.env.JWT_REFRESH_SECRET,
-          expiresIn: 60 * 15 * 24 * 7,
+          expiresIn: 60 * 60 * 24 * 14,
         },
       ),
     ]);

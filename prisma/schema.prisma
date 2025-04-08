@@ -305,7 +305,7 @@ model contractor {
 model warranty {
   id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deviceId          String          @unique @db.Uuid
-  warrantyNumber    String          @unique
+  warrantyNumber    String
   provider          String
   contractorId      String?         @db.Uuid
   isExpired         Boolean         @default(false)
