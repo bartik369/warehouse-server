@@ -21,6 +21,7 @@ export class DevicesController {
   @Post()
   @UsePipes(new ValidationPipe())
   async createDevice(@Body() deviceDto: DeviceDto) {
+    console.log(deviceDto);
     const device = await this.devicesService.createDevice(deviceDto);
     return {
       message: deviceCreated,
@@ -48,8 +49,6 @@ export class DevicesController {
   @Put(':id')
   @UsePipes(new ValidationPipe())
   async updateDevice(@Param('id') id: string, @Body() deviceDto: DeviceDto) {
-    console.log(id);
-    console.log(deviceDto);
     return await this.devicesService.updateDevice(id, deviceDto);
   }
 }
