@@ -48,8 +48,8 @@ export class TypesService {
     const updatedType = await this.prisma.device_type.update({
       where: { id: existType.id },
       data: {
-        name: typeDto.name?.trim() || undefined,
-        slug: typeDto.slug?.trim() || undefined,
+        name: typeDto.name?.trim(),
+        slug: typeDto.slug?.trim(),
       },
     });
     return updatedType;

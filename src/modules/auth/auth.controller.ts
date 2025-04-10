@@ -28,7 +28,7 @@ export class AuthController {
   @UseInterceptors(SetCookiesInterceptor)
   @UsePipes(new ValidationPipe())
   @Public()
-  @Post('signin')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
   async signin(@Body() authDto: AuthDto): Promise<AuthData> {
     const data: GroupAuthData = await this.authService.signin(authDto);

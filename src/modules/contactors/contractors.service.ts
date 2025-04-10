@@ -26,7 +26,7 @@ export class ContractorsService {
         name: contractorDto.name?.trim(),
         slug: contractorDto.slug?.trim(),
         phoneNumber: contractorDto.phoneNumber?.trim(),
-        address: contractorDto.address,
+        address: contractorDto.address || '',
       },
     });
     return contractor;
@@ -50,11 +50,10 @@ export class ContractorsService {
     const updatedContractor = await this.prisma.contractor.update({
       where: { id },
       data: {
-        name: contractorDto.name?.trim() || undefined,
-        slug: contractorDto.slug?.trim() || undefined,
-        phoneNumber:
-          contractorDto.phoneNumber?.trim() || existContractor.phoneNumber,
-        address: contractorDto.address || existContractor.address,
+        name: contractorDto.name?.trim(),
+        slug: contractorDto.slug?.trim(),
+        phoneNumber: contractorDto.phoneNumber?.trim(),
+        address: contractorDto.address || '',
       },
     });
     return updatedContractor;

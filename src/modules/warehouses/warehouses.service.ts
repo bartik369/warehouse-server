@@ -32,19 +32,17 @@ export class WarehousesService {
     if (!existLocation) throw new LocationNotFoundException();
     const warehouse = await this.prisma.warehouse.create({
       data: {
-        name: warehouseDto.name,
-        slug: warehouseDto.slug,
+        name: warehouseDto.name?.trim(),
+        slug: warehouseDto.slug?.trim(),
         locationId: existLocation.id,
-        comment: warehouseDto.comment,
+        comment: warehouseDto.comment || '',
       },
     });
     return warehouse;
   }
   async getWarehouse(id: string) {
     const warehouse = await this.prisma.warehouse.findUnique({
-      where: {
-        id: id,
-      },
+      where: { id: id },
       include: {
         location: {
           select: { name: true },
@@ -63,9 +61,9 @@ export class WarehousesService {
     const updatedWarehouse = await this.prisma.warehouse.update({
       where: { id: id },
       data: {
-        name: warehouseDto.name?.trim() || undefined,
-        slug: warehouseDto.slug?.trim() || undefined,
-        comment: warehouseDto.comment || undefined,
+        name: warehouseDto.name?.trim(),
+        slug: warehouseDto.slug?.trim(),
+        comment: warehouseDto.comment || '',
       },
     });
     return updatedWarehouse;

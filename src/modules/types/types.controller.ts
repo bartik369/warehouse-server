@@ -13,6 +13,7 @@ import {
 import { TypesService } from './types.service';
 import { TypeDto } from './dto/type.dto';
 import { typeCreated } from 'src/common/utils/constants';
+import { FormDataOnlyInterceptor } from 'src/common/interceptors/form-data.interceptor';
 
 @Controller('types')
 export class TypesController {
@@ -26,6 +27,7 @@ export class TypesController {
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.CREATED)
+  @FormDataOnlyInterceptor()
   async createType(@Body() typeDto: TypeDto) {
     const type = await this.typesService.createType(typeDto);
     return {

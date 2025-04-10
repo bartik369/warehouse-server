@@ -13,6 +13,7 @@ import {
 import { ManufacturersService } from './manufacturers.service';
 import { ManufacturerDto } from './dto/manufacturer.dto';
 import { manufacturerCreated } from 'src/common/utils/constants';
+import { FormDataOnlyInterceptor } from 'src/common/interceptors/form-data.interceptor';
 
 @Controller('manufacturers')
 export class ManufacturersController {
@@ -21,6 +22,7 @@ export class ManufacturersController {
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.CREATED)
+  @FormDataOnlyInterceptor()
   async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
     const manufacturer =
       await this.manufacturersService.createManufacturer(manufacturerDto);

@@ -33,7 +33,7 @@ export class DepartmentsService {
       data: {
         name: departmentDto.name.trim(),
         slug: departmentDto.slug.trim(),
-        comment: departmentDto.comment,
+        comment: departmentDto.comment || '',
       },
     });
     return department;
@@ -46,9 +46,9 @@ export class DepartmentsService {
     const updatedDepartment = await this.prisma.department.update({
       where: { id: existDepartment.id },
       data: {
-        name: departmentDto.name?.trim() || undefined,
-        slug: departmentDto.slug?.trim() || undefined,
-        comment: departmentDto.comment || undefined,
+        name: departmentDto.name?.trim(),
+        slug: departmentDto.slug?.trim(),
+        comment: departmentDto.comment || '',
       },
     });
     return updatedDepartment;

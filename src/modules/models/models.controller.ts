@@ -12,7 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ModelsService } from './models.service';
-import { FileUploadInterceptor } from '../devices/decorators/file-upload.decorator';
+import { FileUploadInterceptor } from '../../common/interceptors/file-upload.interceptor';
 import {
   allowedPictureOptions,
   modelCreated,

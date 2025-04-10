@@ -74,11 +74,11 @@ export class ModelsService {
     const savedFilePath = await this.saveFile(modelDto.imagePath, file);
     const model = await this.prisma.device_model.create({
       data: {
-        name: modelDto.name,
-        slug: modelDto.slug,
-        imagePath: savedFilePath,
+        name: modelDto.name?.trim(),
+        slug: modelDto.slug?.trim(),
+        imagePath: savedFilePath?.trim(),
         manufacturerId: existingManufacturer.id,
-        typeId: modelDto.typeId,
+        typeId: modelDto.typeId?.trim(),
       },
     });
     return model;
@@ -92,13 +92,13 @@ export class ModelsService {
     const model = await this.prisma.device_model.update({
       where: { id: existModel.id },
       data: {
-        name: modelDto.name?.trim() || undefined,
-        slug: modelDto.slug?.trim() || undefined,
+        name: modelDto.name?.trim(),
+        slug: modelDto.slug?.trim(),
         imagePath: file
           ? await this.saveFile(existModel.imagePath, file)
           : existModel.imagePath,
-        manufacturerId: modelDto.manufacturerId?.trim() || undefined,
-        typeId: modelDto.typeId?.trim() || undefined,
+        manufacturerId: modelDto.manufacturerId?.trim(),
+        typeId: modelDto.typeId?.trim(),
       },
     });
     return model;

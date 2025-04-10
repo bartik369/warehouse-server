@@ -21,7 +21,6 @@ export class DevicesController {
   @Post()
   @UsePipes(new ValidationPipe())
   async createDevice(@Body() deviceDto: DeviceDto) {
-    console.log(deviceDto);
     const device = await this.devicesService.createDevice(deviceDto);
     return {
       message: deviceCreated,

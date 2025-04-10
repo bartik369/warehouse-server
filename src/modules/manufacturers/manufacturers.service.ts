@@ -31,9 +31,9 @@ export class ManufacturersService {
     const updatedManufacturer = await this.prisma.manufacturer.update({
       where: { id: id },
       data: {
-        name: manufacturerDto.name?.trim() || undefined,
-        slug: manufacturerDto.slug?.trim() || undefined,
-        comment: manufacturerDto.comment || undefined,
+        name: manufacturerDto.name?.trim(),
+        slug: manufacturerDto.slug?.trim(),
+        comment: manufacturerDto.comment || '',
       },
     });
     return updatedManufacturer;
@@ -42,16 +42,17 @@ export class ManufacturersService {
   async createManufacturer(manufacturerDto: ManufacturerDto) {
     const existingManufacturer = await this.prisma.manufacturer.findFirst({
       where: {
-        name: manufacturerDto.name,
-        slug: manufacturerDto.slug,
+        name: manufacturerDto.name?.trim(),
+        slug: manufacturerDto.slug?.trim(),
       },
     });
     if (existingManufacturer) throw new ManufacturerExistsException();
 
     const manufacturer = await this.prisma.manufacturer.create({
       data: {
-        name: manufacturerDto.name,
-        slug: manufacturerDto.slug,
+        name: manufacturerDto.name?.trim(),
+        slug: manufacturerDto.slug?.trim(),
+        comment: manufacturerDto.comment || '',
       },
     });
     return manufacturer;
