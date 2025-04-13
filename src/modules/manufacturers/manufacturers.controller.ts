@@ -21,8 +21,8 @@ export class ManufacturersController {
   // Create device manufacturer
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  @HttpCode(HttpStatus.CREATED)
   @FormDataOnlyInterceptor()
+  @HttpCode(HttpStatus.CREATED)
   async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
     const manufacturer =
       await this.manufacturersService.createManufacturer(manufacturerDto);

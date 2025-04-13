@@ -84,6 +84,11 @@ export class ContactorNotFoundException extends NotFoundException {
     super(contractorNotFound);
   }
 }
+export class ContactorNotUpdatedException extends NotFoundException {
+  constructor() {
+    super(contractorNotFound);
+  }
+}
 export class WarrantyValidateException extends ConflictException {
   constructor() {
     super(validateWarrantyInputs);

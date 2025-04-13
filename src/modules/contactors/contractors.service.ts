@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { ContractorDto } from './dtos/contactor.dto';
 import {
   ContactorExistsException,
   ContactorNotFoundException,
 } from 'src/exceptions/device.exceptions';
+import { somethingWentWrong } from 'src/common/utils/constants';
 
 @Injectable()
 export class ContractorsService {

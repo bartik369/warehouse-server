@@ -40,7 +40,6 @@ export class AuthController {
       };
     }
   }
-
   @Public()
   @Get('refresh')
   @UseInterceptors(ClearCookiesInterceptor)

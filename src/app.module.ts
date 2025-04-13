@@ -17,6 +17,8 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
 import { TypesModule } from './modules/types/types.module';
 import { ModelsModule } from './modules/models/models.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { PermissionsModule } from './modules/permissions/Permissions.module';
 
 console.log(
   'Static files rootPath:',
@@ -43,6 +45,8 @@ console.log(
     ManufacturersModule,
     TypesModule,
     ModelsModule,
+    RolesModule,
+    PermissionsModule,
   ],
   providers: [
     {

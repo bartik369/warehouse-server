@@ -8,34 +8,53 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ContractorsService } from './contractors.service';
+import {
+  contractorCreated,
+  contractorUpdated,
+} from 'src/common/utils/constants';
 import { ContractorDto } from './dtos/contactor.dto';
+import { ContractorsService } from './contractors.service';
 
 @Controller('contractors')
 export class ContractorsController {
   constructor(private contractorsService: ContractorsService) {}
+  // All
   @Get()
-  async getContractors() {
+  async getContractors(): Promise<ContractorDto[]> {
     return await this.contractorsService.getContractors();
   }
-
-  @UsePipes(new ValidationPipe())
+  // Create
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   @Post()
-  async createContactor(@Body() contractorDto: ContractorDto) {
-    return await this.contractorsService.createContractor(contractorDto);
+  async createContractor(
+    @Body() contractorDto: ContractorDto,
+  ): Promise<{ message: string; contractor: ContractorDto }> {
+    const contractor =
+      await this.contractorsService.createContractor(contractorDto);
+    return {
+      message: contractorCreated,
+      contractor,
+    };
   }
-
+  // Get by ID
   @Get(':id')
-  async getContractor(@Param('id') id: string) {
+  async getContractor(@Param('id') id: string): Promise<ContractorDto> {
     return await this.contractorsService.getContractor(id);
   }
-
-  @UsePipes(new ValidationPipe())
+  // Update
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   @Put(':id')
   async updateContractor(
     @Param('id') id: string,
     @Body() contractorDto: ContractorDto,
-  ) {
-    return await this.contractorsService.updateContractor(id, contractorDto);
+  ): Promise<{ message: string; updatedContractor: ContractorDto }> {
+    const updatedContractor = await this.contractorsService.updateContractor(
+      id,
+      contractorDto,
+    );
+    return {
+      message: contractorUpdated,
+      updatedContractor,
+    };
   }
 }

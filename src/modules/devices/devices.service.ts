@@ -2,6 +2,7 @@ import {
   IDeviceOptions,
   IDevice,
   IAggregatedDeviceInfo,
+  IFilteredDevices,
 } from 'src/common/types/device.types';
 import {
   DeviceExistsException,
@@ -15,8 +16,11 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 @Injectable()
 export class DevicesService {
   constructor(private prisma: PrismaService) {}
-
-  async findAll(query: Record<string, string>, city: string): Promise<any> {
+  // All
+  async findAll(
+    query: Record<string, string>,
+    city: string,
+  ): Promise<{ devices: IFilteredDevices[]; totalPages: number }> {
     const where: Record<string, any> = {};
     if (city) {
       where.warehouse = {
@@ -119,7 +123,7 @@ export class DevicesService {
     const totalPages = Math.ceil(total / limit);
     return { devices, totalPages };
   }
-  // GET DEVICE
+  // Get by ID
   async getDevice(id: string): Promise<IAggregatedDeviceInfo> {
     const device = await this.prisma.device.findUnique({
       where: { id: id },
@@ -196,7 +200,7 @@ export class DevicesService {
     return history;
   }
 
-  // GET DEVICE OPTIONS
+  // Options
   async getOptions(city: string): Promise<IDeviceOptions> {
     const where: Record<string, any> = city
       ? {
@@ -309,7 +313,7 @@ export class DevicesService {
     };
   }
 
-  // CREATE DEVICE
+  // Create
   async createDevice(deviceDto: DeviceDto): Promise<Partial<IDevice>> {
     const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } =
       deviceDto;
@@ -367,8 +371,11 @@ export class DevicesService {
     }
     if (device) return device;
   }
-  //UPDATE DEVICE
-  async updateDevice(deviceId: string, deviceDto: DeviceDto) {
+  //Update
+  async updateDevice(
+    deviceId: string,
+    deviceDto: DeviceDto,
+  ): Promise<DeviceDto> {
     const existDevice = await this.prisma.device.findUnique({
       where: { id: deviceId },
     });
@@ -381,7 +388,7 @@ export class DevicesService {
         throw new WarrantyValidateException();
       }
     }
-    const updatedDevice = this.prisma.device.update({
+    const updatedDevice = await this.prisma.device.update({
       where: { id: existDevice.id },
       data: {
         name: deviceDto.name?.trim(),
@@ -418,10 +425,19 @@ export class DevicesService {
     if (existContractor) {
       await this.warrantyAction(deviceDto, existContractor.id, deviceId);
     }
-    return updatedDevice;
+    return {
+      ...updatedDevice,
+      price_with_vat: updatedDevice.price_with_vat?.toNumber(),
+      price_without_vat: updatedDevice.price_without_vat?.toNumber(),
+      residual_price: updatedDevice.residual_price?.toNumber(),
+    };
   }
 
-  warrantyAction = async (deviceDto: DeviceDto, id: string, deviceId: string) => {
+  warrantyAction = async (
+    deviceDto: DeviceDto,
+    id: string,
+    deviceId: string,
+  ) => {
     const warrantyData = {
       deviceId: deviceId || undefined,
       warrantyNumber: deviceDto.warrantyNumber?.trim() || undefined,

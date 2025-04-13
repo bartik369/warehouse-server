@@ -9,13 +9,13 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class ValidateAccessMIddleware implements NestMiddleware {
+export class ValidateAccessMiddleware implements NestMiddleware {
   constructor(
     private jwtService: JwtService,
     private prisma: PrismaService,
   ) {}
 
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: Request, res: Response, next: NextFunction): Promise<void> {
     const token = this.extractTokenFromHeader(req);
     if (!token) throw new UnauthorizedException();
     try {
@@ -25,15 +25,15 @@ export class ValidateAccessMIddleware implements NestMiddleware {
 
       if (!validate) throw new UnauthorizedException();
       const user = await this.prisma.user.findUnique({
-        where: {
-          id: validate.sub,
-        },
+        where: { id: validate.sub },
       });
-      return res.json(user);
+      if (!user) throw new UnauthorizedException();
+      req.user = user;
+      next();
     } catch (error) {
-      console.log(error);
+      console.error('[ValidateAccessMiddleware]', error);
+      throw new UnauthorizedException('Access token is invalid or expired');
     }
-    next();
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
