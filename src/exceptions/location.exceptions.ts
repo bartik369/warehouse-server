@@ -4,12 +4,19 @@ import {
   warehouseNotFound,
   locationNotFound,
   departmentNotFound,
+  locationAlreadyExist,
 } from './../common/utils/constants';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class WarehouseExistException extends ConflictException {
   constructor() {
     super(warehouseAlreadyExist);
+  }
+}
+
+export class LocationExistException extends ConflictException {
+  constructor() {
+    super(locationAlreadyExist);
   }
 }
 export class WarehouseNotFoundException extends NotFoundException {

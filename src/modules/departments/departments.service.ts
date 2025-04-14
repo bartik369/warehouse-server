@@ -5,24 +5,26 @@ import {
   DepartmentExistException,
   DepartmentNotFoundException,
 } from 'src/exceptions/location.exceptions';
-import { ILocation } from 'src/common/types/location.types';
 
 @Injectable()
 export class DepartmentsService {
   constructor(private prisma: PrismaService) {}
-
-  async getDepartments(): Promise<ILocation[]> {
+  // All
+  async getDepartments(): Promise<DepartmentDto[]> {
     const departments = await this.prisma.department.findMany({});
+    if (!departments) throw new DepartmentNotFoundException();
     return departments;
   }
-  async getDepartment(id: string): Promise<ILocation> {
+  // Get by ID
+  async getDepartment(id: string): Promise<DepartmentDto> {
     const department = await this.prisma.department.findUnique({
       where: { id: id },
     });
-    if (!department) return null;
+    if (!department) throw new DepartmentNotFoundException();
     return department;
   }
-  async createDepartment(departmentDto: DepartmentDto): Promise<ILocation> {
+  // Create
+  async createDepartment(departmentDto: DepartmentDto): Promise<DepartmentDto> {
     const existDepartment = await this.prisma.department.findUnique({
       where: {
         name: departmentDto.name.trim(),
@@ -33,22 +35,27 @@ export class DepartmentsService {
       data: {
         name: departmentDto.name.trim(),
         slug: departmentDto.slug.trim(),
-        comment: departmentDto.comment || '',
+        comment: departmentDto.comment || undefined,
       },
     });
     return department;
   }
-  async updateDepartment(id: string, departmentDto: DepartmentDto) {
+  // Update
+  async updateDepartment(
+    id: string,
+    departmentDto: DepartmentDto,
+  ): Promise<DepartmentDto> {
     const existDepartment = await this.prisma.department.findUnique({
       where: { id: id },
     });
     if (!existDepartment) throw new DepartmentNotFoundException();
+
     const updatedDepartment = await this.prisma.department.update({
       where: { id: existDepartment.id },
       data: {
         name: departmentDto.name?.trim(),
         slug: departmentDto.slug?.trim(),
-        comment: departmentDto.comment || '',
+        comment: departmentDto.comment || undefined,
       },
     });
     return updatedDepartment;

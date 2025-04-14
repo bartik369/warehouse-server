@@ -13,8 +13,8 @@ import { ModelDto } from './dto/model.dto';
 @Injectable()
 export class ModelsService {
   constructor(private prisma: PrismaService) {}
-  // GET DEVICE MODELS
-  async getModels(manufacturer: string, type: string) {
+  // All models
+  async getModels(manufacturer: string, type: string): Promise<ModelDto[]> {
     const existingType = await this.prisma.device_type.findUnique({
       where: { slug: type },
     });
@@ -32,8 +32,10 @@ export class ModelsService {
     });
     return models;
   }
-  //GET MODEL BY ID
-  async getModelById(id: string) {
+  // Get by ID
+  async getModelById(
+    id: string,
+  ): Promise<ModelDto & { manufacturer: string; type: string }> {
     const existModel = await this.prisma.device_model.findUnique({
       where: { id: id },
     });
@@ -54,12 +56,15 @@ export class ModelsService {
     };
   }
   // GET ALL MODElS
-  async getAllModels() {
+  async getAllModels(): Promise<ModelDto[]> {
     const models = await this.prisma.device_model.findMany({});
     return models;
   }
-  // CREATE DEVICE MODEL
-  async createModel(modelDto: ModelDto, file: Express.Multer.File) {
+  // Create
+  async createModel(
+    modelDto: ModelDto,
+    file: Express.Multer.File,
+  ): Promise<ModelDto> {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: modelDto.manufacturerId },
     });
@@ -83,8 +88,11 @@ export class ModelsService {
     });
     return model;
   }
-  // UPDATE MODEL
-  async updateModel(modelDto: ModelDto, file: Express.Multer.File) {
+  // Update
+  async updateModel(
+    modelDto: ModelDto,
+    file: Express.Multer.File,
+  ): Promise<ModelDto> {
     const existModel = await this.prisma.device_model.findUnique({
       where: { id: modelDto.id },
     });

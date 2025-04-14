@@ -1,13 +1,10 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class DepartmentDto {
-  id: string;
-  @IsNotEmpty()
+export class RoleDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
+  @IsString()
   @IsNotEmpty()
-  @IsString()
-  slug: string;
-  @IsString()
   comment: string;
 }

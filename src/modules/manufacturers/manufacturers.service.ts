@@ -9,21 +9,24 @@ import {
 @Injectable()
 export class ManufacturersService {
   constructor(private prisma: PrismaService) {}
-  // GET DEVICE MANUFACTURERS
-  async getManufacturers() {
+  // Get All
+  async getManufacturers(): Promise<ManufacturerDto[]> {
     const manufacturers = await this.prisma.manufacturer.findMany();
     return manufacturers;
   }
-  // GET MANUFACTURER
-  async getManufacturer(id: string) {
+  // Get by ID
+  async getManufacturer(id: string): Promise<ManufacturerDto> {
     const manufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: id },
     });
-    if (!manufacturer) return null;
+    if (!manufacturer) throw new ManufacturerNotFoundException();
     return manufacturer;
   }
-  // UPDATE MANUFACTURER
-  async updateManufacturer(id: string, manufacturerDto: ManufacturerDto) {
+  // Update
+  async updateManufacturer(
+    id: string,
+    manufacturerDto: ManufacturerDto,
+  ): Promise<ManufacturerDto> {
     const existManufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: id },
     });
@@ -33,13 +36,15 @@ export class ManufacturersService {
       data: {
         name: manufacturerDto.name?.trim(),
         slug: manufacturerDto.slug?.trim(),
-        comment: manufacturerDto.comment || '',
+        comment: manufacturerDto.comment || undefined,
       },
     });
     return updatedManufacturer;
   }
-  //CREATE DEVICE MANUFACTURER
-  async createManufacturer(manufacturerDto: ManufacturerDto) {
+  // Create
+  async createManufacturer(
+    manufacturerDto: ManufacturerDto,
+  ): Promise<ManufacturerDto> {
     const existingManufacturer = await this.prisma.manufacturer.findFirst({
       where: {
         name: manufacturerDto.name?.trim(),
@@ -52,7 +57,7 @@ export class ManufacturersService {
       data: {
         name: manufacturerDto.name?.trim(),
         slug: manufacturerDto.slug?.trim(),
-        comment: manufacturerDto.comment || '',
+        comment: manufacturerDto.comment || undefined,
       },
     });
     return manufacturer;

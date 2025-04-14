@@ -37,7 +37,9 @@ export class DeviceDto {
   @IsOptional()
   @IsNumber()
   residual_price: number;
-  contractorId: string;
+  @IsString()
+  @IsOptional()
+  contractorId?: string;
   isAssigned: boolean;
   @IsString()
   warehouseId: string;
