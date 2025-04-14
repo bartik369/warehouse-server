@@ -35,7 +35,7 @@ export class DepartmentsService {
       data: {
         name: departmentDto.name.trim(),
         slug: departmentDto.slug.trim(),
-        comment: departmentDto.comment || '',
+        comment: departmentDto.comment || undefined,
       },
     });
     return department;
@@ -55,7 +55,7 @@ export class DepartmentsService {
       data: {
         name: departmentDto.name?.trim(),
         slug: departmentDto.slug?.trim(),
-        comment: departmentDto.comment || '',
+        comment: departmentDto.comment || undefined,
       },
     });
     return updatedDepartment;

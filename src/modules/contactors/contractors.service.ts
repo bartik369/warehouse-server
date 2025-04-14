@@ -27,7 +27,7 @@ export class ContractorsService {
         name: contractorDto.name?.trim(),
         slug: contractorDto.slug?.trim(),
         phoneNumber: contractorDto.phoneNumber?.trim(),
-        address: contractorDto.address || '',
+        address: contractorDto.address || undefined,
       },
     });
     return contractor;
@@ -54,7 +54,7 @@ export class ContractorsService {
         name: contractorDto.name?.trim(),
         slug: contractorDto.slug?.trim(),
         phoneNumber: contractorDto.phoneNumber?.trim(),
-        address: contractorDto.address || '',
+        address: contractorDto.address || undefined,
       },
     });
     return updatedContractor;

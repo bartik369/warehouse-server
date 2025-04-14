@@ -8,5 +8,6 @@ export class DepartmentDto {
   @IsNotEmpty()
   @IsString()
   slug: string;
+  @IsString()
   comment: string;
 }

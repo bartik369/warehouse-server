@@ -16,6 +16,7 @@ import { FileUploadInterceptor } from '../../common/interceptors/file-upload.int
 import {
   allowedPictureOptions,
   modelCreated,
+  modelUpdated,
 } from 'src/common/utils/constants';
 import { ModelDto } from './dto/model.dto';
 import { plainToInstance } from 'class-transformer';
@@ -23,17 +24,20 @@ import { plainToInstance } from 'class-transformer';
 @Controller('models')
 export class ModelsController {
   constructor(private modelsService: ModelsService) {}
+  // Get by ID
   @Get('/single/:id')
-  async getModelById(@Param('id') id: string) {
+  async getModelById(
+    @Param('id') id: string,
+  ): Promise<ModelDto & { manufacturer: string; type: string }> {
     const model = await this.modelsService.getModelById(id);
     return model;
   }
 
   @Get('/united/:manufacturer/:type')
-  async getModel(
+  async getModels(
     @Param('manufacturer') manufacturer: string,
     @Param('type') type: string,
-  ) {
+  ): Promise<ModelDto[]> {
     return await this.modelsService.getModels(manufacturer, type);
   }
   @Get('/all')
@@ -41,7 +45,7 @@ export class ModelsController {
     return await this.modelsService.getAllModels();
   }
 
-  // Create device model
+  // Create
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.CREATED)
@@ -49,7 +53,7 @@ export class ModelsController {
   async createModel(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: Record<string, string>,
-  ) {
+  ): Promise<{ message: string; model: ModelDto }> {
     const modelDto = plainToInstance(ModelDto, body);
     const model = await this.modelsService.createModel(modelDto, file);
     return {
@@ -57,6 +61,7 @@ export class ModelsController {
       model,
     };
   }
+  // Update
   @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.OK)
@@ -64,8 +69,12 @@ export class ModelsController {
   async updateModel(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: Record<string, string>,
-  ) {
+  ): Promise<{ message: string; updatedModel: ModelDto }> {
     const modelDto = plainToInstance(ModelDto, body);
-    return await this.modelsService.updateModel(modelDto, file);
+    const updatedModel = await this.modelsService.updateModel(modelDto, file);
+    return {
+      message: modelUpdated,
+      updatedModel,
+    };
   }
 }

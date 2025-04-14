@@ -12,18 +12,18 @@ import {
 } from '@nestjs/common';
 import { ManufacturersService } from './manufacturers.service';
 import { ManufacturerDto } from './dto/manufacturer.dto';
-import { manufacturerCreated } from 'src/common/utils/constants';
-import { FormDataOnlyInterceptor } from 'src/common/interceptors/form-data.interceptor';
+import { manufacturerCreated, manufacturerUpdated } from 'src/common/utils/constants';
 
 @Controller('manufacturers')
 export class ManufacturersController {
   constructor(private manufacturersService: ManufacturersService) {}
-  // Create device manufacturer
+  // Create
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  @FormDataOnlyInterceptor()
   @HttpCode(HttpStatus.CREATED)
-  async createManufacturer(@Body() manufacturerDto: ManufacturerDto) {
+  async createManufacturer(
+    @Body() manufacturerDto: ManufacturerDto,
+  ): Promise<{ message: string; manufacturer: ManufacturerDto }> {
     const manufacturer =
       await this.manufacturersService.createManufacturer(manufacturerDto);
     return {
@@ -32,27 +32,29 @@ export class ManufacturersController {
     };
   }
 
-  // Get devices manufacturers
+  // Get All
   @Get()
-  async getManufacturers() {
+  async getManufacturers(): Promise<ManufacturerDto[]> {
     return await this.manufacturersService.getManufacturers();
   }
-  // Get  manufacturer
+  // Get by ID
   @Get(':id')
-  async getManufacturer(@Param('id') id: string) {
+  async getManufacturer(@Param('id') id: string): Promise<ManufacturerDto> {
     return await this.manufacturersService.getManufacturer(id);
   }
-
+  // Update
   @Put(':id')
-  @UsePipes(new ValidationPipe())
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.OK)
   async updateManufacturer(
     @Param('id') id: string,
     @Body() manufacturerDto: ManufacturerDto,
-  ) {
-    return await this.manufacturersService.updateManufacturer(
-      id,
-      manufacturerDto,
-    );
+  ): Promise<{ message: string; updatedManufacturer: ManufacturerDto }> {
+    const updatedManufacturer =
+      await this.manufacturersService.updateManufacturer(id, manufacturerDto);
+    return {
+      message: manufacturerUpdated,
+      updatedManufacturer,
+    };
   }
 }

@@ -6,6 +6,7 @@ export const modelAlreadyExists = 'Модель уже добавлена!';
 export const typeAlreadyExists = 'Тип уже добавлен!';
 export const contractorAlreadyExists = 'Подрядчик уже существует';
 export const warehouseAlreadyExist = 'Склад уже существует';
+export const locationAlreadyExist = 'Город уже существует';
 export const departmentAlreadyExist = 'Отдел уже существует';
 export const roleAlreadyExist = 'Роль уже существует';
 
@@ -41,11 +42,15 @@ export const contractorCreated = 'Подрядчик добавлен';
 export const roleCreated = 'Роль добавлена';
 export const permissionCreated = 'Права добавлены';
 export const departmentCreated = 'Отдел добавлен';
+export const locationCreated = 'Город добавлен';
 
 export const deviceUpdated = 'Устройство обновлено!';
 export const roleUpdated = 'Роль Обновлена';
 export const contractorUpdated = 'Подрядчик обновлен';
 export const departmentUpdated = 'Отдел обновлен';
+export const locationUpdated = 'Город обновлен';
+export const manufacturerUpdated = 'Производитель обновлен';
+export const modelUpdated = 'Модель обновлена';
 
 export const roleNotUpdated = 'Роль не обновлена!';
 export const contractorNotUpdated = 'Подрядчик не обновлен!';
