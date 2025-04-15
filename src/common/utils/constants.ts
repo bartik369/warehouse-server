@@ -9,6 +9,7 @@ export const warehouseAlreadyExist = 'Склад уже существует';
 export const locationAlreadyExist = 'Город уже существует';
 export const departmentAlreadyExist = 'Отдел уже существует';
 export const roleAlreadyExist = 'Роль уже существует';
+export const permissionAlreadyExist = 'Разрешение уже существует';
 
 export const deviceNotFound = 'Устройство не найдено!';
 export const manufacturerNotFound = 'Производитель не найден!';
@@ -19,6 +20,7 @@ export const warehouseNotFound = 'Склад не найден';
 export const departmentNotFound = 'Отдел не найден';
 export const locationNotFound = 'Город не найден';
 export const roleNotFound = 'Роль не найдена';
+export const permissionNotFound = 'Разрешение не найдено';
 
 export const userAlreadyExist = 'Пожалуйста, проверьте данные';
 
@@ -40,19 +42,24 @@ export const typeCreated = 'Тип добавлен!';
 export const manufacturerCreated = 'Производитель добавлен';
 export const contractorCreated = 'Подрядчик добавлен';
 export const roleCreated = 'Роль добавлена';
-export const permissionCreated = 'Права добавлены';
+export const permissionCreated = 'Разрешение добавлено';
 export const departmentCreated = 'Отдел добавлен';
 export const locationCreated = 'Город добавлен';
 
 export const deviceUpdated = 'Устройство обновлено!';
-export const roleUpdated = 'Роль Обновлена';
+export const roleUpdated = 'Роль обновлена';
+export const permissionUpdated = 'Разрешение обновлено';
 export const contractorUpdated = 'Подрядчик обновлен';
 export const departmentUpdated = 'Отдел обновлен';
 export const locationUpdated = 'Город обновлен';
 export const manufacturerUpdated = 'Производитель обновлен';
 export const modelUpdated = 'Модель обновлена';
 
+export const roleDeleted = 'Роль удалена';
+export const permissionDeleted = 'Разрешение удалено';
+
 export const roleNotUpdated = 'Роль не обновлена!';
+export const permissionNotUpdated = 'Разрешение не обновлено!';
 export const contractorNotUpdated = 'Подрядчик не обновлен!';
 
 // auth
