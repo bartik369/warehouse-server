@@ -293,11 +293,11 @@ model device_repair {
 model contractor {
   id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String          @unique
+  slug          String
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   address       String
   phoneNumber   String
-  slug          String
   deviceRepairs device_repair[]
   warranties    warranty[]
 }

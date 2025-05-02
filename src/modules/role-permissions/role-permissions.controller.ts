@@ -1,0 +1,51 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { RolePermissionsService } from './role-permissions.service';
+import { RolePermissionsDto } from './dtos/role-permissions.dto';
+
+@Controller('permissions-roles')
+export class RolePermissionsController {
+  constructor(private rolePermissionsService: RolePermissionsService) {}
+  //Get all
+  @Get('')
+  async getRolePermissions() {
+    return await this.rolePermissionsService.getAllRolesPermissions();
+  }
+  @Post()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async createRolePermissions(
+    @Body() rolePermissionsDto: RolePermissionsDto,
+  ): Promise<{ message: string }> {
+    await this.rolePermissionsService.createRolePermissions(rolePermissionsDto);
+    return {
+      message: 'ewew',
+    };
+  }
+  // Update
+  @Put()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async updateRolePermissions(
+    @Param('id') id: string,
+    @Body() rolePermissionsDto: RolePermissionsDto,
+  ) {
+    console.log(id)
+    console.log(rolePermissionsDto)
+    // return await this.rolePermissionsService.updateRolePermissions(
+    //   id,
+    //   rolePermissionsDto,
+    // );
+  }
+
+  @Get(':roleId')
+  async getPermissionsByRole(@Param('roleId') roleId: string) {
+    return await this.rolePermissionsService.getPermissionsByRole(roleId);
+  }
+}

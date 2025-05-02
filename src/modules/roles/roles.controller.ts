@@ -25,6 +25,12 @@ export class RolesController {
   async getRoles(): Promise<RoleDto[]> {
     return await this.rolesService.getRoles();
   }
+  // Get all for Assign
+  @Get('assignable')
+  async getAssignableRoles(): Promise<RoleDto[]> {
+    return await this.rolesService.getAssignableRoles();
+  }
+
   // Get by ID
   @Get(':id')
   async getRole(@Param('id') id: string): Promise<RoleDto> {
@@ -43,11 +49,11 @@ export class RolesController {
     };
   }
   // Update
-  @Put()
+  @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateRole(
     @Param('id') id: string,
-    roleDto: RoleDto,
+    @Body() roleDto: RoleDto,
   ): Promise<{ message: string; updatedRole: RoleDto }> {
     const updatedRole = await this.rolesService.updateRole(id, roleDto);
     return {
@@ -56,7 +62,7 @@ export class RolesController {
     };
   }
   // Delete
-  @Delete()
+  @Delete(':id')
   async deleteRole(@Param('id') id: string): Promise<{ message: string }> {
     await this.rolesService.deleteRole(id);
     return {

@@ -14,10 +14,10 @@ import {
   permissionDeleted,
   permissionUpdated,
 } from 'src/common/utils/constants';
-import { PermissionsService } from './Permissions.service';
+import { PermissionsService } from './permissions.service';
 import { PermissionDto } from './dto/permission.dto';
 
-@Controller()
+@Controller('permissions')
 export class PermissionsController {
   constructor(private permissionsService: PermissionsService) {}
   // Get all
@@ -44,11 +44,11 @@ export class PermissionsController {
     };
   }
   // Update
-  @Put()
+  @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updatePermission(
     @Param('id') id: string,
-    permissionDto: PermissionDto,
+    @Body() permissionDto: PermissionDto,
   ): Promise<{ message: string; updatedPermission: PermissionDto }> {
     const updatedPermission = await this.permissionsService.updatePermission(
       id,
@@ -61,7 +61,7 @@ export class PermissionsController {
   }
 
   // Delete
-  @Delete()
+  @Delete(':id')
   async deletePermission(
     @Param('id') id: string,
   ): Promise<{ message: string }> {

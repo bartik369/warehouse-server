@@ -10,6 +10,7 @@ export const locationAlreadyExist = 'Город уже существует';
 export const departmentAlreadyExist = 'Отдел уже существует';
 export const roleAlreadyExist = 'Роль уже существует';
 export const permissionAlreadyExist = 'Разрешение уже существует';
+export const rolePermissionAlreadyExist = 'Права данной роли уже назначены';
 
 export const deviceNotFound = 'Устройство не найдено!';
 export const manufacturerNotFound = 'Производитель не найден!';
@@ -21,6 +22,7 @@ export const departmentNotFound = 'Отдел не найден';
 export const locationNotFound = 'Город не найден';
 export const roleNotFound = 'Роль не найдена';
 export const permissionNotFound = 'Разрешение не найдено';
+export const rolePermissionNotFound = 'Права для роли не найдены';
 
 export const userAlreadyExist = 'Пожалуйста, проверьте данные';
 
@@ -45,6 +47,7 @@ export const roleCreated = 'Роль добавлена';
 export const permissionCreated = 'Разрешение добавлено';
 export const departmentCreated = 'Отдел добавлен';
 export const locationCreated = 'Город добавлен';
+export const warehouseCreated = 'Склад добавлен';
 
 export const deviceUpdated = 'Устройство обновлено!';
 export const roleUpdated = 'Роль обновлена';

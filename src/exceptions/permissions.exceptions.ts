@@ -6,6 +6,8 @@ import {
   roleAlreadyExist,
   roleNotFound,
   roleNotUpdated,
+  rolePermissionAlreadyExist,
+  rolePermissionNotFound,
 } from 'src/common/utils/constants';
 
 export class RoleExistException extends ConflictException {
@@ -31,6 +33,16 @@ export class PermissionExistException extends ConflictException {
 export class PermissionNotFoundException extends NotFoundException {
   constructor() {
     super(permissionNotFound);
+  }
+}
+export class RolePermissionExistException extends ConflictException {
+  constructor() {
+    super(rolePermissionAlreadyExist);
+  }
+}
+export class RolePermissionNotFoundException extends NotFoundException {
+  constructor() {
+    super(rolePermissionNotFound);
   }
 }
 export class PermissionNotUpdatedException extends NotFoundException {

@@ -23,6 +23,15 @@ export class RolesService {
     if (!role) throw new RoleNotFoundException();
     return role;
   }
+  // Get all for Assign
+  async getAssignableRoles(): Promise<RoleDto[]> {
+    const roles = await this.prisma.role.findMany({
+      where: {
+        name: { not: 'administrator' },
+      },
+    });
+    return roles;
+  }
   // Create
   async createRole(roleDto: RoleDto) {
     const existingRole = await this.prisma.role.findUnique({

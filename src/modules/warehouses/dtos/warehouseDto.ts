@@ -2,6 +2,7 @@ export class WarehouseDto {
   id: string;
   name: string;
   slug: string;
-  locationName: string;
+  locationId?: string;
+  locationName?: string;
   comment: string;
 }

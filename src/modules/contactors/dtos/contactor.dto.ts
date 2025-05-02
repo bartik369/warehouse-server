@@ -10,5 +10,6 @@ export class ContractorDto {
   @IsString()
   @IsNotEmpty()
   phoneNumber: string;
+  @IsString()
   address: string;
 }
