@@ -1,10 +1,10 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import {
   RolePermissionsDto,
   RolePermissionsResponseDto,
 } from './dtos/role-permissions.dto';
-import { RolePermissionExistException } from 'src/exceptions/permissions.exceptions';
+import { RolePermissionExistException, RolePermissionNotFoundException } from 'src/exceptions/permissions.exceptions';
 
 @Injectable()
 export class RolePermissionsService {
@@ -171,34 +171,44 @@ export class RolePermissionsService {
     }
   }
 
-  // Create
-  async createRolePermissions(rolePermissionsDto: RolePermissionsDto) {
+  // Create and Update
+  async createUpdateRolePermissions(rolePermissionsDto: RolePermissionsDto) {
     const {
+      locationId,
+      warehouseId,
+      permissionIds,
       roleId,
       roleName,
-      locationId,
-      permissionIds,
-      warehouseId,
       comment,
     } = rolePermissionsDto;
-
-    const trimmedRoleId = roleId?.trim();
     const trimmedLocationId = locationId?.trim();
     const trimmedWarehouseId = warehouseId?.trim() ?? null;
+    const trimmedRoleId = roleId?.trim();
+    const trimmedRoleName = roleName?.trim();
+
+    const permissionDataReq: Record<string, string> = {
+      roleId: trimmedRoleId,
+      locationId: trimmedLocationId,
+    };
+    if (trimmedRoleName !== 'manager') {
+      permissionDataReq.warehouseId = trimmedWarehouseId;
+    }
+
     const existingRolePerms = await this.prisma.permission_role.findMany({
-      where: {
-        roleId: trimmedRoleId,
-        locationId: trimmedLocationId,
-        warehouseId: trimmedWarehouseId,
-      },
+      where: permissionDataReq,
     });
-    if (roleName === 'manager') {
-      const exist = existingRolePerms.some(
-        (item) => item.locationId === trimmedLocationId,
-      );
-      if (exist) {
-        throw new RolePermissionExistException();
-      }
+    if (existingRolePerms.length === 0) throw new RolePermissionNotFoundException();
+
+    const deleteWhere = {
+      roleId: trimmedRoleId,
+      locationId: trimmedLocationId,
+      ...(trimmedRoleName !== 'manager' && { warehouseId: trimmedWarehouseId }),
+    };
+
+    if (trimmedRoleName === 'manager') {
+      await this.prisma.permission_role.deleteMany({
+        where: deleteWhere,
+      });
       await this.prisma.permission_role.create({
         data: {
           permissionId: null,
@@ -211,11 +221,7 @@ export class RolePermissionsService {
       return;
     } else {
       await this.prisma.permission_role.deleteMany({
-        where: {
-          roleId: trimmedRoleId,
-          locationId: trimmedLocationId,
-          warehouseId: trimmedWarehouseId,
-        },
+        where: deleteWhere,
       });
       const permissionRoleModel = permissionIds.map((permissionId) => ({
         permissionId,
@@ -229,78 +235,5 @@ export class RolePermissionsService {
         skipDuplicates: true,
       });
     }
-  }
-
-  // Update
-  async updateRolePermissions(rolePermissionsDto: RolePermissionsDto) {
-    const { roleId, locationId, warehouseId, roleName } = rolePermissionsDto;
-    const trimmedRoleId = roleId?.trim();
-    const trimmedLocationId = locationId?.trim();
-    const trimmedWarehouseId = warehouseId?.trim() ?? null;
-
-    this.rewritePermsData(trimmedRoleId, trimmedLocationId, trimmedWarehouseId);
-
-    if (roleName?.trim().length > 0 && roleName !== 'manager') {
-      const [location, warehouse, role] = await Promise.all([
-        this.prisma.location.findUnique({
-          where: { id: trimmedLocationId },
-        }),
-        this.prisma.warehouse.findUnique({
-          where: { id: trimmedWarehouseId },
-        }),
-        this.prisma.role.findUnique({
-          where: { id: trimmedRoleId },
-        }),
-      ]);
-
-      if (!location || !warehouse || !role) throw new ConflictException();
-      const existingRolePerms = await this.prisma.permission_role.findMany({
-        where: {
-          roleId: role.id,
-          locationId: location.id,
-          warehouseId: warehouse.id,
-        },
-      });
-      if (existingRolePerms) {
-        await this.prisma.permission_role.deleteMany({
-          where: {
-            roleId: role.id,
-            locationId: location.id,
-            warehouseId: warehouse.id,
-          },
-        });
-      }
-      const permsRoleModel = rolePermissionsDto.permissionIds.map(
-        (permissionId) => ({
-          permissionId,
-          locationId: location.id,
-          warehouseId: warehouse.id ?? '',
-          roleId: role.id ?? '',
-          comment: rolePermissionsDto.comment,
-        }),
-      );
-      console.log(permsRoleModel);
-      await this.prisma.permission_role.createMany({
-        data: permsRoleModel,
-        skipDuplicates: true,
-      });
-    }
-  }
-
-  async deleteRolePermissions(id: string) {}
-
-  private async rewritePermsData(
-    roleId: string,
-    locationId: string,
-    warehouseId: string,
-  ) {
-    const existingRolePerms = await this.prisma.permission_role.findMany({
-      where: {
-        roleId: roleId,
-        locationId: locationId,
-        warehouseId: warehouseId,
-      },
-    });
-
   }
 }

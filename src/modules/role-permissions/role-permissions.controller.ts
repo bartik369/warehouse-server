@@ -24,7 +24,9 @@ export class RolePermissionsController {
   async createRolePermissions(
     @Body() rolePermissionsDto: RolePermissionsDto,
   ): Promise<{ message: string }> {
-    await this.rolePermissionsService.createRolePermissions(rolePermissionsDto);
+    await this.rolePermissionsService.createUpdateRolePermissions(
+      rolePermissionsDto,
+    );
     return {
       message: 'ewew',
     };
@@ -34,7 +36,7 @@ export class RolePermissionsController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateRolePermissions(@Body() rolePermissionsDto: RolePermissionsDto) {
     // console.log(rolePermissionsDto);
-    return await this.rolePermissionsService.updateRolePermissions(
+    return await this.rolePermissionsService.createUpdateRolePermissions(
       rolePermissionsDto,
     );
   }
