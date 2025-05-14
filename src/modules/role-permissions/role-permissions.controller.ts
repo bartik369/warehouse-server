@@ -32,20 +32,10 @@ export class RolePermissionsController {
   // Update
   @Put()
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async updateRolePermissions(
-    @Param('id') id: string,
-    @Body() rolePermissionsDto: RolePermissionsDto,
-  ) {
-    console.log(id)
-    console.log(rolePermissionsDto)
-    // return await this.rolePermissionsService.updateRolePermissions(
-    //   id,
-    //   rolePermissionsDto,
-    // );
-  }
-
-  @Get(':roleId')
-  async getPermissionsByRole(@Param('roleId') roleId: string) {
-    return await this.rolePermissionsService.getPermissionsByRole(roleId);
+  async updateRolePermissions(@Body() rolePermissionsDto: RolePermissionsDto) {
+    // console.log(rolePermissionsDto);
+    return await this.rolePermissionsService.updateRolePermissions(
+      rolePermissionsDto,
+    );
   }
 }

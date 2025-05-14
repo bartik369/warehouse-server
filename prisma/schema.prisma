@@ -89,17 +89,17 @@ model permission {
 }
 
 model permission_role {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  permissionId String     @db.Uuid
-  roleId       String     @db.Uuid
-  locationId   String?    @db.Uuid
-  warehouseId  String?    @db.Uuid
-  comment      String?
-  createdAt    DateTime   @default(now())
-  location     location?  @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  permission   permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  role         role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  warehouse    warehouse? @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  permissionId String?     @db.Uuid
+  roleId       String      @db.Uuid
+  locationId   String?     @db.Uuid
+  warehouseId  String?     @db.Uuid
+  comment      String      @unique
+  createdAt    DateTime    @default(now())
+  location     location?   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  permission   permission? @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  warehouse    warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
 
   @@unique([permissionId, roleId, locationId, warehouseId])
 }
@@ -293,11 +293,11 @@ model device_repair {
 model contractor {
   id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String          @unique
-  slug          String
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   address       String
   phoneNumber   String
+  slug          String
   deviceRepairs device_repair[]
   warranties    warranty[]
 }

@@ -10,10 +10,13 @@ export class RolePermissionsDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionId: string[];
+  permissionIds: string[] | null;
+  @IsNotEmpty()
+  @IsString()
+  roleName: string;
   @IsOptional()
   @IsString()
-  warehouseId: string;
+  warehouseId: string | null;
   @IsNotEmpty()
   @IsString()
   locationId: string;
@@ -25,7 +28,7 @@ export class RolePermissionsDto {
 export class RolePermissionsResponseDto {
   id: string;
   roleId: string;
-  permissionId: string[];
+  permissionIds: string[];
   permissionName: string[];
   locationId: string;
   locationName: string;
@@ -36,7 +39,7 @@ export class RolePermissionsResponseDto {
   constructor(partial: Partial<RolePermissionsResponseDto>) {
     Object.assign(this, {
       id: '',
-      permissionId: [],
+      permissionIds: [],
       permissionName: [],
       locationId: '',
       locationName: '',
@@ -46,11 +49,4 @@ export class RolePermissionsResponseDto {
       ...partial,
     });
   }
-}
-export class AllRolesPermissionsResDto {
-  roleId: string;
-  role: string;
-  location: string;
-  warehouse: string;
-  permissions: string[];
 }
