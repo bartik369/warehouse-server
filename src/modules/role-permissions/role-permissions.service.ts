@@ -4,7 +4,7 @@ import {
   RolePermissionsDto,
   RolePermissionsResponseDto,
 } from './dtos/role-permissions.dto';
-import { RolePermissionExistException, RolePermissionNotFoundException } from 'src/exceptions/permissions.exceptions';
+import { RolePermissionNotFoundException } from 'src/exceptions/permissions.exceptions';
 
 @Injectable()
 export class RolePermissionsService {
@@ -170,55 +170,63 @@ export class RolePermissionsService {
       };
     }
   }
-
   // Create and Update
   async createUpdateRolePermissions(rolePermissionsDto: RolePermissionsDto) {
     const {
       locationId,
+      oldLocationId,
       warehouseId,
+      oldWarehouseId,
       permissionIds,
       roleId,
       roleName,
       comment,
     } = rolePermissionsDto;
+
     const trimmedLocationId = locationId?.trim();
+    const trimmedOldLocationId = oldLocationId?.trim();
     const trimmedWarehouseId = warehouseId?.trim() ?? null;
+    const trimmedOldWarehouseId = oldWarehouseId?.trim() ?? null;
     const trimmedRoleId = roleId?.trim();
     const trimmedRoleName = roleName?.trim();
 
-    const permissionDataReq: Record<string, string> = {
-      roleId: trimmedRoleId,
-      locationId: trimmedLocationId,
-    };
-    if (trimmedRoleName !== 'manager') {
-      permissionDataReq.warehouseId = trimmedWarehouseId;
-    }
-
-    const existingRolePerms = await this.prisma.permission_role.findMany({
-      where: permissionDataReq,
-    });
-    if (existingRolePerms.length === 0) throw new RolePermissionNotFoundException();
-
     const deleteWhere = {
       roleId: trimmedRoleId,
-      locationId: trimmedLocationId,
-      ...(trimmedRoleName !== 'manager' && { warehouseId: trimmedWarehouseId }),
+      locationId: trimmedOldLocationId || trimmedLocationId,
+      ...(trimmedRoleName !== 'manager' && {
+        warehouseId: trimmedOldWarehouseId || trimmedWarehouseId,
+      }),
     };
 
     if (trimmedRoleName === 'manager') {
-      await this.prisma.permission_role.deleteMany({
-        where: deleteWhere,
-      });
-      await this.prisma.permission_role.create({
-        data: {
-          permissionId: null,
+      const existingPermission = await this.prisma.permission_role.findFirst({
+        where: {
           roleId: trimmedRoleId,
-          locationId: trimmedLocationId,
+          locationId: trimmedOldLocationId || trimmedLocationId,
           warehouseId: null,
-          comment,
         },
       });
-      return;
+      if (existingPermission) {
+        await this.prisma.permission_role.update({
+          where: { id: existingPermission.id },
+          data: {
+            roleId: trimmedRoleId,
+            locationId: trimmedLocationId,
+            warehouseId: null,
+            comment,
+          },
+        });
+      } else {
+        await this.prisma.permission_role.create({
+          data: {
+            permissionId: null,
+            roleId: trimmedRoleId,
+            locationId: trimmedLocationId,
+            warehouseId: null,
+            comment,
+          },
+        });
+      }
     } else {
       await this.prisma.permission_role.deleteMany({
         where: deleteWhere,
@@ -230,10 +238,12 @@ export class RolePermissionsService {
         warehouseId: trimmedWarehouseId,
         comment,
       }));
-      await this.prisma.permission_role.createMany({
-        data: permissionRoleModel,
-        skipDuplicates: true,
-      });
+      if (permissionIds.length > 0) {
+        await this.prisma.permission_role.createMany({
+          data: permissionRoleModel,
+          skipDuplicates: true,
+        });
+      }
     }
   }
 }

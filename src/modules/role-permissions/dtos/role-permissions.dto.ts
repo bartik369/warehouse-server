@@ -16,10 +16,16 @@ export class RolePermissionsDto {
   roleName: string;
   @IsOptional()
   @IsString()
-  warehouseId: string | null;
-  @IsNotEmpty()
+  warehouseId: string;
+  @IsOptional()
+  @IsString()
+  oldWarehouseId: string;
+  @IsOptional()
   @IsString()
   locationId: string;
+  @IsOptional()
+  @IsString()
+  oldLocationId: string;
   @IsNotEmpty()
   @IsString()
   comment: string;
