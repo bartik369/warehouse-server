@@ -1,26 +1,33 @@
-name: Deploy to Server
+# .github/workflows/deploy.yml
+name: Deploy Backend
 
 on:
   push:
     branches:
-      - main
+      - main  # или другая ветка, которую используешь для прода
 
 jobs:
   deploy:
+    name: SSH Deploy Backend
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.8.1
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H YOUR.SERVER.IP >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         run: |
-          ssh -o StrictHostKeyChecking=no deploy@your.server.ip "
-            cd /srv/apps/frontend && git pull &&
-            docker compose pull &&
-            docker compose up -d --build
-          "
+          ssh deploy@79.174.80.187 << 'EOF'
+            cd /srv/apps/backend
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build
+          EOF
+
