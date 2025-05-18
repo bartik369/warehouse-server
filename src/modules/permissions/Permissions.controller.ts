@@ -14,7 +14,7 @@ import {
   permissionDeleted,
   permissionUpdated,
 } from 'src/common/utils/constants';
-import { PermissionsService } from './permissions.service';
+import { PermissionsService } from './Permissions.service';
 import { PermissionDto } from './dto/permission.dto';
 
 @Controller('permissions')
