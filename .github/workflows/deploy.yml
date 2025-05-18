@@ -21,7 +21,23 @@ jobs:
           port: 22
           command_timeout: 50m
           script: |
+            echo "===> Переключаемся в директорию проекта"
             cd /srv/apps/backend
+
+            echo "===> Обновляем репозиторий"
             git pull origin main
+
+            echo "===> Останавливаем контейнеры"
             docker compose down
-            docker compose up --build -d
+
+            echo "===> Собираем образы"
+            docker compose build
+
+            echo "===> Запускаем контейнеры в фоне"
+            docker compose up -d
+
+            echo "===> Проверка статуса контейнеров"
+            docker compose ps
+
+            echo "===> Вывод логов (последние 100 строк)"
+            docker compose logs --tail=100
