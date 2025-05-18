@@ -2,7 +2,6 @@ import express from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
-import rateLimit from 'express-rate-limit';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest-express-application.interface';
@@ -14,7 +13,7 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          imgSrc: ["'self'", "http://localhost:5000"],
+          imgSrc: ["'self'", 'http://localhost:5000'],
           objectSrc: ["'none'"],
           upgradeInsecureRequests: [],
         },

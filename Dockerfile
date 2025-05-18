@@ -1,36 +1,30 @@
 # Этап 1: сборка приложения
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Установка зависимостей
+# Копируем зависимости и устанавливаем
 COPY package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60000 --verbose
 
-# Копируем исходники
+# Копируем весь код
 COPY . .
 
-# Компилируем TypeScript → JavaScript
+# Сборка TypeScript
 RUN npm run build
 
 # Этап 2: production-контейнер
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Устанавливаем только production-зависимости
 COPY package*.json ./
-RUN npm install --only=production
-
-# Копируем собранный код и необходимые папки
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY prisma ./prisma
 
-# Настройка переменных окружения (лучше .env передавать на сервер и монтировать в compose)
 ENV NODE_ENV=production
 
-# Открываем порт
 EXPOSE 5000
 
-# Prisma миграции можно выполнить отдельно или через entrypoint
 CMD ["node", "dist/main.js"]

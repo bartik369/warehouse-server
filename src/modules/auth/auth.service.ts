@@ -9,7 +9,7 @@ import {
 import { UserNotFoundException } from 'src/exceptions/auth.exceptions';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
