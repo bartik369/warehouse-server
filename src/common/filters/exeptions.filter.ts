@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Catch()
 export class ExceptionsFilter implements ExceptionFilter {
@@ -26,7 +27,7 @@ export class ExceptionsFilter implements ExceptionFilter {
         message = responseMessage as string;
       }
     } else if (
-      exception instanceof Prisma.PrismaClientKnownRequestError &&
+      exception instanceof PrismaClientKnownRequestError &&
       exception.code === 'P2025'
     ) {
       status = HttpStatus.NOT_FOUND;

@@ -154,7 +154,7 @@ export class RolePermissionsService {
     }
 
     const rolesName = permissions.map((item) => item.name);
-    if (roleName.name === 'manager') {
+    if (roleName.name === 'manager' && permissionData) {
       return {
         ...permissionData,
         locationName: location.name ?? '',
