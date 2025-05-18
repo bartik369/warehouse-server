@@ -5,6 +5,8 @@ import {
   RolePermissionsResponseDto,
 } from './dtos/role-permissions.dto';
 
+interface 
+
 @Injectable()
 export class RolePermissionsService {
   constructor(private prisma: PrismaService) {}
@@ -155,21 +157,19 @@ export class RolePermissionsService {
     }
 
     const rolesName = permissions.map((item) => item.name);
-    if (roleName.name === 'manager' && permissionData) {
+    if (roleName.name === 'manager') {
       return {
-        ...permissionData,
+        ...(permissionData as RolePermissionsResponseDto),
         locationName: location.name ?? '',
       };
     } else {
-      if (permissionData) {
-        return {
-          ...permissionData,
-          locationName: location.name ?? '',
-          locationId: location.id ?? '',
-          warehouseName: warehouse.name ?? '',
-          permissionName: rolesName,
-        };
-      }
+      return {
+        ...(permissionData as RolePermissionsResponseDto),
+        locationName: location.name ?? '',
+        locationId: location.id ?? '',
+        warehouseName: warehouse.name ?? '',
+        permissionName: rolesName,
+      };
     }
   }
   // Create and Update
