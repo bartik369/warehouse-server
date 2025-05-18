@@ -19,6 +19,7 @@ import {
 import { GetAccessToken } from './decorators/access-token.decorator';
 import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
 import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor';
+import { successLogoutMsg } from 'src/common/utils/constants';
 
 @Controller('auth')
 export class AuthController {
@@ -54,6 +55,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(@GetUserId() userId: string) {
     await this.authService.logout(userId);
+    return { message: successLogoutMsg };
   }
 
   @Post('validate')

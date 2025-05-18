@@ -19,7 +19,7 @@ async function bootstrap() {
           upgradeInsecureRequests: [],
         },
       },
-      crossOriginResourcePolicy: { policy: "cross-origin" },
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     })
   );
 
@@ -38,10 +38,10 @@ async function bootstrap() {
   app.enableCors({
     credentials: true,
     origin: 'http://localhost:5173',
-    methods: ['GET','HEAD','PUT','PATCH','POST','DELETE'],
-    allowedHeaders: "Content-Type, Authorization",
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: 'Content-Type, Authorization',
   });
-  
+
   app.use('/uploads', express.static(__dirname + '/uploads'));
   app.useGlobalPipes(new ValidationPipe());
 
@@ -50,4 +50,3 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 5000);
 }
 bootstrap();
-
