@@ -4,7 +4,6 @@ import {
   RolePermissionsDto,
   RolePermissionsResponseDto,
 } from './dtos/role-permissions.dto';
-import { RolePermissionNotFoundException } from 'src/exceptions/permissions.exceptions';
 
 @Injectable()
 export class RolePermissionsService {

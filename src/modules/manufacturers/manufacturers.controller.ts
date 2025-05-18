@@ -12,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { ManufacturersService } from './manufacturers.service';
 import { ManufacturerDto } from './dto/manufacturer.dto';
-import { manufacturerCreated, manufacturerUpdated } from 'src/common/utils/constants';
+import {
+  manufacturerCreated,
+  manufacturerUpdated,
+} from 'src/common/utils/constants';
 
 @Controller('manufacturers')
 export class ManufacturersController {

@@ -35,8 +35,11 @@ export class RolePermissionsController {
   @Put()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateRolePermissions(@Body() rolePermissionsDto: RolePermissionsDto) {
-    return await this.rolePermissionsService.createUpdateRolePermissions(
+    await this.rolePermissionsService.createUpdateRolePermissions(
       rolePermissionsDto,
     );
+    return {
+      message: 'ewew',
+    };
   }
 }

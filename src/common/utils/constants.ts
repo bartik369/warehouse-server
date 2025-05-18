@@ -25,6 +25,7 @@ export const permissionNotFound = 'Разрешение не найдено';
 export const rolePermissionNotFound = 'Права для роли не найдены';
 
 export const userAlreadyExist = 'Пожалуйста, проверьте данные';
+export const successLogoutMsg = 'Вы успешно вышли из системы';
 
 export const allowedPictureOptions = {
   allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],
@@ -57,6 +58,7 @@ export const departmentUpdated = 'Отдел обновлен';
 export const locationUpdated = 'Город обновлен';
 export const manufacturerUpdated = 'Производитель обновлен';
 export const modelUpdated = 'Модель обновлена';
+export const warehouseUpdated = 'Склад обновлен';
 
 export const roleDeleted = 'Роль удалена';
 export const permissionDeleted = 'Разрешение удалено';

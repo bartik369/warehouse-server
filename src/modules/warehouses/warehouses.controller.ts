@@ -2,7 +2,7 @@ import { WarehouseDto } from './dtos/warehouseDto';
 import { Body, Controller, Post, Param, Put } from '@nestjs/common';
 import { Get } from '@nestjs/common';
 import { WarehousesService } from './warehouses.service';
-import { warehouseCreated } from 'src/common/utils/constants';
+import { warehouseCreated, warehouseUpdated } from 'src/common/utils/constants';
 
 @Controller('warehouses')
 export class WarehousesController {
@@ -43,6 +43,13 @@ export class WarehousesController {
     @Param('id') id: string,
     @Body() warehouseDto: WarehouseDto,
   ) {
-    await this.warehousesService.updateWarehouse(id, warehouseDto);
+    const updatedWarehouse = await this.warehousesService.updateWarehouse(
+      id,
+      warehouseDto,
+    );
+    return {
+      message: warehouseUpdated,
+      updatedWarehouse,
+    };
   }
 }
