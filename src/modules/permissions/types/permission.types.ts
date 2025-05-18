@@ -8,8 +8,7 @@ export interface IRolePermissions {
   permissionId: string[];
 }
 
-export interface IRole {
+export interface IPermission {
   id: string;
-  comment: string | null;
   name: string;
 }

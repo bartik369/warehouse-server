@@ -4,6 +4,10 @@ import {
   RolePermissionsDto,
   RolePermissionsResponseDto,
 } from './dtos/role-permissions.dto';
+import { IRole } from 'src/common/types/permission.types';
+import { IWarehouse } from '../warehouses/types/warehouse.types';
+import { ILocation } from 'src/common/types/location.types';
+import { IPermission } from '../permissions/types/permission.types';
 
 @Injectable()
 export class RolePermissionsService {
@@ -65,17 +69,16 @@ export class RolePermissionsService {
       throw new NotFoundException('Required roles or locations not found');
     }
 
-    const roleMap: Map<
-      string,
-      {
-        id: string;
-        comment: string | null;
-        name: string;
-      }
-    > = new Map(roles.map((r) => [r.id, r]));
-    const warehouseMap = new Map(warehouses.map((w) => [w.id, w]));
-    const locationMap = new Map(locations.map((l) => [l.id, l]));
-    const permissionsMap = new Map(permissions.map((p) => [p.id, p]));
+    const roleMap: Map<string, IRole> = new Map(roles.map((r) => [r.id, r]));
+    const warehouseMap: Map<string, IWarehouse> = new Map(
+      warehouses.map((w) => [w.id, w]),
+    );
+    const locationMap: Map<string, ILocation> = new Map(
+      locations.map((l) => [l.id, l]),
+    );
+    const permissionsMap: Map<string, IPermission> = new Map(
+      permissions.map((p) => [p.id, p]),
+    );
 
     return groupedArray.map(
       ({ roleId, warehouseId, locationId, permissionIds }) => ({
