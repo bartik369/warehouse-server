@@ -32,7 +32,8 @@ export class RolePermissionsService {
       {} as Record<string, Partial<RolePermissionsResponseDto>>,
     );
 
-    const groupedArray = Object.values(groupedByRole);
+    const groupedArray: Partial<RolePermissionsResponseDto>[] =
+      Object.values(groupedByRole);
     const uniqueRoleIds = [...new Set(groupedArray.map((r) => r.roleId))];
     const uniqueWarehouseIds = [
       ...new Set(groupedArray.map((w) => w.warehouseId).filter(Boolean)),
