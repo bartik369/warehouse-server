@@ -160,13 +160,15 @@ export class RolePermissionsService {
         locationName: location.name ?? '',
       };
     } else {
-      return {
-        ...permissionData,
-        locationName: location.name ?? '',
-        locationId: location.id ?? '',
-        warehouseName: warehouse.name ?? '',
-        permissionName: rolesName,
-      };
+      if (permissionData) {
+        return {
+          ...permissionData,
+          locationName: location.name ?? '',
+          locationId: location.id ?? '',
+          warehouseName: warehouse.name ?? '',
+          permissionName: rolesName,
+        };
+      }
     }
   }
   // Create and Update
