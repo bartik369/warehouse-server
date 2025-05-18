@@ -5,8 +5,6 @@ import {
   RolePermissionsResponseDto,
 } from './dtos/role-permissions.dto';
 
-interface 
-
 @Injectable()
 export class RolePermissionsService {
   constructor(private prisma: PrismaService) {}
@@ -67,7 +65,14 @@ export class RolePermissionsService {
       throw new NotFoundException('Required roles or locations not found');
     }
 
-    const roleMap = new Map(roles.map((r) => [r.id, r]));
+    const roleMap: Map<
+      string,
+      {
+        id: string;
+        comment: string | null;
+        name: string;
+      }
+    > = new Map(roles.map((r) => [r.id, r]));
     const warehouseMap = new Map(warehouses.map((w) => [w.id, w]));
     const locationMap = new Map(locations.map((l) => [l.id, l]));
     const permissionsMap = new Map(permissions.map((p) => [p.id, p]));
