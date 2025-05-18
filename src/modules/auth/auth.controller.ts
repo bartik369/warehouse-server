@@ -1,6 +1,6 @@
 import { AuthDto } from './dtos/auth.dto';
 import { GroupAuthData, AuthData } from 'src/common/types/user.types';
-import { AuthService } from './auth.service';
+import { AuthService } from './Auth.service';
 import { Request } from 'express';
 import { Public } from './decorators/public.decorator';
 import { GetUserId } from './decorators/user-id.decorator';

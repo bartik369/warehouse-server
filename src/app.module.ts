@@ -18,8 +18,8 @@ import { ManufacturersModule } from './modules/manufacturers/manufacturers.modul
 import { TypesModule } from './modules/types/types.module';
 import { ModelsModule } from './modules/models/models.module';
 import { RolesModule } from './modules/roles/roles.module';
-import { PermissionsModule } from './modules/permissions/permissions.module';
-import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
+import { PermissionsModule } from './modules/permissions/Permissions.module';
+import { RolePermissionsModule } from './modules/role-permissions/Role-permissions.module';
 
 console.log(
   'Static files rootPath:',
