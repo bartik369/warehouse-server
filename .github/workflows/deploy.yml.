@@ -1,33 +1,26 @@
-# .github/workflows/deploy.yml
-name: Deploy Backend
+name: Deploy Frontend
 
 on:
   push:
-    branches:
-      - main  # или другая ветка, которую используешь для прода
+    branches: [main]
 
 jobs:
   deploy:
-    name: SSH Deploy Backend
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H YOUR.SERVER.IP >> ~/.ssh/known_hosts
-
-      - name: Deploy to server
-        run: |
-          ssh deploy@79.174.80.187 << 'EOF'
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          script: |
             cd /srv/apps/backend
             git pull origin main
-            docker-compose down
-            docker-compose up -d --build
-          EOF
-
+            docker compose down
+            docker compose up --build -d
