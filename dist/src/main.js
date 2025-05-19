@@ -33,6 +33,7 @@ async function bootstrap() {
     });
     app.use('/uploads', express_1.default.static(__dirname + '/uploads'));
     app.useGlobalPipes(new common_1.ValidationPipe());
+    app.setGlobalPrefix('api');
     app.use((0, cookie_parser_1.default)());
     await app.listen(process.env.PORT ?? 5000);
 }
