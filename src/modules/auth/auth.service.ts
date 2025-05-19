@@ -94,7 +94,6 @@ export class AuthService {
       throw new DeniedAccessException();
     }
   }
-
   async validate(token: string): Promise<IUser> {
     const payload = await this.jwtService.decode(token);
     if (!payload) throw new DeniedAccessException();

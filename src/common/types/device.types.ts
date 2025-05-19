@@ -92,7 +92,6 @@ export interface IDeviceIssue {
     lastNameEn: string;
   };
 }
-
 export interface IAggregatedDeviceInfo {
   lastIssuedAt: Date;
   lastReturnedAt: Date;
