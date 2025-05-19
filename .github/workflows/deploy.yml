@@ -27,6 +27,11 @@ jobs:
             echo "===> Обновляем репозиторий"
             git pull origin main
 
+            echo "===> Создаём .env.production из GitHub Secret"
+            cat <<EOF > .env.production
+            ${{ secrets.ENV_PROD }}
+            EOF
+
             echo "===> Останавливаем контейнеры"
             docker compose down
 
