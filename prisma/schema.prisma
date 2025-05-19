@@ -19,8 +19,8 @@ model user {
   locationId            String          @db.Uuid
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
-  firstNameRu           String?
-  lastNameRu            String?
+  firstNameRu           String
+  lastNameRu            String
   devicesAdded          device[]        @relation("who_add_device")
   devicesUpdated        device[]        @relation("who_update_device")
   DeviceIssue           device_issue[]  @relation("issue_device_by_user")
@@ -94,7 +94,7 @@ model permission_role {
   roleId       String      @db.Uuid
   locationId   String?     @db.Uuid
   warehouseId  String?     @db.Uuid
-  comment      String      @unique
+  comment      String
   createdAt    DateTime    @default(now())
   location     location?   @relation(fields: [locationId], references: [id], onDelete: Cascade)
   permission   permission? @relation(fields: [permissionId], references: [id], onDelete: Cascade)

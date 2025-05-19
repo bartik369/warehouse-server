@@ -14,7 +14,7 @@ export const FileUploadInterceptor = (options: IFileUploadOptions) => {
         storage: memoryStorage(), // Temporary file storage in memory
         limits: { fileSize: options.maxSize }, // Limit file size
         fileFilter: (req, file, callback) => {
-          if (!options.allowedTypes.includes(file.mimetype)) {
+          if (!options.allowedTypes?.includes(file.mimetype)) {
             return callback(new WrongFileType(), false);
           }
           if (file.size > options.maxSize) {

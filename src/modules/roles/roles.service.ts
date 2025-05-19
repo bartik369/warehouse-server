@@ -5,18 +5,19 @@ import {
   RoleExistException,
   RoleNotFoundException,
 } from 'src/exceptions/permissions.exceptions';
+import { IRole } from './types/role.types';
 
 @Injectable()
 export class RolesService {
   constructor(private prisma: PrismaService) {}
   // Get all
-  async getRoles() {
+  async getRoles(): Promise<IRole[]> {
     const roles = await this.prisma.role.findMany({});
-    if (!roles) return null;
+    if (!roles) throw new RoleNotFoundException();
     return roles;
   }
   // Get by ID
-  async getRole(id: string): Promise<RoleDto> {
+  async getRole(id: string): Promise<IRole> {
     const role = await this.prisma.role.findUnique({
       where: { id: id },
     });
@@ -24,7 +25,7 @@ export class RolesService {
     return role;
   }
   // Get all for Assign
-  async getAssignableRoles(): Promise<RoleDto[]> {
+  async getAssignableRoles(): Promise<IRole[]> {
     const roles = await this.prisma.role.findMany({
       where: {
         name: { not: 'administrator' },
@@ -47,7 +48,7 @@ export class RolesService {
     return role;
   }
   // Update
-  async updateRole(id: string, roleDto: RoleDto): Promise<RoleDto> {
+  async updateRole(id: string, roleDto: RoleDto): Promise<IRole> {
     const existingRole = await this.prisma.role.findUnique({
       where: { id: id },
     });

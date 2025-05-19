@@ -20,6 +20,7 @@ import { GetAccessToken } from './decorators/access-token.decorator';
 import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
 import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor';
 import { successLogoutMsg } from 'src/common/utils/constants';
+import { IUser, User } from '../users/dtos/user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -60,7 +61,7 @@ export class AuthController {
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
-  async validate(@GetAccessToken() token: string) {
+  async validate(@GetAccessToken() token: string): Promise<IUser> {
     return await this.authService.validate(token);
   }
 }

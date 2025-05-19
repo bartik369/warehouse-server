@@ -6,7 +6,7 @@ import {
   WarehouseExistException,
   WarehouseNotFoundException,
 } from 'src/exceptions/location.exceptions';
-import { LocationDto } from '../locations/dtos/location.dto';
+import { IWarehouse } from './types/warehouse.types';
 
 @Injectable()
 export class WarehousesService {
@@ -18,7 +18,7 @@ export class WarehousesService {
     return null;
   }
   // Get all assignable
-  async getAssignable(locationId: string): Promise<WarehouseDto[]> {
+  async getAssignable(locationId: string): Promise<IWarehouse[]> {
     const existLocation = await this.prisma.location.findUnique({
       where: { id: locationId },
     });
@@ -31,7 +31,7 @@ export class WarehousesService {
     return warehouses;
   }
   // Create
-  async createWarehouse(warehouseDto: WarehouseDto): Promise<LocationDto> {
+  async createWarehouse(warehouseDto: WarehouseDto): Promise<IWarehouse> {
     const [existWarehouse, existLocation] = await Promise.all([
       this.prisma.warehouse.findUnique({
         where: { name: warehouseDto.name },

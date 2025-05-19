@@ -1,4 +1,4 @@
-import { User } from '../users/dtos/user.dto';
+import { IUser } from '../users/dtos/user.dto';
 import { AuthDto } from './dtos/auth.dto';
 import { AuthData, Tokens, GroupAuthData } from 'src/common/types/user.types';
 import { PrismaService } from 'prisma/prisma.service';
@@ -95,7 +95,7 @@ export class AuthService {
     }
   }
 
-  async validate(token: string): Promise<User> {
+  async validate(token: string): Promise<IUser> {
     const payload = await this.jwtService.decode(token);
     if (!payload) throw new DeniedAccessException();
 

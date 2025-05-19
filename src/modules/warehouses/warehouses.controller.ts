@@ -3,6 +3,7 @@ import { Body, Controller, Post, Param, Put } from '@nestjs/common';
 import { Get } from '@nestjs/common';
 import { WarehousesService } from './warehouses.service';
 import { warehouseCreated, warehouseUpdated } from 'src/common/utils/constants';
+import { IWarehouse } from './types/warehouse.types';
 
 @Controller('warehouses')
 export class WarehousesController {
@@ -12,7 +13,7 @@ export class WarehousesController {
   @Get('assignable/:locationId')
   async getAssignable(
     @Param('locationId') locationId: string,
-  ): Promise<WarehouseDto[]> {
+  ): Promise<IWarehouse[]> {
     return await this.warehousesService.getAssignable(locationId);
   }
   // Get all
@@ -24,7 +25,7 @@ export class WarehousesController {
   @Post()
   async createWarehouse(
     @Body() warehouseDto: WarehouseDto,
-  ): Promise<{ message: string; warehouse: WarehouseDto }> {
+  ): Promise<{ message: string; warehouse: IWarehouse }> {
     const warehouse =
       await this.warehousesService.createWarehouse(warehouseDto);
     return {

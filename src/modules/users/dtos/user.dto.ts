@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UserDto {
   id: string;
@@ -8,6 +8,8 @@ export class UserDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
+  @IsOptional()
+  @IsString()
   workId: string;
   @IsNotEmpty()
   @IsString()
@@ -32,4 +34,20 @@ export class UserDto {
   updatedAt: Date;
 }
 
-export type User = UserDto;
+export interface IUser {
+  id: string;
+  userName: string;
+  email: string;
+  workId: string;
+  firstNameRu: string;
+  lastNameRu: string;
+  firstNameEn: string;
+  lastNameEn: string;
+  isActive: boolean;
+  department: string;
+  locationId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// export type User = UserDto;

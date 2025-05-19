@@ -16,24 +16,25 @@ import {
   roleDeleted,
   roleUpdated,
 } from 'src/common/utils/constants';
+import { IRole } from './types/role.types';
 
 @Controller('roles')
 export class RolesController {
   constructor(private rolesService: RolesService) {}
   // Get all
   @Get()
-  async getRoles(): Promise<RoleDto[]> {
+  async getRoles(): Promise<IRole[]> {
     return await this.rolesService.getRoles();
   }
   // Get all for Assign
   @Get('assignable')
-  async getAssignableRoles(): Promise<RoleDto[]> {
+  async getAssignableRoles(): Promise<IRole[]> {
     return await this.rolesService.getAssignableRoles();
   }
 
   // Get by ID
   @Get(':id')
-  async getRole(@Param('id') id: string): Promise<RoleDto> {
+  async getRole(@Param('id') id: string): Promise<IRole> {
     return await this.rolesService.getRole(id);
   }
   // Create
@@ -41,7 +42,7 @@ export class RolesController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createRole(
     @Body() roleDto: RoleDto,
-  ): Promise<{ message: string; role: RoleDto }> {
+  ): Promise<{ message: string; role: IRole }> {
     const role = await this.rolesService.createRole(roleDto);
     return {
       message: roleCreated,
@@ -54,7 +55,7 @@ export class RolesController {
   async updateRole(
     @Param('id') id: string,
     @Body() roleDto: RoleDto,
-  ): Promise<{ message: string; updatedRole: RoleDto }> {
+  ): Promise<{ message: string; updatedRole: IRole }> {
     const updatedRole = await this.rolesService.updateRole(id, roleDto);
     return {
       message: roleUpdated,

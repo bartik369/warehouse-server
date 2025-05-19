@@ -173,7 +173,7 @@ export class RolePermissionsService {
     } else {
       return {
         ...(permissionData as RolePermissionsResponseDto),
-        locationName: location.name ?? '',
+        locationName: location?.name ?? '',
         locationId: location.id ?? '',
         warehouseName: warehouse.name ?? '',
         permissionName: rolesName,
