@@ -86,6 +86,12 @@ export interface IDevice {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export interface IDeviceIssue {
+  user: {
+    firstNameEn: string;
+    lastNameEn: string;
+  };
+}
 
 export interface IAggregatedDeviceInfo {
   lastIssuedAt: Date;

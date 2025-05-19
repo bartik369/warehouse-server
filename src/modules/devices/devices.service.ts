@@ -3,6 +3,7 @@ import {
   IDevice,
   IAggregatedDeviceInfo,
   IFilteredDevices,
+  IDeviceIssue,
 } from 'src/common/types/device.types';
 import {
   DeviceExistsException,
@@ -180,7 +181,7 @@ export class DevicesService {
     if (!device) throw new BadRequestException();
     return {
       ...device,
-      deviceIssues: device.deviceIssues.map((issue) => ({
+      deviceIssues: device.deviceIssues.map((issue: IDeviceIssue) => ({
         firstNameEn: issue.user.firstNameEn,
         lastNameEn: issue.user.lastNameEn,
       })),
@@ -318,8 +319,20 @@ export class DevicesService {
     const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } =
       deviceDto;
     // Validate warranty fields
-    if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
-      if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
+    if (
+      providerName ||
+      warrantyNumber ||
+      startWarrantyDate ||
+      endWarrantyDate
+    ) {
+      if (
+        !(
+          providerName &&
+          warrantyNumber &&
+          startWarrantyDate &&
+          endWarrantyDate
+        )
+      ) {
         throw new WarrantyValidateException();
       }
     }
@@ -383,8 +396,20 @@ export class DevicesService {
 
     const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } =
       deviceDto;
-    if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
-      if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
+    if (
+      providerName ||
+      warrantyNumber ||
+      startWarrantyDate ||
+      endWarrantyDate
+    ) {
+      if (
+        !(
+          providerName &&
+          warrantyNumber &&
+          startWarrantyDate &&
+          endWarrantyDate
+        )
+      ) {
         throw new WarrantyValidateException();
       }
     }
