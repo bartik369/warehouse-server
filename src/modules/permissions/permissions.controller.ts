@@ -23,6 +23,7 @@ export class PermissionsController {
   // Get all
   @Get()
   async getPermissions(): Promise<PermissionDto[]> {
+    console.log('123')
     return await this.permissionsService.getPermissions();
   }
   // Get by ID
