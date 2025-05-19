@@ -27,7 +27,7 @@ export class RolePermissionsController {
       rolePermissionsDto,
     );
     return {
-      message: 'ewew',
+      message: 'ew',
     };
   }
   // Update
@@ -38,7 +38,7 @@ export class RolePermissionsController {
       rolePermissionsDto,
     );
     return {
-      message: 'ewew',
+      message: 'ew',
     };
   }
 }
