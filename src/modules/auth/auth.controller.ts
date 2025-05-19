@@ -20,7 +20,7 @@ import { GetAccessToken } from './decorators/access-token.decorator';
 import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
 import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor';
 import { successLogoutMsg } from 'src/common/utils/constants';
-import { IUser, User } from '../users/dtos/user.dto';
+import { IUser } from '../users/dtos/user.dto';
 
 @Controller('auth')
 export class AuthController {

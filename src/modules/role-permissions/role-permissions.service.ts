@@ -38,15 +38,29 @@ export class RolePermissionsService {
 
     const groupedArray: Partial<RolePermissionsResponseDto>[] =
       Object.values(groupedByRole);
-    const uniqueRoleIds = [...new Set(groupedArray.map((r) => r.roleId))];
+    const uniqueRoleIds = [
+      ...new Set(groupedArray.map((r: RolePermissionsResponseDto) => r.roleId)),
+    ];
     const uniqueWarehouseIds = [
-      ...new Set(groupedArray.map((w) => w.warehouseId).filter(Boolean)),
+      ...new Set(
+        groupedArray
+          .map((w: RolePermissionsResponseDto) => w.warehouseId)
+          .filter(Boolean),
+      ),
     ];
     const uniqueLocationIds = [
-      ...new Set(groupedArray.map((l) => l.locationId).filter(Boolean)),
+      ...new Set(
+        groupedArray
+          .map((l: RolePermissionsResponseDto) => l.locationId)
+          .filter(Boolean),
+      ),
     ];
     const uniquePermissionIds = [
-      ...new Set(groupedArray.flatMap((p) => p.permissionIds).filter(Boolean)),
+      ...new Set(
+        groupedArray
+          .flatMap((p: RolePermissionsResponseDto) => p.permissionIds)
+          .filter(Boolean),
+      ),
     ];
 
     const [roles, warehouses, locations, permissions] = await Promise.all([
@@ -108,78 +122,79 @@ export class RolePermissionsService {
       }),
     );
   }
-  // Permissions by role
-  async getPermissionsByRole(id: string) {
-    const existingRolePerms = await this.prisma.permission_role.findMany({
-      where: { roleId: id.trim() },
-    });
-    if (existingRolePerms.length === 0)
-      return new RolePermissionsResponseDto({ roleId: id.trim() });
+  // // Permissions by role
+  // async getPermissionsByRole(id: string): Promise<RolePermissionsResponseDto> {
+  //   const existingRolePerms = await this.prisma.permission_role.findMany({
+  //     where: { roleId: id.trim() },
+  //   });
+  //   console.log(existingRolePerms)
+  //   if (existingRolePerms.length === 0)
+  //     return new RolePermissionsResponseDto({ roleId: id.trim() });
 
-    const rolePermissions = existingRolePerms.reduce(
-      (acc, elem) => {
-        const { permissionId, ...rest } = elem;
-        if (!acc[rest.roleId]) {
-          acc[rest.roleId] = { ...rest, permissionIds: [] };
-        }
-        acc[rest.roleId].permissionIds.push(permissionId);
-        return acc;
-      },
-      {} as Record<string, Partial<RolePermissionsResponseDto>>,
-    );
+  //   const rolePermissions = existingRolePerms.reduce(
+  //     (acc, elem) => {
+  //       const { permissionId, ...rest } = elem;
+  //       if (!acc[rest.roleId]) {
+  //         acc[rest.roleId] = { ...rest, permissionIds: [] };
+  //       }
+  //       acc[rest.roleId].permissionIds.push(permissionId);
+  //       return acc;
+  //     },
+  //     {} as Record<string, Partial<RolePermissionsResponseDto>>,
+  //   );
 
-    const permissionData = Object.values(rolePermissions)[0];
-    const roleName = await this.prisma.role.findUnique({
-      where: { id: permissionData.roleId },
-    });
-    let location = null;
-    let warehouse = null;
-    let permissions: { name: string }[] = [];
+  //   const permissionData = Object.values(rolePermissions)[0];
+  //   const roleName = await this.prisma.role.findUnique({
+  //     where: { id: permissionData.roleId },
+  //   });
+  //   let location = null;
+  //   let warehouse = null;
+  //   let permissions: { name: string }[] = [];
 
-    if (roleName.name === 'manager') {
-      location = await this.prisma.location.findUnique({
-        where: { id: permissionData.locationId?.trim() },
-      });
-    } else {
-      const [loc, war, perms] = await Promise.all([
-        permissionData.locationId?.trim()
-          ? this.prisma.location.findUnique({
-              where: { id: permissionData.locationId },
-            })
-          : Promise.resolve(null),
-        permissionData.warehouseId?.trim()
-          ? this.prisma.warehouse.findMany({
-              where: { id: permissionData.warehouseId?.trim() },
-            })
-          : Promise.resolve(null),
-        permissionData.permissionIds.length > 0
-          ? this.prisma.permission.findMany({
-              where: { id: { in: permissionData.permissionIds } },
-              select: { name: true },
-            })
-          : Promise.resolve([]),
-      ]);
-      location = loc;
-      warehouse = war;
-      permissions = perms;
-    }
+  //   if (roleName.name === 'manager') {
+  //     location = await this.prisma.location.findUnique({
+  //       where: { id: permissionData.locationId?.trim() },
+  //     });
+  //   } else {
+  //     const [loc, war, perms] = await Promise.all([
+  //       permissionData.locationId?.trim()
+  //         ? this.prisma.location.findUnique({
+  //             where: { id: permissionData.locationId },
+  //           })
+  //         : Promise.resolve(null),
+  //       permissionData.warehouseId?.trim()
+  //         ? this.prisma.warehouse.findMany({
+  //             where: { id: permissionData.warehouseId?.trim() },
+  //           })
+  //         : Promise.resolve(null),
+  //       permissionData.permissionIds.length > 0
+  //         ? this.prisma.permission.findMany({
+  //             where: { id: { in: permissionData.permissionIds } },
+  //             select: { name: true },
+  //           })
+  //         : Promise.resolve([]),
+  //     ]);
+  //     location = loc;
+  //     warehouse = war;
+  //     permissions = perms;
+  //   }
 
-    const rolesName = permissions.map((item) => item.name);
-    if (roleName.name === 'manager') {
-      return {
-        ...(permissionData as RolePermissionsResponseDto),
-        locationName: location.name ?? '',
-      };
-    } else {
-      return {
-        ...(permissionData as RolePermissionsResponseDto),
-        locationName: location?.name ?? '',
-        locationId: location.id ?? '',
-        warehouseName: warehouse.name ?? '',
-        permissionName: rolesName,
-      };
-    }
-  }
+  //   const rolesName = permissions.map((item) => item.name);
+  //   if (roleName.name === 'manager') {
+  //     return {
+  //       ...(permissionData as RolePermissionsResponseDto),
+  //       locationName: location.name ?? '',
+  //     };
+  //   } else {
+  //     return {
+  //       ...(permissionData as RolePermissionsResponseDto),
+  //       locationName: location?.name ?? '',
+  //       locationId: location.id ?? '',
+  //       warehouseName: warehouse.name ?? '',
+  //       permissionName: rolesName,
+  //     };
+  //   }
+  // }
   // Create and Update
   async createUpdateRolePermissions(rolePermissionsDto: RolePermissionsDto) {
     const {
