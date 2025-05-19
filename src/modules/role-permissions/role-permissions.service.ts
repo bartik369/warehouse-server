@@ -17,7 +17,7 @@ export class RolePermissionsService {
     const listPermissions = await this.prisma.permission_role.findMany({});
     if (listPermissions.length === 0) throw new NotFoundException();
     const groupedByRole = listPermissions.reduce(
-      (acc, elem) => {
+      (acc: Record<string, Partial<RolePermissionsResponseDto>>, elem) => {
         const { permissionId, roleId, warehouseId, locationId, comment } = elem;
         const key = `${roleId}_${locationId ?? 'null'}_${warehouseId ?? 'null'}`;
         if (!acc[key]) {
