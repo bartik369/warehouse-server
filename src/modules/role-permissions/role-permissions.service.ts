@@ -8,6 +8,7 @@ import { IRole } from 'src/common/types/permission.types';
 import { IWarehouse } from '../warehouses/types/warehouse.types';
 import { ILocation } from 'src/common/types/location.types';
 import { IPermission } from '../permissions/types/permission.types';
+import { IRolePermission } from '../permissions/types/permission.types';
 
 @Injectable()
 export class RolePermissionsService {
@@ -17,7 +18,10 @@ export class RolePermissionsService {
     const listPermissions = await this.prisma.permission_role.findMany({});
     if (listPermissions.length === 0) throw new NotFoundException();
     const groupedByRole = listPermissions.reduce(
-      (acc: Record<string, Partial<RolePermissionsResponseDto>>, elem) => {
+      (
+        acc: Record<string, Partial<RolePermissionsResponseDto>>,
+        elem: IRolePermission,
+      ) => {
         const { permissionId, roleId, warehouseId, locationId, comment } = elem;
         const key = `${roleId}_${locationId ?? 'null'}_${warehouseId ?? 'null'}`;
         if (!acc[key]) {
