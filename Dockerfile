@@ -10,6 +10,8 @@ RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60
 # Копируем весь код
 COPY . .
 
+RUN npx prisma generate
+
 # Сборка TypeScript
 RUN npm run build
 
