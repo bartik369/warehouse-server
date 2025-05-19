@@ -83,15 +83,17 @@ export class RolePermissionsService {
       throw new NotFoundException('Required roles or locations not found');
     }
 
-    const roleMap: Map<string, IRole> = new Map(roles.map((r) => [r.id, r]));
+    const roleMap: Map<string, IRole> = new Map(
+      roles.map((r: IRole) => [r.id, r]),
+    );
     const warehouseMap: Map<string, IWarehouse> = new Map(
-      warehouses.map((w) => [w.id, w]),
+      warehouses.map((w: IWarehouse) => [w.id, w]),
     );
     const locationMap: Map<string, ILocation> = new Map(
-      locations.map((l) => [l.id, l]),
+      locations.map((l: ILocation) => [l.id, l]),
     );
     const permissionsMap: Map<string, IPermission> = new Map(
-      permissions.map((p) => [p.id, p]),
+      permissions.map((p: IPermission) => [p.id, p]),
     );
 
     return groupedArray.map(
