@@ -49,6 +49,9 @@ jobs:
               exit 1
             fi
 
+            echo "===> Переходим в корневую директорию с docker-compose.yml"
+            cd /srv/apps
+
             echo "===> Останавливаем контейнеры"
             docker compose down
 
