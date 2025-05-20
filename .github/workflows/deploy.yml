@@ -40,6 +40,15 @@ jobs:
             echo "===> Обновляем репозиторий"
             git pull origin main
 
+            echo "===> Удаляем старый .env (если был) и переименовываем новый"
+            mv .env.production .env
+
+            echo "===> Проверяем наличие docker-compose.yml"
+            if [ ! -f docker-compose.yml ]; then
+              echo 'Файл docker-compose.yml не найден!'
+              exit 1
+            fi
+
             echo "===> Останавливаем контейнеры"
             docker compose down
 
