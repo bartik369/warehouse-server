@@ -40,9 +40,6 @@ jobs:
             # echo "Обновляем репозиторий"
             # git pull origin main
 
-            echo "Удаляем старый .env (если был) и переименовываем новый"
-            mv .env.production .env
-
             echo "Переходим в корневую директорию с docker-compose.yml"
             cd /srv/apps
 
