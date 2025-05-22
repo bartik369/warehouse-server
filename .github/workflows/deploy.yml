@@ -14,14 +14,14 @@ jobs:
 
       - name: Установка зависимостей и сборка бэкенда
         run: |
-          cd backend
+          cd  warehouse-server
           npm ci
           npm run build
           cd ..
 
       - name: Архивирование (исключая node_modules)
         run: |
-          cd backend
+          cd  warehouse-server
           tar --exclude='node_modules' --warning=no-file-changed -czf ../backend.tar.gz .
           cd ..
 
