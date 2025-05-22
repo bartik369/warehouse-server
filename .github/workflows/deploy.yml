@@ -1,4 +1,4 @@
-name: Deploy Backend to Server
+name: Deploy Backend
 
 on:
   push:
@@ -12,20 +12,20 @@ jobs:
       - name: Checkout репозитория
         uses: actions/checkout@v3
 
-      - name: Упаковка backend кода
-        run: tar --exclude=node_modules --warning=no-file-changed -czf backend.tar.gz . || true
+      - name: Установка зависимостей и сборка бэкенда
+        run: |
+          cd backend
+          npm ci
+          npm run build
+          cd ..
 
-      - name: Отправка архива на сервер
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: 22
-          source: "backend.tar.gz"
-          target: "/srv/apps/"
+      - name: Архивирование (исключая node_modules)
+        run: |
+          cd backend
+          tar --exclude='node_modules' --warning=no-file-changed -czf ../backend.tar.gz .
+          cd ..
 
-      - name: Отправка .env на сервер
+      - name: Запись .env локально
         run: echo "${{ secrets.ENV_PROD }}" > .env
 
       - name: Копирование .env на сервер
@@ -38,26 +38,43 @@ jobs:
           source: ".env"
           target: "/srv/apps/backend/"
 
-      - name: Распаковка и перезапуск контейнеров
+      - name: Копирование архива проекта на сервер
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          source: "backend.tar.gz"
+          target: "/srv/apps/"
+
+      - name: Деплой на сервер через SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: 22
-          command_timeout: 20m
           script: |
-            echo "Распаковываем backend в нужную директорию"
-            mkdir -p /srv/apps/backend
-            tar -xzf /srv/apps/backend.tar.gz -C /srv/apps/backend
-
-            echo "Удаляем архив"
-            rm /srv/apps/backend.tar.gz
-
-            echo "Переходим в корень проекта"
+            echo "===> Переключаемся в директорию проекта"
             cd /srv/apps
 
-            echo "Пересобираем и перезапускаем контейнеры"
+            echo "===> Распаковываем backend в папку backend"
+            rm -rf backend
+            mkdir backend
+            tar -xzf backend.tar.gz -C backend
+            rm backend.tar.gz
+
+            echo "===> Перемещаем .env в нужное место"
+            mv backend/.env backend/.env.production
+
+            echo "===> Обновляем и перезапускаем контейнеры"
             docker compose down
-            docker compose build --no-cache
+            docker compose build
             docker compose up -d
+
+            echo "===> Проверка статуса контейнеров"
+            docker compose ps
+
+            echo "===> Последние логи"
+            docker compose logs --tail=100
