@@ -1,4 +1,4 @@
-name: Deploy Backend
+name: Deploy Backend to Server
 
 on:
   push:
@@ -9,13 +9,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout репозитория
         uses: actions/checkout@v3
 
-      - name: Write .env file locally
+      - name: Упаковка backend кода
+        run: tar -czf backend.tar.gz . --exclude=node_modules
+
+      - name: Отправка архива на сервер
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          source: "backend.tar.gz"
+          target: "/srv/apps/"
+
+      - name: Отправка .env на сервер
         run: echo "${{ secrets.ENV_PROD }}" > .env
 
-      - name: Copy .env to server
+      - name: Копирование .env на сервер
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -25,36 +38,26 @@ jobs:
           source: ".env"
           target: "/srv/apps/backend/"
 
-      - name: Deploy via SSH
+      - name: Распаковка и перезапуск контейнеров
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: 22
-          command_timeout: 10m
+          command_timeout: 20m
           script: |
-            echo "===> Переключаемся в директорию проекта"
-            cd /srv/apps/backend
+            echo "Распаковываем backend в нужную директорию"
+            mkdir -p /srv/apps/backend
+            tar -xzf /srv/apps/backend.tar.gz -C /srv/apps/backend
 
-            echo "===> Обновляем репозиторий"
-            git pull origin main
+            echo "Удаляем архив"
+            rm /srv/apps/backend.tar.gz
 
-            # Добавленный шаг: очистка предыдущей сборки
-            echo "===> Удаляем старую сборку и зависимости"
-            rm -rf dist node_modules .npm
+            echo "Переходим в корень проекта"
+            cd /srv/apps
 
-            echo "===> Останавливаем контейнеры"
+            echo "Пересобираем и перезапускаем контейнеры"
             docker compose down
-
-            echo "===> Собираем образы (с очисткой кэша)"
             docker compose build --no-cache
-
-            echo "===> Запускаем контейнеры в фоне"
             docker compose up -d
-
-            echo "===> Проверка статуса контейнеров"
-            docker compose ps
-
-            echo "===> Вывод логов (последние 100 строк)"
-            docker compose logs --tail=100
