@@ -14,7 +14,6 @@ jobs:
 
       - name: Установка зависимостей и сборка бэкенда
         run: |
-          cd warehouse-server
           npm ci --legacy-peer-deps
           npm run build
 
