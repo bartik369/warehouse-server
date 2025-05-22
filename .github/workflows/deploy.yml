@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Упаковка backend кода
-        run: tar -czf backend.tar.gz . --exclude=node_modules
+        run: tar --exclude=node_modules -czf backend.tar.gz .
 
       - name: Отправка архива на сервер
         uses: appleboy/scp-action@v0.1.4
