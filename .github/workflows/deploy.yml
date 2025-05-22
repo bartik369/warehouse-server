@@ -14,35 +14,22 @@ jobs:
 
       - name: Установка зависимостей и сборка бэкенда
         run: |
-         npm ci --legacy-peer-deps
-         npm run build
-
-      - name: Архивирование (исключая node_modules)
-        run: |
-         tar --exclude='node_modules' --warning=no-file-changed -czf backend.tar.gz .
+          cd warehouse-server
+          npm ci --legacy-peer-deps
+          npm run build
 
       - name: Запись .env локально
-        run: echo "${{ secrets.ENV_PROD }}" > .env
+        run: echo "${{ secrets.ENV_PROD }}" > warehouse-server/.env
 
-      - name: Копирование .env на сервер
-        uses: appleboy/scp-action@v0.1.4
+      - name: Копирование проекта на сервер через rsync
+        uses: burnett01/rsync-deployments@5.2
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: 22
-          source: ".env"
-          target: "/srv/apps/backend/"
-
-      - name: Копирование архива проекта на сервер
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: 22
-          source: "backend.tar.gz"
-          target: "/srv/apps/"
+          switches: -avz --exclude=node_modules
+          path: warehouse-server/
+          remote_path: /srv/apps/backend/
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{ secrets.DEPLOY_SSH_KEY }}
 
       - name: Деплой на сервер через SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -53,16 +40,10 @@ jobs:
           port: 22
           script: |
             echo "===> Переключаемся в директорию проекта"
-            cd /srv/apps
+            cd /srv/apps/backend
 
-            echo "===> Распаковываем backend в папку backend"
-            rm -rf backend
-            mkdir backend
-            tar -xzf backend.tar.gz -C backend
-            rm backend.tar.gz
-
-            echo "===> Перемещаем .env в нужное место"
-            mv backend/.env backend/.env.production
+            echo "===> Переименовываем .env в .env.production"
+            mv .env .env.production
 
             echo "===> Обновляем и перезапускаем контейнеры"
             docker compose down
