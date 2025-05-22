@@ -18,7 +18,7 @@ jobs:
           npm run build
 
       - name: Запись .env локально
-        run: echo "${{ secrets.ENV_PROD }}" > warehouse-server/.env
+        run: echo "${{ secrets.ENV_PROD }}" > .env
 
       - name: Копирование проекта на сервер через rsync
         uses: burnett01/rsync-deployments@5.2
