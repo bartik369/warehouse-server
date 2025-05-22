@@ -25,6 +25,7 @@ jobs:
          echo "${{ secrets.DEPLOY_SSH_KEY }}" > key.pem
          chmod 600 key.pem
          rsync -az --delete -e "ssh -i key.pem -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/srv/apps/backend/
+         rm -f key.pem
 
       - name: Деплой на сервер через SSH
         uses: appleboy/ssh-action@v1.0.3
