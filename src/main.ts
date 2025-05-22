@@ -35,8 +35,9 @@ async function bootstrap() {
   app.use('/uploads', express.static(__dirname + '/uploads'));
   app.useGlobalPipes(new ValidationPipe());
 
-  // app.setGlobalPrefix('/api/');
+  app.setGlobalPrefix('api');
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 5000);
 }
+
 bootstrap();
