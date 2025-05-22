@@ -14,16 +14,12 @@ jobs:
 
       - name: Установка зависимостей и сборка бэкенда
         run: |
-          cd backend
-          npm ci
-          npm run build
-          cd ..
+         npm ci
+         npm run build
 
       - name: Архивирование (исключая node_modules)
         run: |
-          cd  backend
-          tar --exclude='node_modules' --warning=no-file-changed -czf ../backend.tar.gz .
-          cd ..
+         tar --exclude='node_modules' --warning=no-file-changed -czf backend.tar.gz .
 
       - name: Запись .env локально
         run: echo "${{ secrets.ENV_PROD }}" > .env
