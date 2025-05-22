@@ -40,11 +40,15 @@ jobs:
             echo "===> Обновляем репозиторий"
             git pull origin main
 
+            # Добавленный шаг: очистка предыдущей сборки
+            echo "===> Удаляем старую сборку и зависимости"
+            rm -rf dist node_modules .npm
+
             echo "===> Останавливаем контейнеры"
             docker compose down
 
-            echo "===> Собираем образы"
-            docker compose build
+            echo "===> Собираем образы (с очисткой кэша)"
+            docker compose build --no-cache
 
             echo "===> Запускаем контейнеры в фоне"
             docker compose up -d
