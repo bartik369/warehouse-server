@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import helmet from 'helmet';
-import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { AppModule } from './app.module';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest-express-application.interface';
@@ -39,5 +39,4 @@ async function bootstrap() {
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 5000);
 }
-
 bootstrap();
