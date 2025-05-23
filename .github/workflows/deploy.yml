@@ -12,10 +12,10 @@ jobs:
       - name: Checkout репозитория
         uses: actions/checkout@v3
 
-      #- name: Установка зависимостей и сборка бэкенда
-       # run: |
-        #  npm ci --legacy-peer-deps
-         # npm run build
+      - name: Установка зависимостей и сборка бэкенда
+        run: |
+          npm ci --legacy-peer-deps
+          npm run build
 
       - name: Запись .env локально
         run: echo "${{ secrets.ENV_PROD }}" > .env
@@ -39,7 +39,7 @@ jobs:
             cd /srv/apps/backend
 
             echo "===> Переименовываем .env в .env.production"
-            mv .env .env.production
+            mv .env .env
 
             echo "===> Обновляем и перезапускаем контейнеры"
             docker compose down
