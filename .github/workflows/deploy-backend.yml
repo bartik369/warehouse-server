@@ -23,18 +23,18 @@ jobs:
         run: |
           docker build -t ghcr.io/bartik369/backend:latest .
           docker push ghcr.io/bartik369/backend:latest
-          
+
       - name: Залить .env на сервер.
         uses: appleboy/ssh-action@v1
         with:
-        host: ${{ secrets.SSH_HOST }}
+          host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.DEPLOY_SSH_KEY }}
         port: 22
         script: |
-         cat <<EOF > /srv/apps/backend/.env
-         ${{ secrets.ENV_PROD }}
-         EOF
+          cat <<EOF > /srv/apps/backend/.env
+          ${{ secrets.ENV_PROD }}
+          EOF
 
       - name: Deploy on remote server
         uses: appleboy/ssh-action@v1
