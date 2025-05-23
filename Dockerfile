@@ -1,48 +1,49 @@
 # Этап 1: сборка приложения
-
 FROM node:20-alpine3.17 AS builder
 
 WORKDIR /app
 
-# Используем openssl 1.1 (важно для Prisma)
-
+# Используем зеркало Яндекса и openssl1.1 (важно для Prisma)
 RUN echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/main/" > /etc/apk/repositories \
-&& echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/community/" >> /etc/apk/repositories \
-&& apk update \
-&& apk add --no-cache openssl1.1-compat
+ && echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/community/" >> /etc/apk/repositories \
+ && apk update \
+ && apk add --no-cache openssl1.1-compat
 
 COPY package*.json ./
 
+# Устанавливаем зависимости
 RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60000 --verbose
 
+# Копируем весь проект
 COPY . .
 
+# Генерация клиента Prisma
 RUN npx prisma generate
 
+# Сборка проекта
 RUN npm run build
 
-# Этап 2: production-контейнер
 
-FROM node:20-alpine3.17
+# Этап 2: production-контейнер
+FROM node:20-alpine3.17 AS production
 
 WORKDIR /app
 
-# Устанавливаем runtime openssl 1.1
-
+# Используем зеркало Яндекса и openssl1.1
 RUN echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/main/" > /etc/apk/repositories \
-&& echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/community/" >> /etc/apk/repositories \
-&& apk update \
-&& apk add --no-cache openssl1.1-compat
+ && echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/community/" >> /etc/apk/repositories \
+ && apk update \
+ && apk add --no-cache openssl1.1-compat
 
-# COPY --from=builder /app/node_modules ./node_modules
+# Копируем зависимости
+COPY --from=builder /app/node_modules ./node_modules
 
-COPY --from=builder /app/dist ./dist
-
-# Копируем сгенерированные бинарники Prisma (важно!)
-
+# Копируем Prisma бинарники
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-COPY prisma ./prisma
+# Копируем собранный код и схему
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
 ENV NODE_ENV=production
 
