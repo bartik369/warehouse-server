@@ -24,7 +24,7 @@ jobs:
           docker build -t ghcr.io/${{ github.repository_owner }}/backend:latest .
           docker push ghcr.io/${{ github.repository_owner }}/backend:latest
           
-      - name: Залить .env на сервер
+      - name: Залить .env на сервер.
         uses: appleboy/ssh-action@v1
         with:
          host: ${{ secrets.SSH_HOST }}
