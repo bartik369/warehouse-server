@@ -44,8 +44,6 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 COPY prisma ./prisma
 
-COPY .env .env
-
 ENV NODE_ENV=production
 
 EXPOSE 5000
