@@ -23,7 +23,6 @@ async function bootstrap() {
         },
         crossOriginResourcePolicy: { policy: 'cross-origin' },
     }));
-    console.log('test');
     helmet_1.default.noSniff();
     helmet_1.default.frameguard({ action: 'deny' });
     app.enableCors({
