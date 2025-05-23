@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import helmet from 'helmet';
 import express from 'express';
-import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest-express-application.interface';
