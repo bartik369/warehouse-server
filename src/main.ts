@@ -1,4 +1,4 @@
-import 'dotenv/config';
+// import 'dotenv/config';
 import helmet from 'helmet';
 import express from 'express';
 import { AppModule } from './app.module';
@@ -22,6 +22,8 @@ async function bootstrap() {
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
+  console.log('PORT:', process.env.PORT);
+  console.log('DATABASE_URL:', process.env.DATABASE_URL);
 
   helmet.noSniff();
   helmet.frameguard({ action: 'deny' });
