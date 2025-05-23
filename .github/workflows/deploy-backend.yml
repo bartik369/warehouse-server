@@ -22,7 +22,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build -t ghcr.io/${{ github.repository_owner }}/backend:latest .
-          docker push ghcr.io/bartik369/warehouse-server:latest
+          docker push ghcr.io/bartik369/backend:latest
           
       - name: Залить .env на сервер.
         uses: appleboy/ssh-action@v1
