@@ -22,6 +22,7 @@ async function bootstrap() {
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
+  console.log('test')
 
   helmet.noSniff();
   helmet.frameguard({ action: 'deny' });
