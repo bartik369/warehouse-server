@@ -22,8 +22,8 @@ async function bootstrap() {
     }),
   );
 
-  // helmet.noSniff();
-  // helmet.frameguard({ action: 'deny' });
+  helmet.noSniff();
+  helmet.frameguard({ action: 'deny' });
   app.enableCors({
     credentials: true,
     origin: 'http://localhost:5173',

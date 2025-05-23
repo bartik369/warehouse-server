@@ -32,9 +32,16 @@ console.log(
       rootPath: join(__dirname, '..', '..', 'uploads', 'models'),
       serveRoot: '/api/models/',
     }),
+    // ConfigModule.forRoot({
+    //   isGlobal: true,
+    //   envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+    // }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? undefined
+          : `.env.${process.env.NODE_ENV || 'development'}`,
     }),
     DevicesModule,
     UsersModule,
