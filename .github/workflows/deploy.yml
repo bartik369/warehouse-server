@@ -39,7 +39,7 @@ jobs:
             cd /srv/apps/backend
 
             echo "===> Переименовываем .env в .env.production"
-            mv .env .env.production
+            mv .env .env
 
             echo "===> Обновляем и перезапускаем контейнеры"
             docker compose down
