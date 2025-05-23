@@ -1,4 +1,4 @@
-import 'dotenv/config';
+// import 'dotenv/config';
 import helmet from 'helmet';
 import express from 'express';
 import { AppModule } from './app.module';
