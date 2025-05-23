@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const helmet_1 = __importDefault(require("helmet"));
 const express_1 = __importDefault(require("express"));
-const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const app_module_1 = require("./app.module");
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 async function bootstrap() {
