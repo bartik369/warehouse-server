@@ -1,32 +1,53 @@
 # Этап 1: сборка приложения
-FROM node:20-alpine AS builder
+
+FROM node:20-alpine3.17 AS builder
 
 WORKDIR /app
 
-# Копируем зависимости и устанавливаем
+# Используем openssl 1.1 (важно для Prisma)
+
+RUN echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/main/" > /etc/apk/repositories \
+&& echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/community/" >> /etc/apk/repositories \
+&& apk update \
+&& apk add --no-cache openssl1.1-compat
+
 COPY package*.json ./
+
 RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60000 --verbose
 
-# Копируем весь код
 COPY . .
 
 RUN npx prisma generate
 
-# Сборка TypeScript
 RUN npm run build
 
 # Этап 2: production-контейнер
-FROM node:20-alpine
+
+FROM node:20-alpine3.17
 
 WORKDIR /app
 
-COPY package*.json ./
+# Устанавливаем runtime openssl 1.1
+
+RUN echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/main/" > /etc/apk/repositories \
+&& echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/community/" >> /etc/apk/repositories \
+&& apk update \
+&& apk add --no-cache openssl1.1-compat
+
 COPY --from=builder /app/node_modules ./node_modules
+
 COPY --from=builder /app/dist ./dist
+
+# Копируем сгенерированные бинарники Prisma (важно!)
+
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
 COPY prisma ./prisma
+
+COPY .env .env
 
 ENV NODE_ENV=production
 
 EXPOSE 5000
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
