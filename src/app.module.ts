@@ -38,7 +38,10 @@ console.log(
     // }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: (process.env.NODE_ENV = undefined),
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? undefined
+          : `.env.${process.env.NODE_ENV || 'development'}`,
     }),
     DevicesModule,
     UsersModule,
