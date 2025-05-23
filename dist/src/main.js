@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config");
 const helmet_1 = __importDefault(require("helmet"));
 const express_1 = __importDefault(require("express"));
 const app_module_1 = require("./app.module");
@@ -23,6 +22,8 @@ async function bootstrap() {
         },
         crossOriginResourcePolicy: { policy: 'cross-origin' },
     }));
+    console.log('PORT:', process.env.PORT);
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);
     helmet_1.default.noSniff();
     helmet_1.default.frameguard({ action: 'deny' });
     app.enableCors({
