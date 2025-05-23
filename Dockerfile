@@ -12,7 +12,10 @@ FROM node:20-alpine as production
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+# Устанавливаем зависимости
+RUN npm install --legacy-peer-deps
+
+COPY --from=builder /app/node_modules ./node_modules
 
 COPY --from=builder /app/dist ./dist
 
