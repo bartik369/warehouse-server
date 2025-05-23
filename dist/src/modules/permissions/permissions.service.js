@@ -18,7 +18,6 @@ let PermissionsService = class PermissionsService {
         this.prisma = prisma;
     }
     async getPermissions() {
-        console.log('ewe');
         const permissions = await this.prisma.permission.findMany({});
         if (!permissions)
             return null;

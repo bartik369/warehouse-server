@@ -11,7 +11,6 @@ const common_1 = require("@nestjs/common");
 const prisma_module_1 = require("../../../prisma/prisma.module");
 const permissions_controller_1 = require("./permissions.controller");
 const permissions_service_1 = require("./permissions.service");
-console.log('dsd');
 let PermissionsModule = class PermissionsModule {
 };
 exports.PermissionsModule = PermissionsModule;

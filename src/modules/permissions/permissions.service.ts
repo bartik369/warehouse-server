@@ -11,7 +11,6 @@ export class PermissionsService {
   constructor(private prisma: PrismaService) {}
   // Get all
   async getPermissions() {
-    console.log('ewe');
     const permissions = await this.prisma.permission.findMany({});
     if (!permissions) return null;
     return permissions;

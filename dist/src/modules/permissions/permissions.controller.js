@@ -22,7 +22,6 @@ let PermissionsController = class PermissionsController {
         this.permissionsService = permissionsService;
     }
     async getPermissions() {
-        console.log('123');
         return await this.permissionsService.getPermissions();
     }
     async getPermission(id) {
