@@ -34,7 +34,7 @@ RUN echo "https://mirror.yandex.ru/mirrors/alpine/v3.17/main/" > /etc/apk/reposi
 && apk update \
 && apk add --no-cache openssl1.1-compat
 
-COPY --from=builder /app/node_modules ./node_modules
+RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
