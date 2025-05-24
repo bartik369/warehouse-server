@@ -3,31 +3,24 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Установка зависимостей, необходимых для Prisma и сборки
+# Устанавливаем openssl1.1-compat (если Prisma этого требует)
 RUN apk add --no-cache openssl1.1-compat
 
 COPY package*.json ./
-
-# Установка npm-зависимостей
-RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60000 --verbose
+RUN npm install --legacy-peer-deps
 
 COPY . .
-
-# Генерация Prisma-клиента
 RUN npx prisma generate
-
-# Сборка TypeScript/приложения
 RUN npm run build
 
-# Этап 2: production-образ
+# Этап 2: production
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Установка openssl для запуска приложения (если нужно)
+# Устанавливаем openssl1.1-compat, если нужно
 RUN apk add --no-cache openssl1.1-compat
 
-# Копирование нужных файлов из builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
