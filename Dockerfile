@@ -1,5 +1,5 @@
 # Этап 1: сборка приложения
-FROM node:20-alpine3.17 AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Этап 2: production
-FROM node:20-alpine3.17 AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
