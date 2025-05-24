@@ -1,35 +1,50 @@
-# Этап 1: Сборка приложения
-FROM node:20-slim AS builder
+# Этап 1: сборка приложения
+FROM node:20-alpine3.17 AS builder
 
 WORKDIR /app
 
-# Устанавливаем зависимости
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
+# Устанавливаем зависимости для Prisma
+RUN apk update && apk add --no-cache \
+    openssl \
+    openssl-dev \
+    ca-certificates \
+    libc6-compat \
+    && ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
 
-# Копируем остальной код
+COPY package*.json ./
+
+RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60000 --verbose
+
 COPY . .
 
-# Генерация Prisma клиента
 RUN npx prisma generate
-
-# Сборка TypeScript (или другого билда)
 RUN npm run build
 
-# Этап 2: Production
-FROM node:20-slim AS production
+# Этап 2: production-контейнер
+FROM node:20-alpine3.17 AS production
 
 WORKDIR /app
 
-# Копируем только нужные файлы из builder
-COPY --from=builder /app/dist ./dist
+# Устанавливаем runtime зависимости для Prisma
+RUN apk update && apk add --no-cache \
+    openssl \
+    openssl-dev \
+    ca-certificates \
+    libc6-compat \
+    && ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
+
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 ENV NODE_ENV=production
+ENV LD_LIBRARY_PATH=/lib
+
 EXPOSE 5000
 
-CMD ["node", "dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node --max-old-space-size=4096 dist/src/main.js"]
 
 
 
