@@ -35,7 +35,6 @@ EXPOSE 5000
 
 CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push --accept-data-loss && node dist/src/main.js"]
 
-
 # # Этап 1: сборка приложения
 # FROM node:20-alpine3.17 AS builder
 
