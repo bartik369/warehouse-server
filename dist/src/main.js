@@ -22,8 +22,6 @@ async function bootstrap() {
         },
         crossOriginResourcePolicy: { policy: 'cross-origin' },
     }));
-    console.log('PORT:', process.env.PORT);
-    console.log('DATABASE_URL:', process.env.DATABASE_URL);
     helmet_1.default.noSniff();
     helmet_1.default.frameguard({ action: 'deny' });
     app.enableCors({

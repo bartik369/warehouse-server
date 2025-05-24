@@ -42,7 +42,9 @@ exports.AppModule = AppModule = __decorate([
             }),
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+                envFilePath: process.env.NODE_ENV === 'production'
+                    ? undefined
+                    : `.env.${process.env.NODE_ENV || 'development'}`,
             }),
             devices_module_1.DevicesModule,
             users_module_1.UsersModule,
