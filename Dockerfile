@@ -1,9 +1,9 @@
-# Этап 1: сборка приложения
+# Этап 1: сборка
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Устанавливаем openssl1.1-compat (если Prisma этого требует)
+# Устанавливаем нужные библиотеки (например, openssl1.1-compat для Prisma)
 RUN apk add --no-cache openssl1.1-compat
 
 COPY package*.json ./
@@ -13,18 +13,16 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# Этап 2: production
+# Этап 2: продакшн
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Устанавливаем openssl1.1-compat, если нужно
+# Повторно устанавливаем openssl1.1-compat, если нужно на runtime
 RUN apk add --no-cache openssl1.1-compat
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 
 ENV NODE_ENV=production
@@ -32,6 +30,7 @@ ENV NODE_ENV=production
 EXPOSE 5000
 
 CMD ["node", "dist/src/main.js"]
+
 
 
 # # Этап 1: сборка приложения
