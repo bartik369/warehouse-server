@@ -1,32 +1,32 @@
-# Этап 1: сборка
-FROM node:20-alpine AS builder
+# Этап 1: Сборка приложения
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Устанавливаем нужные библиотеки (например, openssl1.1-compat для Prisma)
-RUN apk add --no-cache openssl1.1-compat
-
+# Устанавливаем зависимости
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
+# Копируем остальной код
 COPY . .
+
+# Генерация Prisma клиента
 RUN npx prisma generate
+
+# Сборка TypeScript (или другого билда)
 RUN npm run build
 
-# Этап 2: продакшн
-FROM node:20-alpine AS production
+# Этап 2: Production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Повторно устанавливаем openssl1.1-compat, если нужно на runtime
-RUN apk add --no-cache openssl1.1-compat
-
+# Копируем только нужные файлы из builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 
 ENV NODE_ENV=production
-
 EXPOSE 5000
 
 CMD ["node", "dist/src/main.js"]
