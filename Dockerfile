@@ -44,7 +44,7 @@ ENV LD_LIBRARY_PATH=/lib
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node --max-old-space-size=4096 dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma migrate resolve --applied init && node dist/src/main.js"]
 
 
 
