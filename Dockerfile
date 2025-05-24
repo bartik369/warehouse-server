@@ -1,37 +1,28 @@
-# Этап 1: сборка приложения
 FROM node:20-alpine3.17 AS builder
 
 WORKDIR /app
 
-# Устанавливаем зависимости для Prisma
 RUN apk update && apk add --no-cache \
     openssl \
     openssl-dev \
     ca-certificates \
-    libc6-compat \
-    && ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
+    libc6-compat
 
 COPY package*.json ./
-
-RUN npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-maxtimeout=60000 --verbose
-
+RUN npm install --legacy-peer-deps
 COPY . .
-
 RUN npx prisma generate
 RUN npm run build
 
-# Этап 2: production-контейнер
 FROM node:20-alpine3.17 AS production
 
 WORKDIR /app
 
-# Устанавливаем runtime зависимости для Prisma
 RUN apk update && apk add --no-cache \
     openssl \
     openssl-dev \
     ca-certificates \
-    libc6-compat \
-    && ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
+    libc6-compat
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
@@ -40,12 +31,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 ENV NODE_ENV=production
-ENV LD_LIBRARY_PATH=/lib
-
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma migrate resolve --applied init && node dist/src/main.js"]
-
+CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push --accept-data-loss && node dist/src/main.js"]
 
 
 # # Этап 1: сборка приложения
