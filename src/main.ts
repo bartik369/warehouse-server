@@ -31,7 +31,7 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  app.use('/uploads', express.static(__dirname + '/uploads'));
+  app.use('/uploads', express.static(__dirname + '/uploads/models'));
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
   app.use(cookieParser());
