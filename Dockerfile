@@ -30,6 +30,9 @@ COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/clie
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
+COPY --from=builder /app/uploads ./uploads
+RUN ln -s /app/uploads /uploads
+
 ENV NODE_ENV=production
 EXPOSE 5000
 
