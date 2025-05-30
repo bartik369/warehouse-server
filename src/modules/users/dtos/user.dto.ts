@@ -26,8 +26,8 @@ export class UserDto {
   isActive: boolean;
   @IsNotEmpty()
   @IsString()
-  department: string;
-  @IsNotEmpty()
+  departmentId: string;
+  @IsOptional()
   @IsString()
   locationId: string;
   createdAt: Date;
@@ -44,7 +44,7 @@ export interface IUser {
   firstNameEn: string;
   lastNameEn: string;
   isActive: boolean;
-  department: string;
+  departmentId: string;
   locationId: string;
   createdAt: Date;
   updatedAt: Date;

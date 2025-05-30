@@ -19,7 +19,7 @@ export class UsersController {
   @Post('/')
   @UsePipes(new ValidationPipe())
   create(@Body() userDto: UserDto) {
-    // return this.usersService.create(userDto);
+    return this.usersService.create(userDto);
   }
 
   @Get()
@@ -32,13 +32,4 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() userDto: UserDto) {
-    return this.usersService.update(+id, userDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
-  }
 }

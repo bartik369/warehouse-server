@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { UserDto } from './dtos/user.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConflictUserException } from 'src/exceptions/auth.exceptions';
 
@@ -21,20 +21,24 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data: userDto,
     });
-
-    await this.prisma.password.create({
-      data: {
-        userId: user.id,
-        password: hash,
-      },
-    });
-    await this.prisma.token.create({
-      data: {
-        userId: user.id,
-        token: '',
-      },
-    });
-
+    const [userPassword, userToken] = await Promise.all([
+      this.prisma.password.create({
+        data: {
+          userId: user.id,
+          password: hash,
+        },
+      }),
+      this.prisma.token.create({
+        data: {
+          userId: user.id,
+          token: '',
+        },
+      }),
+    ]);
+    if (!userPassword || userToken)
+      throw new InternalServerErrorException(
+        'Failed to create password or token',
+      );
     return user;
   }
 
@@ -50,20 +54,20 @@ export class UsersService {
     });
   }
 
-  update(id: number, userDto: UserDto) {
-    return `This action updates a #${id} user`;
-  }
+  // update(id: number, userDto: UserDto) {
+  //   return `This action updates a #${id} user`;
+  // }
 
-  async remove(id: string) {
-    await this.prisma.password.delete({
-      where: {
-        id: id,
-      },
-    });
-    await this.prisma.user.delete({
-      where: {
-        id: id,
-      },
-    });
-  }
+  // async remove(id: string) {
+  //   await this.prisma.password.delete({
+  //     where: {
+  //       id: userDto.id,
+  //     },
+  //   });
+  //   await this.prisma.user.delete({
+  //     where: {
+  //       id: userDto.id,
+  //     },
+  //   });
+  // }
 }
