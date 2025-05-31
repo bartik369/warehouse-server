@@ -1,24 +1,25 @@
 import { PrismaService } from 'prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { WarehouseDto } from './dtos/warehouseDto';
+import { WarehouseBaseDto } from './dtos/warehouseBase.dto';
 import {
   LocationNotFoundException,
   WarehouseExistException,
   WarehouseNotFoundException,
 } from 'src/exceptions/location.exceptions';
-import { IWarehouse } from './types/warehouse.types';
+import { CreateWarehouseDto } from './dtos/create-warehouse.dto';
+import { UpdateWarehouseDto } from './dtos/update-warehouse.dto';
 
 @Injectable()
 export class WarehousesService {
   constructor(private prisma: PrismaService) {}
   // Get all
-  async findAll() {
+  async findAll(): Promise<WarehouseBaseDto[]> {
     const warehouses = await this.prisma.warehouse.findMany();
     if (warehouses) return warehouses;
     return null;
   }
   // Get all assignable
-  async getAssignable(locationId: string): Promise<IWarehouse[]> {
+  async getAssignable(locationId: string): Promise<WarehouseBaseDto[]> {
     const existLocation = await this.prisma.location.findUnique({
       where: { id: locationId },
     });
@@ -31,7 +32,9 @@ export class WarehousesService {
     return warehouses;
   }
   // Create
-  async createWarehouse(warehouseDto: WarehouseDto): Promise<IWarehouse> {
+  async createWarehouse(
+    warehouseDto: CreateWarehouseDto,
+  ): Promise<WarehouseBaseDto> {
     const [existWarehouse, existLocation] = await Promise.all([
       this.prisma.warehouse.findUnique({
         where: { name: warehouseDto.name },
@@ -45,16 +48,16 @@ export class WarehousesService {
     if (!existLocation) throw new LocationNotFoundException();
     const warehouse = await this.prisma.warehouse.create({
       data: {
-        name: warehouseDto.name?.trim(),
-        slug: warehouseDto.slug?.trim(),
+        name: warehouseDto.name,
+        slug: warehouseDto.slug,
         locationId: existLocation.id,
-        comment: warehouseDto.comment || undefined,
+        comment: warehouseDto.comment || '',
       },
     });
     return warehouse;
   }
   // Get by ID
-  async getWarehouse(id: string) {
+  async getWarehouse(id: string): Promise<WarehouseBaseDto> {
     const warehouse = await this.prisma.warehouse.findUnique({
       where: { id: id },
       include: {
@@ -68,7 +71,10 @@ export class WarehousesService {
     return { ...rest, locationName: location?.name || null };
   }
   // Update
-  async updateWarehouse(id: string, warehouseDto: WarehouseDto) {
+  async updateWarehouse(
+    id: string,
+    warehouseDto: UpdateWarehouseDto,
+  ): Promise<WarehouseBaseDto> {
     const existWarehouse = await this.prisma.warehouse.findUnique({
       where: { id: id },
     });
@@ -76,8 +82,8 @@ export class WarehousesService {
     const updatedWarehouse = await this.prisma.warehouse.update({
       where: { id: id },
       data: {
-        name: warehouseDto.name?.trim(),
-        slug: warehouseDto.slug?.trim(),
+        name: warehouseDto.name,
+        slug: warehouseDto.slug,
         comment: warehouseDto.comment || undefined,
       },
     });

@@ -10,39 +10,41 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { RolesService } from './roles.service';
-import { RoleDto } from './dto/role.dto';
 import {
   roleCreated,
   roleDeleted,
   roleUpdated,
 } from 'src/common/utils/constants';
-import { IRole } from './types/role.types';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { RoleBaseDto } from './dto/role-base.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Controller('roles')
 export class RolesController {
   constructor(private rolesService: RolesService) {}
+
   // Get all
   @Get()
-  async getRoles(): Promise<IRole[]> {
+  async getRoles(): Promise<RoleBaseDto[]> {
     return await this.rolesService.getRoles();
   }
   // Get all for Assign
   @Get('assignable')
-  async getAssignableRoles(): Promise<IRole[]> {
+  async getAssignableRoles(): Promise<RoleBaseDto[]> {
     return await this.rolesService.getAssignableRoles();
   }
 
   // Get by ID
   @Get(':id')
-  async getRole(@Param('id') id: string): Promise<IRole> {
+  async getRole(@Param('id') id: string): Promise<RoleBaseDto> {
     return await this.rolesService.getRole(id);
   }
   // Create
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createRole(
-    @Body() roleDto: RoleDto,
-  ): Promise<{ message: string; role: IRole }> {
+    @Body() roleDto: CreateRoleDto,
+  ): Promise<{ message: string; role: RoleBaseDto }> {
     const role = await this.rolesService.createRole(roleDto);
     return {
       message: roleCreated,
@@ -54,8 +56,8 @@ export class RolesController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateRole(
     @Param('id') id: string,
-    @Body() roleDto: RoleDto,
-  ): Promise<{ message: string; updatedRole: IRole }> {
+    @Body() roleDto: UpdateRoleDto,
+  ): Promise<{ message: string; updatedRole: RoleBaseDto }> {
     const updatedRole = await this.rolesService.updateRole(id, roleDto);
     return {
       message: roleUpdated,

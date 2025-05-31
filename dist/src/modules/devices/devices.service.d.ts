@@ -1,6 +1,8 @@
-import { IDeviceOptions, IDevice, IAggregatedDeviceInfo, IFilteredDevices } from 'src/common/types/device.types';
+import { IDeviceOptions, IAggregatedDeviceInfo, IFilteredDevices } from 'src/common/types/device.types';
 import { PrismaService } from 'prisma/prisma.service';
-import { DeviceDto } from './dtos/device.dto';
+import { CreateDeviceDto } from './dtos/create-device.dto';
+import { DeviceBaseDto } from './dtos/device-base.dto';
+import { UpdateDeviceDto } from './dtos/update-device.dto';
 export declare class DevicesService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -11,87 +13,87 @@ export declare class DevicesService {
     getDevice(id: string): Promise<IAggregatedDeviceInfo>;
     deviceHistory(): Promise<({
         deviceIssues: ({
-            user: {
-                id: string;
-                locationId: string;
-                userName: string;
-                email: string;
-                workId: string | null;
-                firstNameRu: string;
-                lastNameRu: string;
-                firstNameEn: string;
-                lastNameEn: string;
-                departmentId: string | null;
-                isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
-            };
             issuedBy: {
                 id: string;
-                locationId: string;
+                createdAt: Date;
+                updatedAt: Date;
                 userName: string;
                 email: string;
                 workId: string | null;
-                firstNameRu: string;
-                lastNameRu: string;
                 firstNameEn: string;
                 lastNameEn: string;
-                departmentId: string | null;
                 isActive: boolean;
+                locationId: string;
+                firstNameRu: string;
+                lastNameRu: string;
+                departmentId: string | null;
+            };
+            user: {
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                userName: string;
+                email: string;
+                workId: string | null;
+                firstNameEn: string;
+                lastNameEn: string;
+                isActive: boolean;
+                locationId: string;
+                firstNameRu: string;
+                lastNameRu: string;
+                departmentId: string | null;
             };
         } & {
             id: string;
-            comment: string | null;
             createdAt: Date;
             updatedAt: Date;
-            userId: string | null;
-            deviceId: string | null;
             processId: number;
+            deviceId: string | null;
+            userId: string | null;
             issuedById: string | null;
             issueDate: Date;
             status: string;
+            comment: string | null;
         })[];
         deviceReturns: ({
             user: {
                 id: string;
-                locationId: string;
+                createdAt: Date;
+                updatedAt: Date;
                 userName: string;
                 email: string;
                 workId: string | null;
-                firstNameRu: string;
-                lastNameRu: string;
                 firstNameEn: string;
                 lastNameEn: string;
-                departmentId: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
+                locationId: string;
+                firstNameRu: string;
+                lastNameRu: string;
+                departmentId: string | null;
             };
             returnedBy: {
                 id: string;
-                locationId: string;
+                createdAt: Date;
+                updatedAt: Date;
                 userName: string;
                 email: string;
                 workId: string | null;
-                firstNameRu: string;
-                lastNameRu: string;
                 firstNameEn: string;
                 lastNameEn: string;
-                departmentId: string | null;
                 isActive: boolean;
-                createdAt: Date;
-                updatedAt: Date;
+                locationId: string;
+                firstNameRu: string;
+                lastNameRu: string;
+                departmentId: string | null;
             };
         } & {
             id: string;
-            comment: string | null;
             createdAt: Date;
             updatedAt: Date;
-            userId: string | null;
-            deviceId: string | null;
             processId: number;
+            deviceId: string | null;
+            userId: string | null;
+            comment: string | null;
             returnedById: string | null;
             returnDate: Date;
             condition: string | null;
@@ -99,8 +101,6 @@ export declare class DevicesService {
     } & {
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         inventoryNumber: string | null;
         modelId: string | null;
         modelCode: string | null;
@@ -108,21 +108,23 @@ export declare class DevicesService {
         weight: number | null;
         screenSize: number | null;
         memorySize: number | null;
-        price_with_vat: import("@prisma/client/runtime/library").Decimal | null;
-        price_without_vat: import("@prisma/client/runtime/library").Decimal | null;
-        residual_price: import("@prisma/client/runtime/library").Decimal | null;
+        inStock: boolean;
+        isFunctional: boolean;
+        isAssigned: boolean;
         warehouseId: string | null;
         description: string | null;
         addedById: string;
-        isFunctional: boolean;
-        isAssigned: boolean;
-        inStock: boolean;
         updatedById: string;
         lastIssuedAt: Date | null;
         lastReturnedAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+        price_without_vat: import("@prisma/client/runtime/library").Decimal | null;
+        price_with_vat: import("@prisma/client/runtime/library").Decimal | null;
+        residual_price: import("@prisma/client/runtime/library").Decimal | null;
     })[]>;
     getOptions(city: string): Promise<IDeviceOptions>;
-    createDevice(deviceDto: DeviceDto): Promise<Partial<IDevice>>;
-    updateDevice(deviceId: string, deviceDto: DeviceDto): Promise<DeviceDto>;
-    warrantyAction: (deviceDto: DeviceDto, id: string, deviceId: string) => Promise<void>;
+    createDevice(deviceDto: CreateDeviceDto): Promise<Partial<DeviceBaseDto>>;
+    updateDevice(deviceId: string, deviceDto: UpdateDeviceDto): Promise<DeviceBaseDto>;
+    warrantyAction: (deviceDto: UpdateDeviceDto, id: string, deviceId: string) => Promise<void>;
 }

@@ -8,13 +8,14 @@ import {
   ModelNotFoundException,
   TypeNotFoundException,
 } from 'src/exceptions/device.exceptions';
-import { ModelDto } from './dto/model.dto';
+import { ModelBaseDto } from './dto/model-base.dto';
+import { CreateModelDto } from './dto/model-create.dto';
 
 @Injectable()
 export class ModelsService {
   constructor(private prisma: PrismaService) {}
   // All models
-  async getModels(manufacturer: string, type: string): Promise<ModelDto[]> {
+  async getModels(manufacturer: string, type: string): Promise<ModelBaseDto[]> {
     const existingType = await this.prisma.device_type.findUnique({
       where: { slug: type },
     });
@@ -35,7 +36,7 @@ export class ModelsService {
   // Get by ID
   async getModelById(
     id: string,
-  ): Promise<ModelDto & { manufacturer: string; type: string }> {
+  ): Promise<ModelBaseDto & { manufacturer: string; type: string }> {
     const existModel = await this.prisma.device_model.findUnique({
       where: { id: id },
     });
@@ -56,15 +57,15 @@ export class ModelsService {
     };
   }
   // GET ALL MODElS
-  async getAllModels(): Promise<ModelDto[]> {
+  async getAllModels(): Promise<ModelBaseDto[]> {
     const models = await this.prisma.device_model.findMany({});
     return models;
   }
   // Create
   async createModel(
-    modelDto: ModelDto,
+    modelDto: CreateModelDto,
     file: Express.Multer.File,
-  ): Promise<ModelDto> {
+  ): Promise<ModelBaseDto> {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: modelDto.manufacturerId },
     });
@@ -79,20 +80,20 @@ export class ModelsService {
     const savedFilePath = await this.saveFile(modelDto.imagePath, file);
     const model = await this.prisma.device_model.create({
       data: {
-        name: modelDto.name?.trim(),
-        slug: modelDto.slug?.trim(),
-        imagePath: savedFilePath?.trim(),
+        name: modelDto.name,
+        slug: modelDto.slug,
+        imagePath: savedFilePath,
         manufacturerId: existingManufacturer.id,
-        typeId: modelDto.typeId?.trim(),
+        typeId: modelDto.typeId,
       },
     });
     return model;
   }
   // Update
   async updateModel(
-    modelDto: ModelDto,
+    modelDto: ModelBaseDto,
     file: Express.Multer.File,
-  ): Promise<ModelDto> {
+  ): Promise<ModelBaseDto> {
     const existModel = await this.prisma.device_model.findUnique({
       where: { id: modelDto.id },
     });
@@ -100,13 +101,13 @@ export class ModelsService {
     const model = await this.prisma.device_model.update({
       where: { id: existModel.id },
       data: {
-        name: modelDto.name?.trim(),
-        slug: modelDto.slug?.trim(),
+        name: modelDto.name,
+        slug: modelDto.slug,
         imagePath: file
           ? await this.saveFile(existModel.imagePath, file)
           : existModel.imagePath,
-        manufacturerId: modelDto.manufacturerId?.trim(),
-        typeId: modelDto.typeId?.trim(),
+        manufacturerId: modelDto.manufacturerId,
+        typeId: modelDto.typeId,
       },
     });
     return model;

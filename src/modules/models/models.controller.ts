@@ -18,17 +18,18 @@ import {
   modelCreated,
   modelUpdated,
 } from 'src/common/utils/constants';
-import { ModelDto } from './dto/model.dto';
 import { plainToInstance } from 'class-transformer';
+import { ModelBaseDto } from './dto/model-base.dto';
 
 @Controller('models')
 export class ModelsController {
   constructor(private modelsService: ModelsService) {}
+
   // Get by ID
   @Get('/single/:id')
   async getModelById(
     @Param('id') id: string,
-  ): Promise<ModelDto & { manufacturer: string; type: string }> {
+  ): Promise<ModelBaseDto & { manufacturer: string; type: string }> {
     const model = await this.modelsService.getModelById(id);
     return model;
   }
@@ -37,7 +38,7 @@ export class ModelsController {
   async getModels(
     @Param('manufacturer') manufacturer: string,
     @Param('type') type: string,
-  ): Promise<ModelDto[]> {
+  ): Promise<ModelBaseDto[]> {
     return await this.modelsService.getModels(manufacturer, type);
   }
   @Get('/all')
@@ -53,8 +54,8 @@ export class ModelsController {
   async createModel(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: Record<string, string>,
-  ): Promise<{ message: string; model: ModelDto }> {
-    const modelDto = plainToInstance(ModelDto, body);
+  ): Promise<{ message: string; model: ModelBaseDto }> {
+    const modelDto = plainToInstance(ModelBaseDto, body);
     const model = await this.modelsService.createModel(modelDto, file);
     return {
       message: modelCreated,
@@ -69,8 +70,8 @@ export class ModelsController {
   async updateModel(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: Record<string, string>,
-  ): Promise<{ message: string; updatedModel: ModelDto }> {
-    const modelDto = plainToInstance(ModelDto, body);
+  ): Promise<{ message: string; updatedModel: ModelBaseDto }> {
+    const modelDto = plainToInstance(ModelBaseDto, body);
     const updatedModel = await this.modelsService.updateModel(modelDto, file);
     return {
       message: modelUpdated,

@@ -1,15 +1,16 @@
-import { IUser } from 'src/modules/users/dtos/user.dto';
+import { UserBaseDto } from 'src/modules/users/dtos/user-base.dto';
+
 export type Tokens = {
   accessToken: string;
   refreshToken: string;
 };
 export type GroupAuthData = {
-  user: IUser;
+  user: UserBaseDto;
   tokens: Tokens;
 };
 
 export type AuthData = {
-  user: IUser;
+  user: UserBaseDto;
   accessToken: string;
   refreshToken: string;
 };
@@ -17,4 +18,4 @@ export type JwtPayload = {
   sub: string;
   email: string;
 };
-export type JwtPayloadWithRt = JwtPayload & { refreshToken: string };
+export type JwtPayloadWithRt = JwtPayload & { refreshToken: string }

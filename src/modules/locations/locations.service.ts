@@ -1,22 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { ILocation } from 'src/common/types/location.types';
-import { LocationDto } from './dtos/location.dto';
 import {
   LocationExistException,
   LocationNotFoundException,
 } from 'src/exceptions/location.exceptions';
+import { CreateLocationDto } from './dtos/location-create.dto';
+import { LocationBaseDto } from './dtos/location-base.dto';
+import { UpdateLocationDto } from './dtos/location-update.dto';
 
 @Injectable()
 export class LocationsService {
   constructor(private prisma: PrismaService) {}
   // All
-  async getLocations(): Promise<ILocation[]> {
+  async getLocations(): Promise<LocationBaseDto[]> {
     const locations = await this.prisma.location.findMany({});
     return locations;
   }
   //By ID
-  async getLocation(id: string): Promise<ILocation> {
+  async getLocation(id: string): Promise<LocationBaseDto> {
     const location = await this.prisma.location.findUnique({
       where: { id: id },
     });
@@ -24,16 +26,19 @@ export class LocationsService {
     return location;
   }
   // Create
-  async createLocation(locationDto: LocationDto) {
+  async createLocation(
+    locationDto: CreateLocationDto,
+  ): Promise<LocationBaseDto> {
     const existingLocation = await this.prisma.location.findUnique({
-      where: { name: locationDto.name?.trim() },
+      where: { name: locationDto.name },
     });
     if (existingLocation) throw new LocationExistException();
+
     const location = await this.prisma.location.create({
       data: {
-        name: locationDto.name?.trim(),
-        slug: locationDto.slug?.trim(),
-        comment: locationDto.comment || undefined,
+        name: locationDto.name,
+        slug: locationDto.slug,
+        comment: locationDto.comment || '',
       },
     });
     return location;
@@ -41,8 +46,8 @@ export class LocationsService {
   // Update
   async updateLocation(
     id: string,
-    locationDto: LocationDto,
-  ): Promise<ILocation> {
+    locationDto: UpdateLocationDto,
+  ): Promise<LocationBaseDto> {
     const existLocation = await this.prisma.location.findUnique({
       where: { id: id },
     });
@@ -51,9 +56,9 @@ export class LocationsService {
     const updatedLocation = await this.prisma.location.update({
       where: { id: existLocation.id },
       data: {
-        name: locationDto.name?.trim(),
-        slug: locationDto.slug?.trim(),
-        comment: locationDto.comment || undefined,
+        name: locationDto.name,
+        slug: locationDto.slug,
+        comment: locationDto.comment || '',
       },
     });
     return updatedLocation;

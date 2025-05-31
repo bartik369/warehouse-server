@@ -11,15 +11,18 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { TypesService } from './types.service';
-import { TypeDto } from './dto/type.dto';
-import { typeCreated } from 'src/common/utils/constants';
+import { typeCreated, updatedTypeMsg } from 'src/common/utils/constants';
 import { FormDataOnlyInterceptor } from 'src/common/interceptors/form-data.interceptor';
+import { CreateTypeDto } from './dto/create-type.dto';
+import { TypeBaseDto } from './dto/type-base.dto';
+import { UpdateTypeDto } from './dto/update-type.dto';
 
 @Controller('types')
 export class TypesController {
   constructor(private typesService: TypesService) {}
+  // Get all
   @Get()
-  async getTypes() {
+  async getTypes(): Promise<TypeBaseDto[]> {
     return await this.typesService.getTypes();
   }
 
@@ -28,7 +31,9 @@ export class TypesController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.CREATED)
   @FormDataOnlyInterceptor()
-  async createType(@Body() typeDto: TypeDto) {
+  async createType(
+    @Body() typeDto: CreateTypeDto,
+  ): Promise<{ message: string; type: TypeBaseDto }> {
     const type = await this.typesService.createType(typeDto);
     return {
       message: typeCreated,
@@ -37,13 +42,21 @@ export class TypesController {
   }
   // GET DEVICE TYPE BY ID
   @Get(':id')
-  async getType(@Param('id') id: string) {
+  async getType(@Param('id') id: string): Promise<TypeBaseDto> {
     return await this.typesService.getType(id);
   }
+
   // UPDATE DEVICE TYPE
   @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async updateType(@Body() typeDto: TypeDto, @Param('id') id: string) {
-    await this.typesService.updateType(typeDto, id);
+  async updateType(
+    @Body() typeDto: UpdateTypeDto,
+    @Param('id') id: string,
+  ): Promise<{ message: string; updatedType: TypeBaseDto }> {
+    const updatedType = await this.typesService.updateType(typeDto, id);
+    return {
+      message: updatedTypeMsg,
+      updatedType,
+    };
   }
 }

@@ -67,6 +67,10 @@ export const roleNotUpdated = 'Роль не обновлена!';
 export const permissionNotUpdated = 'Разрешение не обновлено!';
 export const contractorNotUpdated = 'Подрядчик не обновлен!';
 
+export const updatedTypeMsg = 'Тип обновлен';
+export const updatedRolePermissions = 'Разрешения роли обновлены';
+export const createdRolePermissions = 'Разрешения роли добавлены';
+
 // auth
 export const wrongAuthData = 'Пожалуйста, проверьте данные для входа!';
 export const deniedAccess = 'Отказано в доступе!';

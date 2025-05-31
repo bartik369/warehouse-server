@@ -4,19 +4,21 @@ import {
   PermissionExistException,
   PermissionNotFoundException,
 } from 'src/exceptions/permissions.exceptions';
-import { PermissionDto } from './dto/permission.dto';
+import { PermissionBaseDto } from './dto/permission-base.dto';
+import { CreatePermissionDto } from './dto/create-permission.dto';
+import { UpdatePermissionDto } from './dto/update-permission.dto';
 
 @Injectable()
 export class PermissionsService {
   constructor(private prisma: PrismaService) {}
   // Get all
-  async getPermissions() {
+  async getPermissions(): Promise<PermissionBaseDto[]> {
     const permissions = await this.prisma.permission.findMany({});
     if (!permissions) return null;
     return permissions;
   }
   // Get by ID
-  async getPermission(id: string): Promise<PermissionDto> {
+  async getPermission(id: string): Promise<PermissionBaseDto> {
     const permission = await this.prisma.permission.findUnique({
       where: { id: id },
     });
@@ -24,14 +26,16 @@ export class PermissionsService {
     return permission;
   }
   // Create
-  async createPermission(permissionDto: PermissionDto): Promise<PermissionDto> {
+  async createPermission(
+    permissionDto: CreatePermissionDto,
+  ): Promise<PermissionBaseDto> {
     const existingPermission = await this.prisma.permission.findUnique({
-      where: { name: permissionDto.name?.trim() },
+      where: { name: permissionDto.name },
     });
     if (existingPermission) throw new PermissionExistException();
     const permission = await this.prisma.permission.create({
       data: {
-        name: permissionDto.name?.trim(),
+        name: permissionDto.name,
         comment: permissionDto.comment,
       },
     });
@@ -40,8 +44,8 @@ export class PermissionsService {
   // Update
   async updatePermission(
     id: string,
-    permissionDto: PermissionDto,
-  ): Promise<PermissionDto> {
+    permissionDto: UpdatePermissionDto,
+  ): Promise<PermissionBaseDto> {
     const existingPermission = await this.prisma.permission.findUnique({
       where: { id: id },
     });
@@ -49,7 +53,7 @@ export class PermissionsService {
     const updatedPermission = await this.prisma.permission.update({
       where: { id: id },
       data: {
-        name: permissionDto.name?.trim(),
+        name: permissionDto.name,
         comment: permissionDto.comment || undefined,
       },
     });

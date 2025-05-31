@@ -10,16 +10,24 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserDto } from './dtos/user.dto';
+import { UserBaseDto } from './dtos/user-base.dto';
+import { CreateUserDto } from './dtos/create-user.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post('/')
-  @UsePipes(new ValidationPipe())
-  create(@Body() userDto: UserDto) {
-    return this.usersService.create(userDto);
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async create(
+    @Body() userDto: CreateUserDto,
+  ): Promise<{ message: string; user: UserBaseDto }> {
+    console.log(userDto)
+    const user = await this.usersService.create(userDto);
+    return {
+      message: 'rerwerw',
+      user,
+    };
   }
 
   @Get()

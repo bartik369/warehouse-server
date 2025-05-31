@@ -44,16 +44,19 @@ let UsersService = class UsersService {
     }
     async create(userDto) {
         const existUser = await this.prisma.user.findUnique({
-            where: {
-                email: userDto.email?.trim(),
-            },
+            where: { email: userDto.email },
         });
         if (existUser)
             throw new auth_exceptions_1.ConflictUserException();
         const password = (0, uuid_1.v4)();
         const hash = await bcrypt.hash(password, 9);
         const user = await this.prisma.user.create({
-            data: userDto,
+            data: {
+                ...userDto,
+                workId: userDto.workId || null,
+                departmentId: userDto.departmentId || null,
+                locationId: userDto.locationId || null,
+            },
         });
         const [userPassword, userToken] = await Promise.all([
             this.prisma.password.create({
@@ -69,7 +72,7 @@ let UsersService = class UsersService {
                 },
             }),
         ]);
-        if (!userPassword || userToken)
+        if (!userPassword || !userToken)
             throw new common_1.InternalServerErrorException('Failed to create password or token');
         return user;
     }

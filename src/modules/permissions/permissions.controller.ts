@@ -15,27 +15,30 @@ import {
   permissionUpdated,
 } from 'src/common/utils/constants';
 import { PermissionsService } from './permissions.service';
-import { PermissionDto } from './dto/permission.dto';
+import { PermissionBaseDto } from './dto/permission-base.dto';
+import { CreatePermissionDto } from './dto/create-permission.dto';
+import { UpdatePermissionDto } from './dto/update-permission.dto';
 
 @Controller('permissions')
 export class PermissionsController {
   constructor(private permissionsService: PermissionsService) {}
+
   // Get all
   @Get()
-  async getPermissions(): Promise<PermissionDto[]> {
+  async getPermissions(): Promise<PermissionBaseDto[]> {
     return await this.permissionsService.getPermissions();
   }
   // Get by ID
   @Get(':id')
-  async getPermission(@Param('id') id: string): Promise<PermissionDto> {
+  async getPermission(@Param('id') id: string): Promise<PermissionBaseDto> {
     return await this.permissionsService.getPermission(id);
   }
   // Create
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createPermission(
-    @Body() permissionDto: PermissionDto,
-  ): Promise<{ message: string; permission: PermissionDto }> {
+    @Body() permissionDto: CreatePermissionDto,
+  ): Promise<{ message: string; permission: PermissionBaseDto }> {
     const permission =
       await this.permissionsService.createPermission(permissionDto);
     return {
@@ -48,8 +51,8 @@ export class PermissionsController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updatePermission(
     @Param('id') id: string,
-    @Body() permissionDto: PermissionDto,
-  ): Promise<{ message: string; updatedPermission: PermissionDto }> {
+    @Body() permissionDto: UpdatePermissionDto,
+  ): Promise<{ message: string; updatedPermission: PermissionBaseDto }> {
     const updatedPermission = await this.permissionsService.updatePermission(
       id,
       permissionDto,

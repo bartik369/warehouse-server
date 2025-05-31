@@ -1,14 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import {
-  RolePermissionsDto,
-  RolePermissionsResponseDto,
-} from './dtos/role-permissions.dto';
+import { RolePermissionsResponseDto } from './dtos/response-role-permissions.dto';
 import { IRole } from 'src/common/types/permission.types';
 import { IWarehouse } from '../warehouses/types/warehouse.types';
 import { ILocation } from 'src/common/types/location.types';
 import { IPermission } from '../permissions/types/permission.types';
 import { IRolePermission } from '../permissions/types/permission.types';
+import { CreateRolePermissionsDto } from './dtos/create-role-permissions.dto';
 
 @Injectable()
 export class RolePermissionsService {
@@ -128,82 +126,10 @@ export class RolePermissionsService {
       }),
     );
   }
-  // // Permissions by role
-  // async getPermissionsByRole(id: string): Promise<RolePermissionsResponseDto> {
-  //   const existingRolePerms = await this.prisma.permission_role.findMany({
-  //     where: { roleId: id.trim() },
-  //   });
-  //   console.log(existingRolePerms)
-  //   if (existingRolePerms.length === 0)
-  //     return new RolePermissionsResponseDto({ roleId: id.trim() });
-
-  //   const rolePermissions = existingRolePerms.reduce(
-  //     (acc, elem) => {
-  //       const { permissionId, ...rest } = elem;
-  //       if (!acc[rest.roleId]) {
-  //         acc[rest.roleId] = { ...rest, permissionIds: [] };
-  //       }
-  //       acc[rest.roleId].permissionIds.push(permissionId);
-  //       return acc;
-  //     },
-  //     {} as Record<string, Partial<RolePermissionsResponseDto>>,
-  //   );
-
-  //   const permissionData = Object.values(rolePermissions)[0];
-  //   const roleName = await this.prisma.role.findUnique({
-  //     where: { id: permissionData.roleId },
-  //   });
-  //   let location = null;
-  //   let warehouse = null;
-  //   let permissions: { name: string }[] = [];
-
-  //   if (roleName.name === 'manager') {
-  //     location = await this.prisma.location.findUnique({
-  //       where: { id: permissionData.locationId?.trim() },
-  //     });
-  //   } else {
-  //     const [loc, war, perms] = await Promise.all([
-  //       permissionData.locationId?.trim()
-  //         ? this.prisma.location.findUnique({
-  //             where: { id: permissionData.locationId },
-  //           })
-  //         : Promise.resolve(null),
-  //       permissionData.warehouseId?.trim()
-  //         ? this.prisma.warehouse.findMany({
-  //             where: { id: permissionData.warehouseId?.trim() },
-  //           })
-  //         : Promise.resolve(null),
-  //       permissionData.permissionIds.length > 0
-  //         ? this.prisma.permission.findMany({
-  //             where: { id: { in: permissionData.permissionIds } },
-  //             select: { name: true },
-  //           })
-  //         : Promise.resolve([]),
-  //     ]);
-  //     location = loc;
-  //     warehouse = war;
-  //     permissions = perms;
-  //   }
-
-  //   const rolesName = permissions.map((item) => item.name);
-  //   if (roleName.name === 'manager') {
-  //     return {
-  //       ...(permissionData as RolePermissionsResponseDto),
-  //       locationName: location.name ?? '',
-  //     };
-  //   } else {
-  //     return {
-  //       ...(permissionData as RolePermissionsResponseDto),
-  //       locationName: location?.name ?? '',
-  //       locationId: location.id ?? '',
-  //       warehouseName: warehouse.name ?? '',
-  //       permissionName: rolesName,
-  //     };
-  //   }
-  // }
-
   // Create and Update
-  async createUpdateRolePermissions(rolePermissionsDto: RolePermissionsDto) {
+  async createUpdateRolePermissions(
+    rolePermissionsDto: CreateRolePermissionsDto,
+  ) {
     const {
       locationId,
       oldLocationId,
@@ -263,7 +189,7 @@ export class RolePermissionsService {
       await this.prisma.permission_role.deleteMany({
         where: deleteWhere,
       });
-      const permissionRoleModel = permissionIds.map((permissionId) => ({
+      const permissionRoleModel = permissionIds.map((permissionId: string) => ({
         permissionId,
         roleId: trimmedRoleId,
         locationId: trimmedLocationId,

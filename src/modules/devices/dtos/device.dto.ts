@@ -1,72 +1,6 @@
-import { IsNumber, IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
+import { DeviceBaseDto } from './device-base.dto';
 
-export class DeviceDto {
-  id: string;
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-  @IsOptional()
-  @IsString()
-  inventoryNumber?: string;
-  @IsOptional()
-  @IsString()
-  modelId?: string;
-  @IsOptional()
-  @IsString()
-  modelCode?: string;
-  @IsOptional()
-  @IsString()
-  serialNumber?: string;
-  @IsOptional()
-  @IsNumber()
-  weight?: number;
-  @IsOptional()
-  @IsNumber()
-  screenSize?: number;
-  @IsOptional()
-  @IsNumber()
-  memorySize?: number;
-  inStock: boolean;
-  isFunctional: boolean;
-  @IsOptional()
-  @IsNumber()
-  price_with_vat: number;
-  @IsOptional()
-  @IsNumber()
-  price_without_vat: number;
-  @IsOptional()
-  @IsNumber()
-  residual_price: number;
-  @IsString()
-  @IsOptional()
-  contractorId?: string;
-  isAssigned: boolean;
-  @IsString()
-  warehouseId: string;
-  @IsOptional()
-  @IsString()
-  description?: string;
-  @IsNotEmpty()
-  @IsString()
-  addedById: string;
-  updatedById: string;
-  lastIssuedAt: Date;
-  lastReturnedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  @IsOptional()
-  @IsString()
-  providerName?: string;
-  @IsOptional()
-  @IsString()
-  warrantyNumber?: string;
-  @IsOptional()
-  @IsString()
-  startWarrantyDate?: string;
-  @IsOptional()
-  @IsString()
-  endWarrantyDate?: string;
-}
 export class DeviceModelDto {
   id: string;
   @IsNotEmpty()
@@ -95,5 +29,5 @@ export class DeviceTypeDto {
   slug: string;
 }
 
-export type TDeviceDto = DeviceDto;
+export type TDeviceDto = DeviceBaseDto;
 export type TDeviceModelDto = DeviceModelDto;

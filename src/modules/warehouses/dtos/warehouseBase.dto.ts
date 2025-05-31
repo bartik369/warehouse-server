@@ -1,4 +1,4 @@
-export class WarehouseDto {
+export class WarehouseBaseDto {
   id: string;
   name: string;
   slug: string;

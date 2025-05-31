@@ -1,4 +1,3 @@
-import { IUser } from '../users/dtos/user.dto';
 import { AuthDto } from './dtos/auth.dto';
 import { AuthData, Tokens, GroupAuthData } from 'src/common/types/user.types';
 import { PrismaService } from 'prisma/prisma.service';
@@ -10,6 +9,7 @@ import { UserNotFoundException } from 'src/exceptions/auth.exceptions';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { UserBaseDto } from '../users/dtos/user-base.dto';
 
 @Injectable()
 export class AuthService {
@@ -50,13 +50,8 @@ export class AuthService {
   }
 
   async logout(id: string): Promise<boolean> {
-    await this.prisma.token.update({
-      where: {
-        userId: id,
-      },
-      data: {
-        token: '',
-      },
+    await this.prisma.token.delete({
+      where: { userId: id },
     });
     return true;
   }
@@ -94,7 +89,7 @@ export class AuthService {
       throw new DeniedAccessException();
     }
   }
-  async validate(token: string): Promise<IUser> {
+  async validate(token: string): Promise<UserBaseDto> {
     const payload = await this.jwtService.decode(token);
     if (!payload) throw new DeniedAccessException();
 
@@ -111,14 +106,22 @@ export class AuthService {
   // Updating refresh token in token table
   async updateRefreshHash(userId: string, refreshToken: string) {
     const hash = await this.hashData(refreshToken);
-    await this.prisma.token.updateMany({
-      where: {
-        userId: userId,
-      },
-      data: {
-        token: hash,
-      },
+    const existingToken = await this.prisma.token.findUnique({
+      where: { userId },
     });
+    if (existingToken) {
+      await this.prisma.token.updateMany({
+        where: { userId: userId },
+        data: { token: hash },
+      });
+    } else {
+      await this.prisma.token.create({
+        data: {
+          userId,
+          token: hash,
+        },
+      });
+    }
   }
 
   // Utility functions

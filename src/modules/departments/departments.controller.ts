@@ -11,31 +11,33 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { DepartmentsService } from './departments.service';
-import { DepartmentDto } from '../departments/dtos/department.dto';
+import { DepartmentBaseDto } from './dtos/department-base.dto';
 import {
   departmentCreated,
   departmentUpdated,
 } from 'src/common/utils/constants';
+import { CreateDepartmentDto } from './dtos/create-department.dto';
+import { UpdateDepartmentDto } from './dtos/update-department.dto';
 
 @Controller('departments')
 export class DepartmentsController {
   constructor(private departmentsService: DepartmentsService) {}
   // All
   @Get()
-  async getDepartments(): Promise<DepartmentDto[]> {
+  async getDepartments(): Promise<DepartmentBaseDto[]> {
     return await this.departmentsService.getDepartments();
   }
   // Get by ID
   @Get(':id')
-  async getDepartment(@Param('id') id: string): Promise<DepartmentDto> {
+  async getDepartment(@Param('id') id: string): Promise<DepartmentBaseDto> {
     return await this.departmentsService.getDepartment(id);
   }
   // Create
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createDepartment(
-    @Body() departmentDto: DepartmentDto,
-  ): Promise<{ message: string; department: DepartmentDto }> {
+    @Body() departmentDto: CreateDepartmentDto,
+  ): Promise<{ message: string; department: DepartmentBaseDto }> {
     const department =
       await this.departmentsService.createDepartment(departmentDto);
     return {
@@ -48,9 +50,9 @@ export class DepartmentsController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(HttpStatus.OK)
   async updateDepartment(
-    @Body() departmentDto: DepartmentDto,
+    @Body() departmentDto: UpdateDepartmentDto,
     @Param('id') id: string,
-  ): Promise<{ message: string; updatedDepartment: DepartmentDto }> {
+  ): Promise<{ message: string; updatedDepartment: DepartmentBaseDto }> {
     const updatedDepartment = await this.departmentsService.updateDepartment(
       id,
       departmentDto,

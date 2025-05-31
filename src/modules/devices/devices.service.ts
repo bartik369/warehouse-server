@@ -1,6 +1,5 @@
 import {
   IDeviceOptions,
-  IDevice,
   IAggregatedDeviceInfo,
   IFilteredDevices,
   IDeviceIssue,
@@ -11,8 +10,10 @@ import {
   WarrantyValidateException,
 } from 'src/exceptions/device.exceptions';
 import { PrismaService } from 'prisma/prisma.service';
-import { DeviceDto } from './dtos/device.dto';
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { CreateDeviceDto } from './dtos/create-device.dto';
+import { DeviceBaseDto } from './dtos/device-base.dto';
+import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Injectable()
 export class DevicesService {
@@ -315,7 +316,9 @@ export class DevicesService {
   }
 
   // Create
-  async createDevice(deviceDto: DeviceDto): Promise<Partial<IDevice>> {
+  async createDevice(
+    deviceDto: CreateDeviceDto,
+  ): Promise<Partial<DeviceBaseDto>> {
     const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } =
       deviceDto;
     // Validate warranty fields
@@ -348,11 +351,11 @@ export class DevicesService {
     // Create device
     const device = await this.prisma.device.create({
       data: {
-        name: deviceDto.name?.trim(),
-        inventoryNumber: deviceDto.inventoryNumber?.trim() || null,
-        modelId: deviceDto.modelId?.trim() || null,
+        name: deviceDto.name,
+        inventoryNumber: deviceDto.inventoryNumber || null,
+        modelId: deviceDto.modelId || null,
         modelCode: deviceDto.modelCode || null,
-        serialNumber: deviceDto.serialNumber?.trim() || null,
+        serialNumber: deviceDto.serialNumber || null,
         weight: deviceDto.weight === 0 ? null : deviceDto.weight,
         screenSize: deviceDto.screenSize === 0 ? null : deviceDto.screenSize,
         memorySize: deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
@@ -382,13 +385,20 @@ export class DevicesService {
         await this.warrantyAction(deviceDto, existContractor.id, device.id);
       }
     }
-    if (device) return device;
+    if (device) {
+      return {
+        ...device,
+        price_with_vat: device.price_with_vat.toNumber() ?? null,
+        price_without_vat: device.price_without_vat.toNumber() ?? null,
+        residual_price: device.residual_price.toNumber() ?? null,
+      };
+    }
   }
   //Update
   async updateDevice(
     deviceId: string,
-    deviceDto: DeviceDto,
-  ): Promise<DeviceDto> {
+    deviceDto: UpdateDeviceDto,
+  ): Promise<DeviceBaseDto> {
     const existDevice = await this.prisma.device.findUnique({
       where: { id: deviceId },
     });
@@ -416,15 +426,13 @@ export class DevicesService {
     const updatedDevice = await this.prisma.device.update({
       where: { id: existDevice.id },
       data: {
-        name: deviceDto.name?.trim(),
+        name: deviceDto.name,
         inventoryNumber: deviceDto.inventoryNumber
-          ? deviceDto.inventoryNumber.trim()
+          ? deviceDto.inventoryNumber
           : null,
-        modelId: deviceDto.modelId ? deviceDto.modelId.trim() : null,
-        modelCode: deviceDto.modelCode ? deviceDto.modelCode.trim() : null,
-        serialNumber: deviceDto.serialNumber
-          ? deviceDto.serialNumber.trim()
-          : null,
+        modelId: deviceDto.modelId ? deviceDto.modelId : null,
+        modelCode: deviceDto.modelCode ? deviceDto.modelCode : null,
+        serialNumber: deviceDto.serialNumber ? deviceDto.serialNumber : null,
         weight: deviceDto.weight === 0 ? null : deviceDto.weight,
         screenSize: deviceDto.screenSize === 0 ? null : deviceDto.screenSize,
         memorySize: deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
@@ -439,7 +447,6 @@ export class DevicesService {
         residual_price:
           deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
         updatedById: deviceDto.updatedById,
-        updatedAt: deviceDto.updatedAt,
       },
     });
     const existContractor = await this.prisma.contractor.findUnique({
@@ -459,16 +466,16 @@ export class DevicesService {
   }
 
   warrantyAction = async (
-    deviceDto: DeviceDto,
+    deviceDto: UpdateDeviceDto,
     id: string,
     deviceId: string,
   ) => {
     const warrantyData = {
       deviceId: deviceId || undefined,
-      warrantyNumber: deviceDto.warrantyNumber?.trim() || undefined,
+      warrantyNumber: deviceDto.warrantyNumber || undefined,
       startWarrantyDate: deviceDto.startWarrantyDate || undefined,
       endWarrantyDate: deviceDto.endWarrantyDate || undefined,
-      provider: deviceDto.providerName?.trim() || undefined,
+      provider: deviceDto.providerName || undefined,
       contractorId: id?.trim() || undefined,
     };
     const existWarranty = await this.prisma.warranty.findUnique({

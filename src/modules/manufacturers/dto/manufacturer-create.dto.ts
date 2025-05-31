@@ -1,14 +1,13 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
-export class ManufacturerDto {
-  @IsOptional()
-  @IsString()
-  id?: string;
-
+export class CreateManufacturerDto {
+  @Transform(({ value }) => value?.trim())
   @IsNotEmpty()
   @IsString()
   name: string;
 
+  @Transform(({ value }) => value?.trim())
   @IsNotEmpty()
   @IsString()
   slug: string;

@@ -1,4 +1,4 @@
-import { DeviceDto } from './dtos/device.dto';
+import { DeviceBaseDto } from './dtos/device-base.dto';
 import {
   Body,
   Controller,
@@ -17,6 +17,8 @@ import {
 } from 'src/common/types/device.types';
 import { DevicesService } from './devices.service';
 import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
+import { CreateDeviceDto } from './dtos/create-device.dto';
+import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Controller('devices')
 export class DevicesController {
@@ -25,8 +27,8 @@ export class DevicesController {
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createDevice(
-    @Body() deviceDto: DeviceDto,
-  ): Promise<{ message: string; device: Partial<DeviceDto> }> {
+    @Body() deviceDto: CreateDeviceDto,
+  ): Promise<{ message: string; device: Partial<DeviceBaseDto> }> {
     const device = await this.devicesService.createDevice(deviceDto);
     return {
       message: deviceCreated,
@@ -57,8 +59,8 @@ export class DevicesController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateDevice(
     @Param('id') id: string,
-    @Body() deviceDto: DeviceDto,
-  ): Promise<{ message: string; updatedDevice: DeviceDto }> {
+    @Body() deviceDto: UpdateDeviceDto,
+  ): Promise<{ message: string; updatedDevice: DeviceBaseDto }> {
     const updatedDevice = await this.devicesService.updateDevice(id, deviceDto);
     return {
       message: deviceUpdated,
