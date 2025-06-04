@@ -22,7 +22,6 @@ export class UsersController {
   async create(
     @Body() userDto: CreateUserDto,
   ): Promise<{ message: string; user: UserBaseDto }> {
-    console.log(userDto)
     const user = await this.usersService.create(userDto);
     return {
       message: 'rerwerw',
@@ -31,7 +30,7 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
+  async findAll(): Promise<UserBaseDto[]> {
     return this.usersService.findAll();
   }
 

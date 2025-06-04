@@ -47,8 +47,23 @@ export class UsersService {
     return user;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(): Promise<UserBaseDto[]> {
+    const users = await this.prisma.user.findMany({
+      include: {
+        location: {
+          select: { name: true },
+        },
+        department: {
+          select: { name: true },
+        },
+      },
+    });
+
+    return users.map(({ department, location, ...user }) => ({
+      ...user,
+      department: department?.name,
+      location: location?.name,
+    }));
   }
 
   findOne(id: string) {

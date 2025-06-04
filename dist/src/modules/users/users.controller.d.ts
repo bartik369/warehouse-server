@@ -8,20 +8,20 @@ export declare class UsersController {
         message: string;
         user: UserBaseDto;
     }>;
-    findAll(): string;
+    findAll(): Promise<UserBaseDto[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__userClient<{
-        id: string;
         locationId: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         userName: string;
         email: string;
         workId: string | null;
+        firstNameRu: string;
+        lastNameRu: string;
         firstNameEn: string;
         lastNameEn: string;
         isActive: boolean;
-        firstNameRu: string;
-        lastNameRu: string;
         departmentId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }, null, import("@prisma/client/runtime/library").DefaultArgs>;
 }

@@ -76,8 +76,22 @@ let UsersService = class UsersService {
             throw new common_1.InternalServerErrorException('Failed to create password or token');
         return user;
     }
-    findAll() {
-        return `This action returns all users`;
+    async findAll() {
+        const users = await this.prisma.user.findMany({
+            include: {
+                location: {
+                    select: { name: true },
+                },
+                department: {
+                    select: { name: true },
+                },
+            },
+        });
+        return users.map(({ department, location, ...user }) => ({
+            ...user,
+            department: department?.name,
+            location: location?.name,
+        }));
     }
     findOne(id) {
         return this.prisma.user.findUnique({

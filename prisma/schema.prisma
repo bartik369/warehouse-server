@@ -35,6 +35,7 @@ model user {
   password              password?
   token                 token?
   Transfer              transfer[]
+  department            department?     @relation(fields: [departmentId], references: [id])
   location              location        @relation("user_assigned_to_location", fields: [locationId], references: [id])
   roles                 user_role[]
 }
@@ -54,6 +55,7 @@ model department {
   name    String @unique
   slug    String @unique
   comment String
+  user    user[]
 }
 
 model token {

@@ -9,7 +9,9 @@ export class UserBaseDto {
   lastNameEn: string;
   isActive: boolean;
   departmentId?: string;
+  department?: string;
   locationId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  location?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

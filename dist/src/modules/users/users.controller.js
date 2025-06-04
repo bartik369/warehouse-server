@@ -21,14 +21,13 @@ let UsersController = class UsersController {
         this.usersService = usersService;
     }
     async create(userDto) {
-        console.log(userDto);
         const user = await this.usersService.create(userDto);
         return {
             message: 'rerwerw',
             user,
         };
     }
-    findAll() {
+    async findAll() {
         return this.usersService.findAll();
     }
     findOne(id) {
@@ -48,7 +47,7 @@ __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
