@@ -18,15 +18,27 @@ import {
 import { CreateRoleDto } from './dto/create-role.dto';
 import { RoleBaseDto } from './dto/role-base.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { GrantRoleDto } from './dto/grant-role.dto';
+import { RolesListDto } from './dto/roles-list.dto';
+import { RolesListResponseDto } from './dto/roles-list-res.dto';
 
 @Controller('roles')
 export class RolesController {
   constructor(private rolesService: RolesService) {}
 
+  @Get('/users/:id')
+  async getUserRoles(@Param('id') id: string): Promise<RolesListResponseDto> {
+    return await this.rolesService.getUserRoles(id);
+  }
+
   // Get all
   @Get()
   async getRoles(): Promise<RoleBaseDto[]> {
     return await this.rolesService.getRoles();
+  }
+  @Get('/list')
+  async getRolesList(): Promise<RolesListDto[]> {
+    return await this.rolesService.getRolesList();
   }
   // Get all for Assign
   @Get('assignable')
@@ -71,5 +83,17 @@ export class RolesController {
     return {
       message: roleDeleted,
     };
+  }
+  @Post('/grant')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async grantUserRole(@Body() body: GrantRoleDto) {
+    const splittedArgs = body.roleId.split('/');
+    const userInfo = {
+      userId: body.userId,
+      roleId: splittedArgs[0],
+      locationId: splittedArgs[1],
+      warehouseId: splittedArgs[2] || null,
+    };
+    return await this.rolesService.grantUserRole(userInfo);
   }
 }
