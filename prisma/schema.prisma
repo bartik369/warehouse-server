@@ -103,18 +103,21 @@ model permission_role {
   permission   permission? @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   role         role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
   warehouse    warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  userRoles    user_role[] @relation("permissionRoleToUserRole")
 
   @@unique([permissionId, roleId, locationId, warehouseId])
 }
 
 model user_role {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId String @db.Uuid
-  roleId String @db.Uuid
-  role   role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String          @db.Uuid
+  roleId           String          @db.Uuid
+  permissionRoleId String          @db.Uuid
+  permissionRole   permission_role @relation("permissionRoleToUserRole", fields: [permissionRoleId], references: [id], onDelete: Cascade)
+  role             role            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user             user            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, roleId])
+  @@unique([userId, roleId, permissionRoleId])
 }
 
 model warehouse {

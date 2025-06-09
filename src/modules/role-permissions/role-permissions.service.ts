@@ -111,7 +111,7 @@ export class RolePermissionsService {
           : '',
         locationName: locationMap.get(locationId)?.name ?? null,
         locationId: locationMap.get(locationId)?.id ?? null,
-        permissionName:
+        permissionsName:
           permissionIds.length > 0
             ? (permissionIds
                 .map((id) => permissionsMap.get(id)?.name)
@@ -141,65 +141,159 @@ export class RolePermissionsService {
       comment,
     } = rolePermissionsDto;
 
-    const trimmedLocationId = locationId?.trim();
-    const trimmedOldLocationId = oldLocationId?.trim();
-    const trimmedWarehouseId = warehouseId?.trim() ?? null;
-    const trimmedOldWarehouseId = oldWarehouseId?.trim() ?? null;
-    const trimmedRoleId = roleId?.trim();
-    const trimmedRoleName = roleName?.trim();
+    const currentLocationId = locationId || oldLocationId;
+    const currentWarehouseId =
+      roleName !== 'manager' ? warehouseId || oldWarehouseId : null;
 
-    const deleteWhere = {
-      roleId: trimmedRoleId,
-      locationId: trimmedOldLocationId || trimmedLocationId,
-      ...(trimmedRoleName !== 'manager' && {
-        warehouseId: trimmedOldWarehouseId || trimmedWarehouseId,
-      }),
-    };
+    // Get all current permission_role from this role, location, warehouse
+    const existingPermissionRoles = await this.prisma.permission_role.findMany({
+      where: {
+        roleId,
+        locationId: currentLocationId,
+        warehouseId: currentWarehouseId,
+      },
+    });
 
-    if (trimmedRoleName === 'manager') {
-      const existingPermission = await this.prisma.permission_role.findFirst({
+    const existingPermissionIds = new Set(
+      existingPermissionRoles.map((item) => item.permissionId),
+    );
+    const newPermissionIds = new Set(permissionIds);
+
+    // Get new permissions and delete old
+    const permissionIdsToAdd = [...newPermissionIds].filter(
+      (id) => !existingPermissionIds.has(id),
+    );
+    const permissionRolesToDelete = existingPermissionRoles.filter(
+      (item) => item.permissionId && !newPermissionIds.has(item.permissionId),
+    );
+
+    if (comment) {
+      await this.prisma.permission_role.updateMany({
         where: {
-          roleId: trimmedRoleId,
-          locationId: trimmedOldLocationId || trimmedLocationId,
-          warehouseId: null,
+          roleId,
+          locationId: currentLocationId,
+          warehouseId: currentWarehouseId,
+        },
+        data: { comment },
+      });
+    }
+
+    // Delete unusable permission_role
+    const idsToDelete = permissionRolesToDelete.map((item) => item.id);
+    const usedPermissionRoles = await this.prisma.user_role.findMany({
+      where: { permissionRoleId: { in: idsToDelete } },
+      select: { permissionRoleId: true },
+    });
+
+    const usedIds = new Set(usedPermissionRoles.map((item) => item.permissionRoleId));
+    const deletableIds = idsToDelete.filter((id) => !usedIds.has(id));
+
+    if (deletableIds.length > 0) {
+      await this.prisma.permission_role.deleteMany({
+        where: { id: { in: deletableIds } },
+      });
+    }
+
+    // Add new permission_role
+    const newPermissionRoleData = permissionIdsToAdd.map((permissionId) => ({
+      permissionId,
+      roleId,
+      locationId: currentLocationId,
+      warehouseId: currentWarehouseId,
+      comment: comment ?? '',
+    }));
+
+    if (newPermissionRoleData.length > 0) {
+      await this.prisma.permission_role.createMany({
+        data: newPermissionRoleData,
+        skipDuplicates: true,
+      });
+    }
+
+    // Sync user_role after update permission_role
+    const userRolesToSync = await this.prisma.user_role.findMany({
+      where: { roleId },
+      include: { permissionRole: true },
+    });
+
+    const filteredUserRoles = userRolesToSync.filter(
+      (role) =>
+        role.permissionRole.locationId === currentLocationId &&
+        role.permissionRole.warehouseId === currentWarehouseId,
+    );
+
+    if (filteredUserRoles.length > 0) {
+      await this.prisma.user_role.deleteMany({
+        where: {
+          id: { in: filteredUserRoles.map((role) => role.id) },
         },
       });
-      if (existingPermission) {
-        await this.prisma.permission_role.update({
-          where: { id: existingPermission.id },
-          data: {
-            roleId: trimmedRoleId,
-            locationId: trimmedLocationId,
-            warehouseId: null,
-            comment,
+
+      const updatedPermissionRoles = await this.prisma.permission_role.findMany(
+        {
+          where: {
+            roleId,
+            locationId: currentLocationId,
+            warehouseId: currentWarehouseId,
+            permissionId: { in: permissionIds },
           },
+        },
+      );
+
+      const permissionRoleMap = new Map(
+        updatedPermissionRoles.map((permission) => [
+          permission.permissionId!,
+          permission.id,
+        ]),
+      );
+
+      const newUserRoles = [];
+      for (const role of filteredUserRoles) {
+        for (const permId of permissionIds) {
+          const permissionRoleId = permissionRoleMap.get(permId);
+          if (permissionRoleId) {
+            newUserRoles.push({
+              userId: role.userId,
+              roleId,
+              permissionRoleId,
+            });
+          }
+        }
+      }
+
+      if (newUserRoles.length > 0) {
+        await this.prisma.user_role.createMany({
+          data: newUserRoles,
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    // Role manager without permissions
+    if (roleName === 'manager' && permissionIds.length === 0) {
+      const existingManager = await this.prisma.permission_role.findFirst({
+        where: {
+          roleId,
+          locationId,
+          warehouseId: null,
+          permissionId: null,
+        },
+      });
+
+      if (existingManager) {
+        await this.prisma.permission_role.update({
+          where: { id: existingManager.id },
+          data: { comment: comment ?? '' },
         });
       } else {
         await this.prisma.permission_role.create({
           data: {
-            permissionId: null,
-            roleId: trimmedRoleId,
-            locationId: trimmedLocationId,
+            roleId,
+            locationId,
             warehouseId: null,
-            comment,
+            permissionId: null,
+            comment: comment ?? '',
           },
-        });
-      }
-    } else {
-      await this.prisma.permission_role.deleteMany({
-        where: deleteWhere,
-      });
-      const permissionRoleModel = permissionIds.map((permissionId: string) => ({
-        permissionId,
-        roleId: trimmedRoleId,
-        locationId: trimmedLocationId,
-        warehouseId: trimmedWarehouseId,
-        comment,
-      }));
-      if (permissionIds.length > 0) {
-        await this.prisma.permission_role.createMany({
-          data: permissionRoleModel,
-          skipDuplicates: true,
         });
       }
     }

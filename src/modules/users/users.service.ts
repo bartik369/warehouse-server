@@ -66,10 +66,46 @@ export class UsersService {
     }));
   }
 
-  findOne(id: string) {
+  async findOne(id: string) {
     return this.prisma.user.findUnique({
       where: {
         id: id,
+      },
+    });
+  }
+  async findSortedUsers(search: string): Promise<UserBaseDto[]> {
+    return await this.prisma.user.findMany({
+      where: {
+        OR: [
+          { userName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { firstNameEn: { contains: search, mode: 'insensitive' } },
+          { lastNameEn: { contains: search, mode: 'insensitive' } },
+          { firstNameRu: { contains: search, mode: 'insensitive' } },
+          { lastNameRu: { contains: search, mode: 'insensitive' } },
+        ],
+      },
+    });
+  }
+  async getProfile(id: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: id },
+      include: {
+        location: {
+          select: {
+            name: true,
+          },
+        },
+        department: {
+          select: {
+            name: true,
+          },
+        },
+        roles: {
+          include: {
+            role: true,
+          }
+        }
       },
     });
   }

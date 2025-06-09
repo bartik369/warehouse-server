@@ -23,6 +23,7 @@ export const locationNotFound = 'Город не найден';
 export const roleNotFound = 'Роль не найдена';
 export const permissionNotFound = 'Разрешение не найдено';
 export const rolePermissionNotFound = 'Права для роли не найдены';
+export const userNotFound = 'Пользователь не найден';
 
 export const userAlreadyExist = 'Пожалуйста, проверьте данные';
 export const successLogoutMsg = 'Вы успешно вышли из системы';

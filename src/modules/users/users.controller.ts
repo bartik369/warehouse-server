@@ -3,11 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserBaseDto } from './dtos/user-base.dto';
@@ -28,6 +27,12 @@ export class UsersController {
       user,
     };
   }
+  @Get('/sorted')
+  async findSortedUsers(
+    @Query('search') search: string,
+  ): Promise<UserBaseDto[]> {
+    return await this.usersService.findSortedUsers(search);
+  }
 
   @Get()
   async findAll(): Promise<UserBaseDto[]> {
@@ -35,8 +40,11 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
-
+  @Get('/profile/:id')
+  async getProfile(@Param('id') id: string) {
+    return await this.usersService.getProfile(id);
+  }
 }
