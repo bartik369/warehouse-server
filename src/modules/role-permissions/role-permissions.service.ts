@@ -185,7 +185,9 @@ export class RolePermissionsService {
       select: { permissionRoleId: true },
     });
 
-    const usedIds = new Set(usedPermissionRoles.map((item) => item.permissionRoleId));
+    const usedIds = new Set(
+      usedPermissionRoles.map((item) => item.permissionRoleId),
+    );
     const deletableIds = idsToDelete.filter((id) => !usedIds.has(id));
 
     if (deletableIds.length > 0) {
