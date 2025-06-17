@@ -125,6 +125,28 @@ export class DevicesService {
     const totalPages = Math.ceil(total / limit);
     return { devices, totalPages };
   }
+  async searchDevices(query: string): Promise<DeviceBaseDto[]> {
+    const devices = await this.prisma.device.findMany({
+      where: {
+        OR: [
+          { inventoryNumber: { contains: query, mode: 'insensitive' } },
+          { serialNumber: { contains: query, mode: 'insensitive' } },
+          { modelCode: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+    });
+    return devices.map((device) => {
+      const { price_with_vat, price_without_vat, residual_price, ...rest } =
+        device;
+
+      return {
+        ...rest,
+        price_with_vat: price_with_vat?.toNumber() ?? null,
+        price_without_vat: price_without_vat?.toNumber() ?? null,
+        residual_price: residual_price?.toNumber() ?? null,
+      };
+    });
+  }
   // Get by ID
   async getDevice(id: string): Promise<IAggregatedDeviceInfo> {
     const device = await this.prisma.device.findUnique({

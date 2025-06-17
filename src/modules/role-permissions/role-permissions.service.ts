@@ -195,7 +195,6 @@ export class RolePermissionsService {
         where: { id: { in: deletableIds } },
       });
     }
-
     // Add new permission_role
     const newPermissionRoleData = permissionIdsToAdd.map((permissionId) => ({
       permissionId,

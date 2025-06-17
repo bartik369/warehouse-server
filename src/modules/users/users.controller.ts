@@ -27,7 +27,11 @@ export class UsersController {
       user,
     };
   }
-  @Get('/sorted')
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<UserBaseDto> {
+    return this.usersService.findOne(id);
+  }
+  @Get('/search/sorted')
   async findSortedUsers(
     @Query('search') search: string,
   ): Promise<UserBaseDto[]> {
@@ -39,10 +43,6 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
-  }
   @Get('/profile/:id')
   async getProfile(@Param('id') id: string) {
     return await this.usersService.getProfile(id);

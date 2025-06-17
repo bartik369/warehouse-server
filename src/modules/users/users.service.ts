@@ -67,11 +67,27 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    return this.prisma.user.findUnique({
-      where: {
-        id: id,
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: id },
+      include: {
+        location: {
+          select: {
+            name: true,
+          },
+        },
+        department: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
+    const { location, department, ...rest } = existingUser;
+    return {
+      ...rest,
+      location: location.name,
+      department: department.name,
+    };
   }
   async findSortedUsers(search: string): Promise<UserBaseDto[]> {
     return await this.prisma.user.findMany({
@@ -87,6 +103,7 @@ export class UsersService {
       },
     });
   }
+
   async getProfile(id: string) {
     return await this.prisma.user.findUnique({
       where: { id: id },
@@ -104,8 +121,8 @@ export class UsersService {
         roles: {
           include: {
             role: true,
-          }
-        }
+          },
+        },
       },
     });
   }

@@ -35,6 +35,10 @@ export class DevicesController {
       device,
     };
   }
+  @Get('search')
+  async searchDevices(@Query('q') q: string): Promise<DeviceBaseDto[]> {
+    return await this.devicesService.searchDevices(q);
+  }
 
   @Get('/locations/:city')
   async findAll(
@@ -55,6 +59,7 @@ export class DevicesController {
   async getDevice(@Param('id') id: string): Promise<IAggregatedDeviceInfo> {
     return await this.devicesService.getDevice(id);
   }
+
   @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateDevice(
