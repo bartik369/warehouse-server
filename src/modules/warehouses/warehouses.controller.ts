@@ -22,6 +22,12 @@ export class WarehousesController {
   async findAll(): Promise<WarehouseBaseDto[]> {
     return await this.warehousesService.findAll();
   }
+  @Get('/by-user/:id')
+  async getWarehousesByUser(
+    @Param('id') id: string,
+  ): Promise<WarehouseBaseDto[]> {
+    return await this.warehousesService.getWarehousesByUser(id);
+  }
   //Create
   @Post()
   async createWarehouse(

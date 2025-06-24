@@ -70,6 +70,9 @@ export class WarehousesService {
     const { location, ...rest } = warehouse;
     return { ...rest, locationName: location?.name || null };
   }
+  async getWarehousesByUser(id: string): Promise<WarehouseBaseDto[]> {
+    return await this.prisma.warehouse.findMany({});
+  }
   // Update
   async updateWarehouse(
     id: string,

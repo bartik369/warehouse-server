@@ -19,6 +19,7 @@ import { DevicesService } from './devices.service';
 import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
+import { DeviceCombineDto } from './dtos/device-combine.dto';
 
 @Controller('devices')
 export class DevicesController {
@@ -36,7 +37,7 @@ export class DevicesController {
     };
   }
   @Get('search')
-  async searchDevices(@Query('q') q: string): Promise<DeviceBaseDto[]> {
+  async searchDevices(@Query('q') q: string): Promise<DeviceCombineDto[]> {
     return await this.devicesService.searchDevices(q);
   }
 

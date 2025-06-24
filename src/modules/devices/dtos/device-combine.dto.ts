@@ -1,0 +1,33 @@
+export class DeviceCombineDto {
+  id: string;
+  name: string;
+  inventoryNumber?: string;
+  modelId?: string;
+  modelCode?: string;
+  modelName?: string;
+  typeName?: string;
+  manufacturerName: string;
+  serialNumber?: string;
+  weight?: number;
+  screenSize?: number;
+  memorySize?: number;
+  inStock: boolean;
+  isFunctional: boolean;
+  isAssigned: boolean;
+  warehouseId: string;
+  description?: string;
+  addedById: string;
+  updatedById: string;
+  lastIssuedAt: Date;
+  lastReturnedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  price_without_vat: number;
+  price_with_vat: number;
+  residual_price: number;
+  contractorId?: string;
+  providerName?: string;
+  warrantyNumber?: string;
+  startWarrantyDate?: string;
+  endWarrantyDate?: string;
+}
