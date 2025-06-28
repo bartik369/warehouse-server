@@ -20,6 +20,7 @@ import { ModelsModule } from './modules/models/models.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
+import { IssueModule } from './modules/issue/issue.module';
 
 console.log(
   'Static files rootPath:',
@@ -52,6 +53,7 @@ console.log(
     RolesModule,
     PermissionsModule,
     RolePermissionsModule,
+    IssueModule,
   ],
   providers: [
     {

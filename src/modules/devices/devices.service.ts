@@ -14,6 +14,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
+import { DeviceCombineDto } from './dtos/device-combine.dto';
 
 @Injectable()
 export class DevicesService {
@@ -124,6 +125,53 @@ export class DevicesService {
     ]);
     const totalPages = Math.ceil(total / limit);
     return { devices, totalPages };
+  }
+  async searchDevices(query: string): Promise<DeviceCombineDto[]> {
+    const devices = await this.prisma.device.findMany({
+      where: {
+        OR: [
+          { inventoryNumber: { startsWith: query, mode: 'insensitive' } },
+          { serialNumber: { startsWith: query, mode: 'insensitive' } },
+          { modelCode: { startsWith: query, mode: 'insensitive' } },
+        ],
+      },
+      include: {
+        model: {
+          select: {
+            name: true,
+            manufacturer: {
+              select: {
+                name: true,
+              },
+            },
+            type: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return devices.map((device) => {
+      const {
+        price_with_vat,
+        price_without_vat,
+        residual_price,
+        model,
+        ...rest
+      } = device;
+
+      return {
+        ...rest,
+        modelName: model?.name ?? null,
+        typeName: model?.type.name ?? null,
+        manufacturerName: model?.manufacturer.name ?? null,
+        price_with_vat: price_with_vat?.toNumber() ?? null,
+        price_without_vat: price_without_vat?.toNumber() ?? null,
+        residual_price: residual_price?.toNumber() ?? null,
+      };
+    });
   }
   // Get by ID
   async getDevice(id: string): Promise<IAggregatedDeviceInfo> {

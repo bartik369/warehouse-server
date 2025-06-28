@@ -38,6 +38,8 @@ model user {
   department            department?     @relation(fields: [departmentId], references: [id])
   location              location        @relation("user_assigned_to_location", fields: [locationId], references: [id])
   roles                 user_role[]
+  issueProcessesIssued  device_issue_process[] @relation("issued_by_user")
+  issueProcessesReceived device_issue_process[] @relation("issued_to_user")
 }
 
 model location {
@@ -197,9 +199,26 @@ model device {
   warranty          warranty?
 }
 
+model device_issue_process {
+  id          Int       @id @default(autoincrement())
+  documentNo  Int       @unique                      // номер акта выдачи
+  userId      String    @db.Uuid                    // Кому выдано (пользователь)
+  issuedById  String    @db.Uuid                    // Кто выдал (пользователь)
+  issueDate   DateTime  @default(now())
+  comment     String?
+  status      String    @default("draft")           // draft, issued, signed и т.п.
+  pdfPath     String?                                 // путь к PDF акту (если нужен)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        user      @relation("issued_to_user", fields: [userId], references: [id])
+  issuedBy    user      @relation("issued_by_user", fields: [issuedById], references: [id])
+  deviceIssues device_issue[] @relation("process_device_issues")  // Связанные устройства
+}
+
 model device_issue {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId  Int      @default(autoincrement())
+  processId  Int                         
   deviceId   String?  @db.Uuid
   userId     String?  @db.Uuid
   issuedById String?  @db.Uuid
@@ -208,11 +227,16 @@ model device_issue {
   comment    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  isDraft    Boolean  @default(true)
+  step       String?
+
   device     device?  @relation(fields: [deviceId], references: [id])
+  process    device_issue_process? @relation("process_device_issues", fields: [processId], references: [id])
   issuedBy   user?    @relation("issue_device_by_user", fields: [issuedById], references: [id])
   user       user?    @relation("who_device_issues", fields: [userId], references: [id])
   files      file[]   @relation("device_issue_files")
 }
+
 
 model device_return {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

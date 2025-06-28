@@ -19,6 +19,7 @@ import { DevicesService } from './devices.service';
 import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
+import { DeviceCombineDto } from './dtos/device-combine.dto';
 
 @Controller('devices')
 export class DevicesController {
@@ -34,6 +35,10 @@ export class DevicesController {
       message: deviceCreated,
       device,
     };
+  }
+  @Get('search')
+  async searchDevices(@Query('q') q: string): Promise<DeviceCombineDto[]> {
+    return await this.devicesService.searchDevices(q);
   }
 
   @Get('/locations/:city')
@@ -55,6 +60,7 @@ export class DevicesController {
   async getDevice(@Param('id') id: string): Promise<IAggregatedDeviceInfo> {
     return await this.devicesService.getDevice(id);
   }
+
   @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateDevice(
