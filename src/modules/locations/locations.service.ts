@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { ILocation } from 'src/common/types/location.types';
 import {
   LocationExistException,
   LocationNotFoundException,

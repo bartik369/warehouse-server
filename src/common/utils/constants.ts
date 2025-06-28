@@ -32,6 +32,10 @@ export const allowedPictureOptions = {
   allowedTypes: ['image/jpg', 'image/jpeg', 'image/png'],
   maxSize: 1 * 1024 * 1024,
 };
+export const allowedPrintFileOptions = {
+  allowedTypes: ['application/pdf'],
+  maxSize: 10 * 1024 * 1024,
+};
 export const somethingWentWrong = 'Что-то пошло не так';
 export const unacceptableDataSize = 'Недопустимый размер файла! (Max 2mb)';
 export const unacceptableDataFormat =
