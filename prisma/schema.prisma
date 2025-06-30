@@ -134,6 +134,8 @@ model warehouse {
   TransferFrom    transfer[]        @relation("from_warehouse")
   TransferTo      transfer[]        @relation("to_warehouse")
   location        location?         @relation(fields: [locationId], references: [id])
+
+  device_issue_process device_issue_process[]
 }
 
 model manufacturer {
@@ -203,6 +205,7 @@ model device_issue_process {
   id          Int       @id @default(autoincrement())
   documentNo  Int       @unique                      // номер акта выдачи
   userId      String    @db.Uuid                    // Кому выдано (пользователь)
+  warehouseId  String    @db.Uuid
   issuedById  String    @db.Uuid                    // Кто выдал (пользователь)
   issueDate   DateTime  @default(now())
   comment     String?
@@ -213,6 +216,7 @@ model device_issue_process {
 
   user        user      @relation("issued_to_user", fields: [userId], references: [id])
   issuedBy    user      @relation("issued_by_user", fields: [issuedById], references: [id])
+  warehouse    warehouse @relation(fields: [warehouseId], references: [id]) // если есть модель склада
   deviceIssues device_issue[] @relation("process_device_issues")  // Связанные устройства
 }
 
@@ -227,7 +231,6 @@ model device_issue {
   comment    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  isDraft    Boolean  @default(true)
   step       String?
 
   device     device?  @relation(fields: [deviceId], references: [id])
