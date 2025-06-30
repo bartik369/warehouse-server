@@ -225,6 +225,10 @@ model device_issue {
   deviceId   String?  @db.Uuid
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+<<<<<<< HEAD
+=======
+  step       String?
+>>>>>>> 83ab2e762697b1c85161cd1d7c43a1e15b364f33
 
   device     device?  @relation(fields: [deviceId], references: [id])
   process    device_issue_process? @relation("process_device_issues", fields: [processId], references: [id])
