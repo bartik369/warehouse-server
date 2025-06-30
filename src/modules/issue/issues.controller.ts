@@ -13,6 +13,7 @@ export class IssueController {
     @UploadedFile() file: Express.Multer.File,
     @Body() data: IssueBaseDto,
   ) {
+    console.log(data)
     console.log(file);
     await new Promise((res) => setTimeout(res, 1500));
     return { success: true };
