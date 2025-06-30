@@ -2,7 +2,6 @@ import {
   IDeviceOptions,
   IAggregatedDeviceInfo,
   IFilteredDevices,
-  IDeviceIssue,
 } from 'src/common/types/device.types';
 import {
   DeviceExistsException,
@@ -205,10 +204,10 @@ export class DevicesService {
             },
           },
         },
-        deviceIssues: {
-          where: { status: 'approved' },
-          include: { user: true },
-        },
+        // deviceIssues: {
+        //   where: { status: 'approved' },
+        //   include: { user: true },
+        // },
         addedBy: {
           select: {
             firstNameRu: true,
@@ -228,27 +227,28 @@ export class DevicesService {
       },
     });
     if (!device) throw new BadRequestException();
-    return {
-      ...device,
-      deviceIssues: device.deviceIssues.map((issue: IDeviceIssue) => ({
-        firstNameEn: issue.user.firstNameEn,
-        lastNameEn: issue.user.lastNameEn,
-      })),
-    };
+    return device;
+    // return {
+    //   ...device,
+    //   // deviceIssues: device.deviceIssues.map((issue: IDeviceIssue) => ({
+    //   //   firstNameEn: issue.user.firstNameEn,
+    //   //   lastNameEn: issue.user.lastNameEn,
+    //   // })),
+    // };
   }
-  async deviceHistory() {
-    const history = await this.prisma.device.findMany({
-      include: {
-        deviceIssues: {
-          include: { user: true, issuedBy: true },
-        },
-        deviceReturns: {
-          include: { user: true, returnedBy: true },
-        },
-      },
-    });
-    return history;
-  }
+  // async deviceHistory() {
+  //   const history = await this.prisma.device.findMany({
+  //     include: {
+  //       deviceIssues: {
+  //         include: { user: true, issuedBy: true },
+  //       },
+  //       deviceReturns: {
+  //         include: { user: true, returnedBy: true },
+  //       },
+  //     },
+  //   });
+  //   return history;
+  // }
 
   // Options
   async getOptions(city: string): Promise<IDeviceOptions> {

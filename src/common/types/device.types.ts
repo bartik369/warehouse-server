@@ -123,10 +123,10 @@ export interface IAggregatedDeviceInfo {
       name: string;
     };
   };
-  deviceIssues: {
-    firstNameEn: string;
-    lastNameEn: string;
-  }[];
+  // deviceIssues: {
+  //   firstNameEn: string;
+  //   lastNameEn: string;
+  // }[];
   addedBy: { firstNameEn: string; lastNameEn: string };
   updatedBy: { firstNameEn: string; lastNameEn: string };
 }

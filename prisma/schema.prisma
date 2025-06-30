@@ -24,8 +24,6 @@ model user {
   departmentId          String?         @db.Uuid
   devicesAdded          device[]        @relation("who_add_device")
   devicesUpdated        device[]        @relation("who_update_device")
-  DeviceIssue           device_issue[]  @relation("issue_device_by_user")
-  deviceIssues          device_issue[]  @relation("who_device_issues")
   deviceRepairsReceived device_repair[] @relation("contractor_who_gets_device_for_repair")
   deviceRepairsSent     device_repair[] @relation("who_sent_device_for_repair")
   DeviceReturn          device_return[]
@@ -134,6 +132,8 @@ model warehouse {
   TransferFrom    transfer[]        @relation("from_warehouse")
   TransferTo      transfer[]        @relation("to_warehouse")
   location        location?         @relation(fields: [locationId], references: [id])
+
+  device_issue_process device_issue_process[]
 }
 
 model manufacturer {
@@ -203,16 +203,19 @@ model device_issue_process {
   id          Int       @id @default(autoincrement())
   documentNo  Int       @unique                      // номер акта выдачи
   userId      String    @db.Uuid                    // Кому выдано (пользователь)
+  warehouseId  String    @db.Uuid
   issuedById  String    @db.Uuid                    // Кто выдал (пользователь)
   issueDate   DateTime  @default(now())
   comment     String?
   status      String    @default("draft")           // draft, issued, signed и т.п.
-  pdfPath     String?                                 // путь к PDF акту (если нужен)
+  fileId     String?    @db.Uuid                             // путь к PDF акту
+  file       file?   @relation(fields: [fileId], references: [id]) // 👈 связь с моделью `file`
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   user        user      @relation("issued_to_user", fields: [userId], references: [id])
   issuedBy    user      @relation("issued_by_user", fields: [issuedById], references: [id])
+  warehouse    warehouse @relation(fields: [warehouseId], references: [id]) // если есть модель склада
   deviceIssues device_issue[] @relation("process_device_issues")  // Связанные устройства
 }
 
@@ -220,21 +223,11 @@ model device_issue {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   processId  Int                         
   deviceId   String?  @db.Uuid
-  userId     String?  @db.Uuid
-  issuedById String?  @db.Uuid
-  issueDate  DateTime @default(now())
-  status     String   @default("in_progress")
-  comment    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  isDraft    Boolean  @default(true)
-  step       String?
 
   device     device?  @relation(fields: [deviceId], references: [id])
   process    device_issue_process? @relation("process_device_issues", fields: [processId], references: [id])
-  issuedBy   user?    @relation("issue_device_by_user", fields: [issuedById], references: [id])
-  user       user?    @relation("who_device_issues", fields: [userId], references: [id])
-  files      file[]   @relation("device_issue_files")
 }
 
 
@@ -357,8 +350,8 @@ model file {
   size          Int
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  deviceIssues  device_issue[]  @relation("device_issue_files")
   deviceRepairs device_repair[] @relation("device_repair_files")
   deviceReturns device_return[] @relation("device_return_files")
   inventories   inventory[]     @relation("inventory_files")
+  device_issue_process device_issue_process[]
 }
