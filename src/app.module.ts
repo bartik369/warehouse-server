@@ -36,7 +36,7 @@ import { IssueModule } from './modules/issue/issue.module';
         process.env.NODE_ENV === 'production'
           ? '/app/uploads/files/issue'
           : join(__dirname, '..', '..', 'uploads', 'issue'),
-      serveRoot: '/api/files/issue/',
+      serveRoot: '/api/uploads/files/issue/',
     }),
     ConfigModule.forRoot({
       isGlobal: true,
