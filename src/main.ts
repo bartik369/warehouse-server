@@ -1,5 +1,4 @@
 import helmet from 'helmet';
-import express from 'express';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
@@ -31,8 +30,6 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  // app.use('api/models', express.static(__dirname + 'models'));
-  // app.use('api/files/issue', express.static(__dirname + 'issue'));
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
   app.use(cookieParser());
