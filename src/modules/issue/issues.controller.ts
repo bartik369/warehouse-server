@@ -27,7 +27,7 @@ export class IssueController {
     @Body() dto: Pick<CreateIssueDto, 'processId'>,
   ) {
     const result = await this.issueService.finalizeIssue(dto, file);
-    // await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 1500));
     return result;
   }
 
