@@ -6,6 +6,7 @@ export async function savePdfFile(
 ): Promise<string> {
   const filePath = `${folderPath}/${file?.originalname}`;
   try {
+    await fs.promises.mkdir(folderPath, { recursive: true });
     await fs.promises.writeFile(filePath, file.buffer);
     return file.originalname;
   } catch (error) {
