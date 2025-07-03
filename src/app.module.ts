@@ -28,7 +28,7 @@ import { IssueModule } from './modules/issue/issue.module';
       rootPath:
         process.env.NODE_ENV === 'production'
           ? '/app/uploads/models'
-          : join(__dirname, '..', '..', 'uploads', 'issue'),
+          : join(__dirname, '..', '..', 'uploads', 'models'),
       serveRoot: '/api/uploads/models/',
     }),
     ServeStaticModule.forRoot({
