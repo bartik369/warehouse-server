@@ -25,15 +25,17 @@ import { IssueModule } from './modules/issue/issue.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'uploads', 'models'),
-      serveRoot: '/api/models/',
+      rootPath:
+        process.env.NODE_ENV === 'production'
+          ? '/app/uploads/models'
+          : join(__dirname, '..', '..', 'uploads', 'issue'),
+      serveRoot: '/api/uploads/models/',
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'uploads', 'issue'),
-      serveRoot: '/api/files/issue/',
-    }),
-    ServeStaticModule.forRoot({
-      rootPath: '/srv/apps/backend/uploads/files/issue',
+      rootPath:
+        process.env.NODE_ENV === 'production'
+          ? '/app/uploads/files/issue'
+          : join(__dirname, '..', '..', 'uploads', 'issue'),
       serveRoot: '/api/files/issue/',
     }),
     ConfigModule.forRoot({
