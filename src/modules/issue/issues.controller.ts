@@ -3,14 +3,12 @@ import {
   Controller,
   Get,
   HttpCode,
-  Patch,
   Post,
   UploadedFile,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { IssueService } from './issues.service';
-import { IssueBaseDto } from './dtos/issue-base.dto';
 import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.interceptor';
 import { allowedPrintFileOptions } from 'src/common/utils/constants';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
@@ -29,7 +27,7 @@ export class IssueController {
     @Body() dto: Pick<CreateIssueDto, 'processId'>,
   ) {
     const result = await this.issueService.finalizeIssue(dto, file);
-    await new Promise((res) => setTimeout(res, 1500));
+    // await new Promise((res) => setTimeout(res, 1500));
     return result;
   }
 
