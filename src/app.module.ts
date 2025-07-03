@@ -22,16 +22,15 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
 import { IssueModule } from './modules/issue/issue.module';
 
-console.log(
-  'Static files rootPath:',
-  join(__dirname, '..', 'uploads', 'models'),
-);
-
 @Module({
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'uploads', 'models'),
       serveRoot: '/api/models/',
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'uploads', 'issue'),
+      serveRoot: '/api/files/issue/',
     }),
     ConfigModule.forRoot({
       isGlobal: true,

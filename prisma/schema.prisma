@@ -164,10 +164,10 @@ model device_type {
 }
 
 model device {
-  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String
-  inventoryNumber   String?            @unique
-  modelId           String?            @db.Uuid
+  inventoryNumber   String?   @unique
+  modelId           String?   @db.Uuid
   modelCode         String?
   serialNumber      String?
   weight            Float?
@@ -200,32 +200,30 @@ model device {
 }
 
 model device_issue_process {
-  id          Int       @id @default(autoincrement())
-  documentNo  Int       @unique                      // номер акта выдачи
-  userId      String    @db.Uuid                    // Кому выдано (пользователь)
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentNo   String    @unique                      // номер акта выдачи
+  userId       String    @db.Uuid                    // Кому выдано (пользователь)
   warehouseId  String    @db.Uuid
-  issuedById  String    @db.Uuid                    // Кто выдал (пользователь)
-  issueDate   DateTime  @default(now())
-  comment     String?
-  status      String    @default("draft")           // draft, issued, signed и т.п.
-  fileId     String?    @db.Uuid                             // путь к PDF акту
-  file       file?   @relation(fields: [fileId], references: [id]) // 👈 связь с моделью `file`
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  user        user      @relation("issued_to_user", fields: [userId], references: [id])
-  issuedBy    user      @relation("issued_by_user", fields: [issuedById], references: [id])
+  issuedById   String    @db.Uuid                    // Кто выдал (пользователь)
+  issueDate    DateTime  @default(now())
+  comment      String?
+  status       String    @default("draft")           // draft, issued, signed и т.п.
+  fileId       String?   @db.Uuid                             // путь к PDF акту
+  file         file?     @relation(fields: [fileId], references: [id]) // связь с моделью `file`
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         user      @relation("issued_to_user", fields: [userId], references: [id])
+  issuedBy     user      @relation("issued_by_user", fields: [issuedById], references: [id])
   warehouse    warehouse @relation(fields: [warehouseId], references: [id]) // если есть модель склада
   deviceIssues device_issue[] @relation("process_device_issues")  // Связанные устройства
 }
 
 model device_issue {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId  Int                         
+  processId  String   @db.Uuid                      
   deviceId   String?  @db.Uuid
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
   device     device?  @relation(fields: [deviceId], references: [id])
   process    device_issue_process? @relation("process_device_issues", fields: [processId], references: [id])
 }
