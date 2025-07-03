@@ -32,6 +32,10 @@ import { IssueModule } from './modules/issue/issue.module';
       rootPath: join(__dirname, '..', '..', 'uploads', 'issue'),
       serveRoot: '/api/files/issue/',
     }),
+    ServeStaticModule.forRoot({
+      rootPath: '/srv/apps/backend/uploads/files/issue',
+      serveRoot: '/api/files/issue/',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
