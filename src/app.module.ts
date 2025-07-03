@@ -11,7 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { AccessTokenGuard } from './modules/auth/guards';
 import { APP_GUARD } from '@nestjs/core';
-import { ContractorsModule } from './modules/contactors/contrators.module';
+import { ContractorsModule } from './modules/contractors/contractors.module';
 import { LocationModule } from './modules/locations/locations.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
