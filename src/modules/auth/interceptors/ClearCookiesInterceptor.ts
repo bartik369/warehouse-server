@@ -26,6 +26,10 @@ export class ClearCookiesInterceptor implements NestInterceptor {
           httpOnly: true,
           sameSite: 'strict',
         });
+        response.clearCookie('csrfToken', {
+          httpOnly: true,
+          sameSite: 'strict',
+        });
       }),
     );
   }
