@@ -26,6 +26,22 @@ export class SetCookiesInterceptor implements NestInterceptor {
             maxAge: 7 * 24 * 60 * 60 * 1000,
           });
         }
+        if (data?.accessToken) {
+          response.cookie('accessToken', data.accessToken, {
+            httpOnly: true,
+            sameSite: 'strict',
+            secure: true,
+            maxAge: 1 * 60 * 1000,
+          });
+        }
+        if (data?.csrfToken) {
+          response.cookie('csrfToken', data.csrfToken, {
+            httpOnly: false,
+            sameSite: 'strict',
+            secure: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+          });
+        }
       }),
     );
   }
