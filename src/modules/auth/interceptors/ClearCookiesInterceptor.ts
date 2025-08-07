@@ -22,6 +22,10 @@ export class ClearCookiesInterceptor implements NestInterceptor {
           httpOnly: true,
           sameSite: 'strict',
         });
+        response.clearCookie('accessToken', {
+          httpOnly: true,
+          sameSite: 'strict',
+        });
       }),
     );
   }

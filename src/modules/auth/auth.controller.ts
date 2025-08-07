@@ -18,7 +18,8 @@ import {
 } from '@nestjs/common';
 import { GetAccessToken } from './decorators/access-token.decorator';
 import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
-import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor';
+import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor'; 
+import { generateCsrfToken } from 'src/common/utils/secure/csrf.util';
 import { successLogoutMsg } from 'src/common/utils/constants';
 import { UserBaseDto } from '../users/dtos/user-base.dto';
 
@@ -32,23 +33,31 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async signin(@Body() authDto: AuthDto): Promise<AuthData> {
+  async signin(
+    @Body() authDto: AuthDto,
+  ): Promise<AuthData & { csrfToken: string }> {
     const data: GroupAuthData = await this.authService.signin(authDto);
     if (data?.tokens?.refreshToken) {
+      const csrfToken = generateCsrfToken();
+      console.log(csrfToken);
       return {
         user: data.user,
         accessToken: data.tokens.accessToken,
         refreshToken: data.tokens.refreshToken,
+        csrfToken,
       };
     }
   }
+
+  @UseInterceptors(SetCookiesInterceptor)
   @Public()
   @Get('refresh')
-  @UseInterceptors(ClearCookiesInterceptor)
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Req() req: Request): Promise<any> {
     const token: string = req.cookies.refreshToken;
-    return await this.authService.refreshToken(token);
+    const { user, accessToken, refreshToken } =
+      await this.authService.refreshToken(token);
+    return { user, accessToken, refreshToken };
   }
 
   @Post('logout')
