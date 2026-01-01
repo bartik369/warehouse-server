@@ -51,6 +51,7 @@ export class DevicesController {
   }> {
     const result = await this.devicesService.findAll(query, city);
     const { devices, totalCount } = result;
+    console.log(totalCount);
     return { devices, totalCount };
   }
 
