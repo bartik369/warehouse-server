@@ -45,13 +45,10 @@ export class DevicesController {
   async findAll(
     @Param('city') city: string,
     @Query() query: Record<string, string>,
-  ): Promise<{
-    devices: IFilteredDevices[];
-    totalCount: number;
-  }> {
+  ): Promise<{ devices: IFilteredDevices[]; totalPages: number }> {
     const result = await this.devicesService.findAll(query, city);
-    const { devices, totalCount } = result;
-    return { devices, totalCount };
+    const { devices, totalPages } = result;
+    return { devices, totalPages };
   }
 
   @Get('/options/:city')
