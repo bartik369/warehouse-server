@@ -205,6 +205,7 @@ export class DevicesService {
             },
           },
         },
+        // Проверить позже
         // deviceIssues: {
         //   where: { status: 'approved' },
         //   include: { user: true },
