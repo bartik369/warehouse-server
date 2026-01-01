@@ -22,13 +22,14 @@ export class DevicesService {
   async findAll(
     query: Record<string, string>,
     city: string,
-  ): Promise<{ devices: IFilteredDevices[]; totalPages: number }> {
+  ): Promise<{ devices: IFilteredDevices[]; totalCount: number }> {
     const where: Record<string, any> = {};
     if (city) {
       where.warehouse = {
         location: { slug: city.trim() },
       };
     }
+
     const checkQueryArray = (field: string) => {
       if (Array.isArray(query[field])) {
         return query[field];
@@ -86,7 +87,7 @@ export class DevicesService {
     }
     const skip = (page - 1) * limit;
 
-    const [devices, total] = await Promise.all([
+    const [devices, totalCount] = await Promise.all([
       this.prisma.device.findMany({
         where,
         select: {
@@ -122,8 +123,8 @@ export class DevicesService {
       }),
       this.prisma.device.count({ where }),
     ]);
-    const totalPages = Math.ceil(total / limit);
-    return { devices, totalPages };
+
+    return { devices, totalCount };
   }
   async searchDevices(query: string): Promise<DeviceCombineDto[]> {
     const devices = await this.prisma.device.findMany({
