@@ -47,8 +47,9 @@ export class DevicesController {
     @Query() query: Record<string, string>,
   ): Promise<{ devices: IFilteredDevices[]; totalPages: number }> {
     const result = await this.devicesService.findAll(query, city);
-    const { devices, totalPages } = result;
-    return { devices, totalPages };
+    const { devices, totalCount } = result;
+    console.log(totalCount);
+    return { devices, totalCount };
   }
 
   @Get('/options/:city')
