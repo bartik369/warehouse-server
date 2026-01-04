@@ -10,12 +10,12 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { TypesService } from './types.service';
-import { typeCreated, updatedTypeMsg } from 'src/common/utils/constants';
 import { FormDataOnlyInterceptor } from 'src/common/interceptors/form-data.interceptor';
+import { typeCreated, updatedTypeMsg } from 'src/common/utils/constants';
 import { CreateTypeDto } from './dto/create-type.dto';
 import { TypeBaseDto } from './dto/type-base.dto';
 import { UpdateTypeDto } from './dto/update-type.dto';
+import { TypesService } from './types.service';
 
 @Controller('types')
 export class TypesController {

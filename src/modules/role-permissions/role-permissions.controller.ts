@@ -1,19 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Put,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import { RolePermissionsService } from './role-permissions.service';
-import { RolePermissionsBaseDto } from './dtos/role-permissions-base.dto';
+import { Body, Controller, Get, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { createdRolePermissions, updatedRolePermissions } from 'src/common/utils/constants';
 import { CreateRolePermissionsDto } from './dtos/create-role-permissions.dto';
-import {
-  createdRolePermissions,
-  updatedRolePermissions,
-} from 'src/common/utils/constants';
+import { RolePermissionsBaseDto } from './dtos/role-permissions-base.dto';
+import { RolePermissionsService } from './role-permissions.service';
 
 @Controller('permissions-roles')
 export class RolePermissionsController {
@@ -28,9 +17,7 @@ export class RolePermissionsController {
   async createRolePermissions(
     @Body() rolePermissionsDto: CreateRolePermissionsDto,
   ): Promise<{ message: string }> {
-    await this.rolePermissionsService.createUpdateRolePermissions(
-      rolePermissionsDto,
-    );
+    await this.rolePermissionsService.createUpdateRolePermissions(rolePermissionsDto);
     return {
       message: createdRolePermissions,
     };
@@ -41,9 +28,7 @@ export class RolePermissionsController {
   async updateRolePermissions(
     @Body() rolePermissionsDto: CreateRolePermissionsDto,
   ): Promise<{ message: string }> {
-    await this.rolePermissionsService.createUpdateRolePermissions(
-      rolePermissionsDto,
-    );
+    await this.rolePermissionsService.createUpdateRolePermissions(rolePermissionsDto);
     return {
       message: updatedRolePermissions,
     };

@@ -38,8 +38,7 @@ export const allowedPrintFileOptions = {
 };
 export const somethingWentWrong = 'Что-то пошло не так';
 export const unacceptableDataSize = 'Недопустимый размер файла! (Max 2mb)';
-export const unacceptableDataFormat =
-  'Недопустимый формат файла! Разрешены: jpg, png, jpeg';
+export const unacceptableDataFormat = 'Недопустимый формат файла! Разрешены: jpg, png, jpeg';
 
 export const validateWarrantyInputs =
   'Заполните все поля гарантии, либо оставьте их пустыми при ее отсутствии!';

@@ -1,6 +1,5 @@
-import { PrismaService } from 'prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { WarehouseBaseDto } from './dtos/warehouseBase.dto';
+import { PrismaService } from 'prisma/prisma.service';
 import {
   LocationNotFoundException,
   WarehouseExistException,
@@ -8,6 +7,7 @@ import {
 } from 'src/exceptions/location.exceptions';
 import { CreateWarehouseDto } from './dtos/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dtos/update-warehouse.dto';
+import { WarehouseBaseDto } from './dtos/warehouseBase.dto';
 
 @Injectable()
 export class WarehousesService {
@@ -32,9 +32,7 @@ export class WarehousesService {
     return warehouses;
   }
   // Create
-  async createWarehouse(
-    warehouseDto: CreateWarehouseDto,
-  ): Promise<WarehouseBaseDto> {
+  async createWarehouse(warehouseDto: CreateWarehouseDto): Promise<WarehouseBaseDto> {
     const [existWarehouse, existLocation] = await Promise.all([
       this.prisma.warehouse.findUnique({
         where: { name: warehouseDto.name },
@@ -74,10 +72,7 @@ export class WarehousesService {
     return await this.prisma.warehouse.findMany({});
   }
   // Update
-  async updateWarehouse(
-    id: string,
-    warehouseDto: UpdateWarehouseDto,
-  ): Promise<WarehouseBaseDto> {
+  async updateWarehouse(id: string, warehouseDto: UpdateWarehouseDto): Promise<WarehouseBaseDto> {
     const existWarehouse = await this.prisma.warehouse.findUnique({
       where: { id: id },
     });

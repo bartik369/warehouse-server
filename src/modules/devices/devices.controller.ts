@@ -1,4 +1,3 @@
-import { DeviceBaseDto } from './dtos/device-base.dto';
 import {
   Body,
   Controller,
@@ -15,11 +14,12 @@ import {
   IDeviceOptions,
   IFilteredDevices,
 } from 'src/common/types/device.types';
-import { DevicesService } from './devices.service';
 import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
+import { DevicesService } from './devices.service';
 import { CreateDeviceDto } from './dtos/create-device.dto';
-import { UpdateDeviceDto } from './dtos/update-device.dto';
+import { DeviceBaseDto } from './dtos/device-base.dto';
 import { DeviceCombineDto } from './dtos/device-combine.dto';
+import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Controller('devices')
 export class DevicesController {

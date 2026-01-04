@@ -4,8 +4,8 @@ import {
   PermissionExistException,
   PermissionNotFoundException,
 } from 'src/exceptions/permissions.exceptions';
-import { PermissionBaseDto } from './dto/permission-base.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
+import { PermissionBaseDto } from './dto/permission-base.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 
 @Injectable()
@@ -26,9 +26,7 @@ export class PermissionsService {
     return permission;
   }
   // Create
-  async createPermission(
-    permissionDto: CreatePermissionDto,
-  ): Promise<PermissionBaseDto> {
+  async createPermission(permissionDto: CreatePermissionDto): Promise<PermissionBaseDto> {
     const existingPermission = await this.prisma.permission.findUnique({
       where: { name: permissionDto.name },
     });

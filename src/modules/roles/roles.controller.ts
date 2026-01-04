@@ -9,18 +9,14 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { RolesService } from './roles.service';
-import {
-  roleCreated,
-  roleDeleted,
-  roleUpdated,
-} from 'src/common/utils/constants';
+import { roleCreated, roleDeleted, roleUpdated } from 'src/common/utils/constants';
 import { CreateRoleDto } from './dto/create-role.dto';
-import { RoleBaseDto } from './dto/role-base.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
 import { GrantRoleDto } from './dto/grant-role.dto';
-import { RolesListDto } from './dto/roles-list.dto';
+import { RoleBaseDto } from './dto/role-base.dto';
 import { RolesListResponseDto } from './dto/roles-list-res.dto';
+import { RolesListDto } from './dto/roles-list.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { RolesService } from './roles.service';
 
 @Controller('roles')
 export class RolesController {

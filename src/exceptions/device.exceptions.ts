@@ -1,21 +1,20 @@
 import {
-  unacceptableDataFormat,
-  unacceptableDataSize,
-} from 'src/common/utils/constants';
-import { NotFoundException, ConflictException } from '@nestjs/common';
-import {
-  deviceAlreadyExists,
-  manufacturerAlreadyExists,
-  modelAlreadyExists,
-  typeAlreadyExists,
-  deviceNotFound,
-  manufacturerNotFound,
-  modelNotFound,
-  typeNotFound,
   contractorAlreadyExists,
   contractorNotFound,
+  deviceAlreadyExists,
+  deviceNotFound,
+  manufacturerAlreadyExists,
+  manufacturerNotFound,
+  modelAlreadyExists,
+  modelNotFound,
+  typeAlreadyExists,
+  typeNotFound,
+  unacceptableDataFormat,
+  unacceptableDataSize,
   validateWarrantyInputs,
 } from 'src/common/utils/constants';
+
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class DeviceNotFoundException extends NotFoundException {
   constructor() {

@@ -1,21 +1,9 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Get,
-  Param,
-  Put,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import {
-  contractorCreated,
-  contractorUpdated,
-} from 'src/common/utils/constants';
+import { Body, Controller, Get, Param, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { contractorCreated, contractorUpdated } from 'src/common/utils/constants';
+import { ContractorsService } from './contractors.service';
 import { ContractorBaseDto } from './dtos/contactor-base.dto';
 import { CreateContractorDto } from './dtos/create-contractor.dto';
 import { UpdateContractorDto } from './dtos/update-contractor.dto';
-import { ContractorsService } from './contractors.service';
 
 @Controller('contractors')
 export class ContractorsController {
@@ -31,8 +19,7 @@ export class ContractorsController {
   async createContractor(
     @Body() contractorDto: CreateContractorDto,
   ): Promise<{ message: string; contractor: ContractorBaseDto }> {
-    const contractor =
-      await this.contractorsService.createContractor(contractorDto);
+    const contractor = await this.contractorsService.createContractor(contractorDto);
     return {
       message: contractorCreated,
       contractor,
@@ -50,10 +37,7 @@ export class ContractorsController {
     @Param('id') id: string,
     @Body() contractorDto: UpdateContractorDto,
   ): Promise<{ message: string; updatedContractor: ContractorBaseDto }> {
-    const updatedContractor = await this.contractorsService.updateContractor(
-      id,
-      contractorDto,
-    );
+    const updatedContractor = await this.contractorsService.updateContractor(id, contractorDto);
     return {
       message: contractorUpdated,
       updatedContractor,

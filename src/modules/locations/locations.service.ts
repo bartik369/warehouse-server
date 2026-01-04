@@ -4,8 +4,8 @@ import {
   LocationExistException,
   LocationNotFoundException,
 } from 'src/exceptions/location.exceptions';
-import { CreateLocationDto } from './dtos/location-create.dto';
 import { LocationBaseDto } from './dtos/location-base.dto';
+import { CreateLocationDto } from './dtos/location-create.dto';
 import { UpdateLocationDto } from './dtos/location-update.dto';
 
 @Injectable()
@@ -25,9 +25,7 @@ export class LocationsService {
     return location;
   }
   // Create
-  async createLocation(
-    locationDto: CreateLocationDto,
-  ): Promise<LocationBaseDto> {
+  async createLocation(locationDto: CreateLocationDto): Promise<LocationBaseDto> {
     const existingLocation = await this.prisma.location.findUnique({
       where: { name: locationDto.name },
     });
@@ -43,10 +41,7 @@ export class LocationsService {
     return location;
   }
   // Update
-  async updateLocation(
-    id: string,
-    locationDto: UpdateLocationDto,
-  ): Promise<LocationBaseDto> {
+  async updateLocation(id: string, locationDto: UpdateLocationDto): Promise<LocationBaseDto> {
     const existLocation = await this.prisma.location.findUnique({
       where: { id: id },
     });

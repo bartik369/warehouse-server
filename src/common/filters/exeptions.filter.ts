@@ -1,13 +1,6 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { Response } from 'express';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Response } from 'express';
 
 @Catch()
 export class ExceptionsFilter implements ExceptionFilter {
@@ -27,10 +20,7 @@ export class ExceptionsFilter implements ExceptionFilter {
       } else {
         message = responseMessage as string;
       }
-    } else if (
-      exception instanceof PrismaClientKnownRequestError &&
-      exception.code === 'P2025'
-    ) {
+    } else if (exception instanceof PrismaClientKnownRequestError && exception.code === 'P2025') {
       status = HttpStatus.NOT_FOUND;
       message = 'Resource not found';
     }

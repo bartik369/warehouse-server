@@ -1,6 +1,7 @@
-import { applyDecorators, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+
+import { UseInterceptors, applyDecorators } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 export const FormDataOnlyInterceptor = () => {
   return applyDecorators(

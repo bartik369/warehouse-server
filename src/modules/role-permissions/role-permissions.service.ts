@@ -1,12 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { RolePermissionsResponseDto } from './dtos/response-role-permissions.dto';
-import { IRole } from 'src/common/types/permission.types';
-import { IWarehouse } from '../warehouses/types/warehouse.types';
 import { ILocation } from 'src/common/types/location.types';
-import { IPermission } from '../permissions/types/permission.types';
-import { IRolePermission } from '../permissions/types/permission.types';
+import { IRole } from 'src/common/types/permission.types';
+import { IPermission, IRolePermission } from '../permissions/types/permission.types';
+import { IWarehouse } from '../warehouses/types/warehouse.types';
 import { CreateRolePermissionsDto } from './dtos/create-role-permissions.dto';
+import { RolePermissionsResponseDto } from './dtos/response-role-permissions.dto';
 
 @Injectable()
 export class RolePermissionsService {
@@ -16,10 +15,7 @@ export class RolePermissionsService {
     const listPermissions = await this.prisma.permission_role.findMany({});
     if (listPermissions.length === 0) throw new NotFoundException();
     const groupedByRole = listPermissions.reduce(
-      (
-        acc: Record<string, Partial<RolePermissionsResponseDto>>,
-        elem: IRolePermission,
-      ) => {
+      (acc: Record<string, Partial<RolePermissionsResponseDto>>, elem: IRolePermission) => {
         const { permissionId, roleId, warehouseId, locationId, comment } = elem;
         const key = `${roleId}_${locationId ?? 'null'}_${warehouseId ?? 'null'}`;
         if (!acc[key]) {
@@ -38,30 +34,21 @@ export class RolePermissionsService {
       {} as Record<string, Partial<RolePermissionsResponseDto>>,
     );
 
-    const groupedArray: Partial<RolePermissionsResponseDto>[] =
-      Object.values(groupedByRole);
+    const groupedArray: Partial<RolePermissionsResponseDto>[] = Object.values(groupedByRole);
     const uniqueRoleIds = [
       ...new Set(groupedArray.map((r: RolePermissionsResponseDto) => r.roleId)),
     ];
     const uniqueWarehouseIds = [
       ...new Set(
-        groupedArray
-          .map((w: RolePermissionsResponseDto) => w.warehouseId)
-          .filter(Boolean),
+        groupedArray.map((w: RolePermissionsResponseDto) => w.warehouseId).filter(Boolean),
       ),
     ];
     const uniqueLocationIds = [
-      ...new Set(
-        groupedArray
-          .map((l: RolePermissionsResponseDto) => l.locationId)
-          .filter(Boolean),
-      ),
+      ...new Set(groupedArray.map((l: RolePermissionsResponseDto) => l.locationId).filter(Boolean)),
     ];
     const uniquePermissionIds = [
       ...new Set(
-        groupedArray
-          .flatMap((p: RolePermissionsResponseDto) => p.permissionIds)
-          .filter(Boolean),
+        groupedArray.flatMap((p: RolePermissionsResponseDto) => p.permissionIds).filter(Boolean),
       ),
     ];
 
@@ -85,51 +72,35 @@ export class RolePermissionsService {
       throw new NotFoundException('Required roles or locations not found');
     }
 
-    const roleMap: Map<string, IRole> = new Map(
-      roles.map((r: IRole) => [r.id, r]),
-    );
+    const roleMap: Map<string, IRole> = new Map(roles.map((r: IRole) => [r.id, r]));
     const warehouseMap: Map<string, IWarehouse> = new Map(
       warehouses.map((w: IWarehouse) => [w.id, w]),
     );
-    const locationMap: Map<string, ILocation> = new Map(
-      locations.map((l: ILocation) => [l.id, l]),
-    );
+    const locationMap: Map<string, ILocation> = new Map(locations.map((l: ILocation) => [l.id, l]));
     const permissionsMap: Map<string, IPermission> = new Map(
       permissions.map((p: IPermission) => [p.id, p]),
     );
 
-    return groupedArray.map(
-      ({ roleId, warehouseId, locationId, permissionIds }) => ({
-        roleId,
-        roleName: roleMap.get(roleId)?.name ?? null,
-        comment: roleMap.get(roleId)?.comment ?? null,
-        warehouseName: warehouseId
-          ? (warehouseMap.get(warehouseId)?.name ?? '')
-          : '',
-        warehouseId: warehouseId
-          ? (warehouseMap.get(warehouseId)?.id ?? '')
-          : '',
-        locationName: locationMap.get(locationId)?.name ?? null,
-        locationId: locationMap.get(locationId)?.id ?? null,
-        permissionsName:
-          permissionIds.length > 0
-            ? (permissionIds
-                .map((id) => permissionsMap.get(id)?.name)
-                .filter(Boolean) as string[])
-            : [],
-        permissionIds:
-          permissionIds.length > 0
-            ? (permissionIds
-                .map((id) => permissionsMap.get(id)?.id)
-                .filter(Boolean) as string[])
-            : [],
-      }),
-    );
+    return groupedArray.map(({ roleId, warehouseId, locationId, permissionIds }) => ({
+      roleId,
+      roleName: roleMap.get(roleId)?.name ?? null,
+      comment: roleMap.get(roleId)?.comment ?? null,
+      warehouseName: warehouseId ? (warehouseMap.get(warehouseId)?.name ?? '') : '',
+      warehouseId: warehouseId ? (warehouseMap.get(warehouseId)?.id ?? '') : '',
+      locationName: locationMap.get(locationId)?.name ?? null,
+      locationId: locationMap.get(locationId)?.id ?? null,
+      permissionsName:
+        permissionIds.length > 0
+          ? (permissionIds.map((id) => permissionsMap.get(id)?.name).filter(Boolean) as string[])
+          : [],
+      permissionIds:
+        permissionIds.length > 0
+          ? (permissionIds.map((id) => permissionsMap.get(id)?.id).filter(Boolean) as string[])
+          : [],
+    }));
   }
   // Create and Update
-  async createUpdateRolePermissions(
-    rolePermissionsDto: CreateRolePermissionsDto,
-  ) {
+  async createUpdateRolePermissions(rolePermissionsDto: CreateRolePermissionsDto) {
     const {
       locationId,
       oldLocationId,
@@ -142,8 +113,7 @@ export class RolePermissionsService {
     } = rolePermissionsDto;
 
     const currentLocationId = locationId || oldLocationId;
-    const currentWarehouseId =
-      roleName !== 'manager' ? warehouseId || oldWarehouseId : null;
+    const currentWarehouseId = roleName !== 'manager' ? warehouseId || oldWarehouseId : null;
 
     // Get all current permission_role from this role, location, warehouse
     const existingPermissionRoles = await this.prisma.permission_role.findMany({
@@ -154,15 +124,11 @@ export class RolePermissionsService {
       },
     });
 
-    const existingPermissionIds = new Set(
-      existingPermissionRoles.map((item) => item.permissionId),
-    );
+    const existingPermissionIds = new Set(existingPermissionRoles.map((item) => item.permissionId));
     const newPermissionIds = new Set(permissionIds);
 
     // Get new permissions and delete old
-    const permissionIdsToAdd = [...newPermissionIds].filter(
-      (id) => !existingPermissionIds.has(id),
-    );
+    const permissionIdsToAdd = [...newPermissionIds].filter((id) => !existingPermissionIds.has(id));
     const permissionRolesToDelete = existingPermissionRoles.filter(
       (item) => item.permissionId && !newPermissionIds.has(item.permissionId),
     );
@@ -185,9 +151,7 @@ export class RolePermissionsService {
       select: { permissionRoleId: true },
     });
 
-    const usedIds = new Set(
-      usedPermissionRoles.map((item) => item.permissionRoleId),
-    );
+    const usedIds = new Set(usedPermissionRoles.map((item) => item.permissionRoleId));
     const deletableIds = idsToDelete.filter((id) => !usedIds.has(id));
 
     if (deletableIds.length > 0) {
@@ -230,22 +194,17 @@ export class RolePermissionsService {
         },
       });
 
-      const updatedPermissionRoles = await this.prisma.permission_role.findMany(
-        {
-          where: {
-            roleId,
-            locationId: currentLocationId,
-            warehouseId: currentWarehouseId,
-            permissionId: { in: permissionIds },
-          },
+      const updatedPermissionRoles = await this.prisma.permission_role.findMany({
+        where: {
+          roleId,
+          locationId: currentLocationId,
+          warehouseId: currentWarehouseId,
+          permissionId: { in: permissionIds },
         },
-      );
+      });
 
       const permissionRoleMap = new Map(
-        updatedPermissionRoles.map((permission) => [
-          permission.permissionId!,
-          permission.id,
-        ]),
+        updatedPermissionRoles.map((permission) => [permission.permissionId!, permission.id]),
       );
 
       const newUserRoles = [];

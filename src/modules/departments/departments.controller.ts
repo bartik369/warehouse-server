@@ -10,13 +10,10 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { departmentCreated, departmentUpdated } from 'src/common/utils/constants';
 import { DepartmentsService } from './departments.service';
-import { DepartmentBaseDto } from './dtos/department-base.dto';
-import {
-  departmentCreated,
-  departmentUpdated,
-} from 'src/common/utils/constants';
 import { CreateDepartmentDto } from './dtos/create-department.dto';
+import { DepartmentBaseDto } from './dtos/department-base.dto';
 import { UpdateDepartmentDto } from './dtos/update-department.dto';
 
 @Controller('departments')
@@ -38,8 +35,7 @@ export class DepartmentsController {
   async createDepartment(
     @Body() departmentDto: CreateDepartmentDto,
   ): Promise<{ message: string; department: DepartmentBaseDto }> {
-    const department =
-      await this.departmentsService.createDepartment(departmentDto);
+    const department = await this.departmentsService.createDepartment(departmentDto);
     return {
       message: departmentCreated,
       department,
@@ -53,10 +49,7 @@ export class DepartmentsController {
     @Body() departmentDto: UpdateDepartmentDto,
     @Param('id') id: string,
   ): Promise<{ message: string; updatedDepartment: DepartmentBaseDto }> {
-    const updatedDepartment = await this.departmentsService.updateDepartment(
-      id,
-      departmentDto,
-    );
+    const updatedDepartment = await this.departmentsService.updateDepartment(id, departmentDto);
     return {
       message: departmentUpdated,
       updatedDepartment,

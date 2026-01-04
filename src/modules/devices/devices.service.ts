@@ -1,6 +1,8 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
 import {
-  IDeviceOptions,
   IAggregatedDeviceInfo,
+  IDeviceOptions,
   IFilteredDevices,
 } from 'src/common/types/device.types';
 import {
@@ -8,12 +10,10 @@ import {
   DeviceNotFoundException,
   WarrantyValidateException,
 } from 'src/exceptions/device.exceptions';
-import { PrismaService } from 'prisma/prisma.service';
-import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
-import { UpdateDeviceDto } from './dtos/update-device.dto';
 import { DeviceCombineDto } from './dtos/device-combine.dto';
+import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Injectable()
 export class DevicesService {
@@ -54,8 +54,7 @@ export class DevicesService {
       where.warehouse = { slug: { in: checkQueryArray('warehouse') } };
     }
     if (query.memorySize) where.memorySize = Number(query.memorySize);
-    if (query.screenSize)
-      where.screenSize = { in: query.screenSize.split(',').map(Number) };
+    if (query.screenSize) where.screenSize = { in: query.screenSize.split(',').map(Number) };
     if (query.isFunctional) {
       const isFunctionalArray = Array.isArray(query.isFunctional)
         ? query.isFunctional
@@ -152,13 +151,7 @@ export class DevicesService {
       },
     });
     return devices.map((device) => {
-      const {
-        price_with_vat,
-        price_without_vat,
-        residual_price,
-        model,
-        ...rest
-      } = device;
+      const { price_with_vat, price_without_vat, residual_price, model, ...rest } = device;
 
       return {
         ...rest,
@@ -295,10 +288,7 @@ export class DevicesService {
       new Map(
         devicesByLocation
           .filter((items) => items.model?.manufacturer)
-          .map((items) => [
-            items.model.manufacturer.slug,
-            items.model.manufacturer,
-          ]),
+          .map((items) => [items.model.manufacturer.slug, items.model.manufacturer]),
       ).values(),
     );
 
@@ -314,32 +304,23 @@ export class DevicesService {
       new Map(
         devicesByLocation
           .filter((items) => items.model)
-          .map((items) => [
-            items.model.slug,
-            { name: items.model.name, slug: items.model.slug },
-          ]),
+          .map((items) => [items.model.slug, { name: items.model.name, slug: items.model.slug }]),
       ).values(),
     );
 
     const warehouses = Array.from(
-      new Map(
-        devicesByLocation.map((item) => [item.warehouse?.slug, item.warehouse]),
-      ).values(),
+      new Map(devicesByLocation.map((item) => [item.warehouse?.slug, item.warehouse])).values(),
     );
 
     const screenSizes = Array.from(
       new Set(
-        devicesByLocation
-          .filter((item) => item.screenSize != null)
-          .map((item) => item.screenSize),
+        devicesByLocation.filter((item) => item.screenSize != null).map((item) => item.screenSize),
       ),
     ).map((size) => ({ screenSize: size }));
 
     const memorySizes = Array.from(
       new Set(
-        devicesByLocation
-          .filter((item) => item.memorySize != null)
-          .map((item) => item.memorySize),
+        devicesByLocation.filter((item) => item.memorySize != null).map((item) => item.memorySize),
       ),
     ).map((size) => ({ memorySize: size }));
 
@@ -347,9 +328,9 @@ export class DevicesService {
       new Set(devicesByLocation.map((item) => item.isFunctional)),
     ).map((status) => ({ isFunctional: status }));
 
-    const isAssigned = Array.from(
-      new Set(devicesByLocation.map((item) => item.isAssigned)),
-    ).map((status) => ({ isAssigned: status }));
+    const isAssigned = Array.from(new Set(devicesByLocation.map((item) => item.isAssigned))).map(
+      (status) => ({ isAssigned: status }),
+    );
 
     return {
       manufacturer: manufacturers,
@@ -364,26 +345,11 @@ export class DevicesService {
   }
 
   // Create
-  async createDevice(
-    deviceDto: CreateDeviceDto,
-  ): Promise<Partial<DeviceBaseDto>> {
-    const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } =
-      deviceDto;
+  async createDevice(deviceDto: CreateDeviceDto): Promise<Partial<DeviceBaseDto>> {
+    const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
     // Validate warranty fields
-    if (
-      providerName ||
-      warrantyNumber ||
-      startWarrantyDate ||
-      endWarrantyDate
-    ) {
-      if (
-        !(
-          providerName &&
-          warrantyNumber &&
-          startWarrantyDate &&
-          endWarrantyDate
-        )
-      ) {
+    if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
+      if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
         throw new WarrantyValidateException();
       }
     }
@@ -408,14 +374,9 @@ export class DevicesService {
         screenSize: deviceDto.screenSize === 0 ? null : deviceDto.screenSize,
         memorySize: deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
         inStock: deviceDto.inStock,
-        price_with_vat:
-          deviceDto.price_with_vat === 0 ? null : deviceDto.price_with_vat,
-        price_without_vat:
-          deviceDto.price_without_vat === 0
-            ? null
-            : deviceDto.price_without_vat,
-        residual_price:
-          deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
+        price_with_vat: deviceDto.price_with_vat === 0 ? null : deviceDto.price_with_vat,
+        price_without_vat: deviceDto.price_without_vat === 0 ? null : deviceDto.price_without_vat,
+        residual_price: deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
         isFunctional: deviceDto.isFunctional,
         isAssigned: deviceDto.isAssigned,
         warehouseId: deviceDto.warehouseId,
@@ -443,31 +404,15 @@ export class DevicesService {
     }
   }
   //Update
-  async updateDevice(
-    deviceId: string,
-    deviceDto: UpdateDeviceDto,
-  ): Promise<DeviceBaseDto> {
+  async updateDevice(deviceId: string, deviceDto: UpdateDeviceDto): Promise<DeviceBaseDto> {
     const existDevice = await this.prisma.device.findUnique({
       where: { id: deviceId },
     });
     if (!existDevice) throw new DeviceNotFoundException();
 
-    const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } =
-      deviceDto;
-    if (
-      providerName ||
-      warrantyNumber ||
-      startWarrantyDate ||
-      endWarrantyDate
-    ) {
-      if (
-        !(
-          providerName &&
-          warrantyNumber &&
-          startWarrantyDate &&
-          endWarrantyDate
-        )
-      ) {
+    const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
+    if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
+      if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
         throw new WarrantyValidateException();
       }
     }
@@ -475,9 +420,7 @@ export class DevicesService {
       where: { id: existDevice.id },
       data: {
         name: deviceDto.name,
-        inventoryNumber: deviceDto.inventoryNumber
-          ? deviceDto.inventoryNumber
-          : null,
+        inventoryNumber: deviceDto.inventoryNumber ? deviceDto.inventoryNumber : null,
         modelId: deviceDto.modelId ? deviceDto.modelId : null,
         modelCode: deviceDto.modelCode ? deviceDto.modelCode : null,
         serialNumber: deviceDto.serialNumber ? deviceDto.serialNumber : null,
@@ -486,14 +429,9 @@ export class DevicesService {
         memorySize: deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
         isFunctional: deviceDto.isFunctional,
         description: deviceDto.description,
-        price_without_vat:
-          deviceDto.price_without_vat === 0
-            ? null
-            : deviceDto.price_without_vat,
-        price_with_vat:
-          deviceDto.price_with_vat === 0 ? null : deviceDto.price_with_vat,
-        residual_price:
-          deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
+        price_without_vat: deviceDto.price_without_vat === 0 ? null : deviceDto.price_without_vat,
+        price_with_vat: deviceDto.price_with_vat === 0 ? null : deviceDto.price_with_vat,
+        residual_price: deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
         updatedById: deviceDto.updatedById,
       },
     });
@@ -513,11 +451,7 @@ export class DevicesService {
     };
   }
 
-  warrantyAction = async (
-    deviceDto: UpdateDeviceDto,
-    id: string,
-    deviceId: string,
-  ) => {
+  warrantyAction = async (deviceDto: UpdateDeviceDto, id: string, deviceId: string) => {
     const warrantyData = {
       deviceId: deviceId || undefined,
       warrantyNumber: deviceDto.warrantyNumber || undefined,

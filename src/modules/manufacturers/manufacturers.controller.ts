@@ -10,14 +10,11 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ManufacturersService } from './manufacturers.service';
-import {
-  manufacturerCreated,
-  manufacturerUpdated,
-} from 'src/common/utils/constants';
-import { CreateManufacturerDto } from './dto/manufacturer-create.dto';
+import { manufacturerCreated, manufacturerUpdated } from 'src/common/utils/constants';
 import { ManufacturerBaseDto } from './dto/manufacturer-base.dto';
+import { CreateManufacturerDto } from './dto/manufacturer-create.dto';
 import { UpdateManufacturerDto } from './dto/manufacturer-update.dto';
+import { ManufacturersService } from './manufacturers.service';
 
 @Controller('manufacturers')
 export class ManufacturersController {
@@ -30,8 +27,7 @@ export class ManufacturersController {
   async createManufacturer(
     @Body() manufacturerDto: CreateManufacturerDto,
   ): Promise<{ message: string; manufacturer: ManufacturerBaseDto }> {
-    const manufacturer =
-      await this.manufacturersService.createManufacturer(manufacturerDto);
+    const manufacturer = await this.manufacturersService.createManufacturer(manufacturerDto);
     return {
       message: manufacturerCreated,
       manufacturer,
@@ -56,8 +52,10 @@ export class ManufacturersController {
     @Param('id') id: string,
     @Body() manufacturerDto: UpdateManufacturerDto,
   ): Promise<{ message: string; updatedManufacturer: ManufacturerBaseDto }> {
-    const updatedManufacturer =
-      await this.manufacturersService.updateManufacturer(id, manufacturerDto);
+    const updatedManufacturer = await this.manufacturersService.updateManufacturer(
+      id,
+      manufacturerDto,
+    );
     return {
       message: manufacturerUpdated,
       updatedManufacturer,

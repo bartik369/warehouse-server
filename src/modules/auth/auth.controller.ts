@@ -1,27 +1,27 @@
-import { AuthDto } from './dtos/auth.dto';
-import { GroupAuthData, AuthData } from 'src/common/types/user.types';
-import { AuthService } from './auth.service';
-import { Request } from 'express';
-import { Public } from './decorators/public.decorator';
-import { GetUserId } from './decorators/user-id.decorator';
 import {
   Body,
   Controller,
-  HttpCode,
-  Post,
   Get,
-  Req,
+  HttpCode,
   HttpStatus,
+  Post,
+  Req,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
-  UseInterceptors,
 } from '@nestjs/common';
-import { GetAccessToken } from './decorators/access-token.decorator';
-import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
-import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor'; 
-import { generateCsrfToken } from 'src/common/utils/secure/csrf.util';
+import { Request } from 'express';
+import { AuthData, GroupAuthData } from 'src/common/types/user.types';
 import { successLogoutMsg } from 'src/common/utils/constants';
+import { generateCsrfToken } from 'src/common/utils/secure/csrf.util';
 import { UserBaseDto } from '../users/dtos/user-base.dto';
+import { AuthService } from './auth.service';
+import { GetAccessToken } from './decorators/access-token.decorator';
+import { Public } from './decorators/public.decorator';
+import { GetUserId } from './decorators/user-id.decorator';
+import { AuthDto } from './dtos/auth.dto';
+import { ClearCookiesInterceptor } from './interceptors/ClearCookiesInterceptor';
+import { SetCookiesInterceptor } from './interceptors/SetCookiesInterceptor';
 
 @Controller('auth')
 export class AuthController {
@@ -33,9 +33,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async signin(
-    @Body() authDto: AuthDto,
-  ): Promise<AuthData & { csrfToken: string }> {
+  async signin(@Body() authDto: AuthDto): Promise<AuthData & { csrfToken: string }> {
     const data: GroupAuthData = await this.authService.signin(authDto);
     if (data?.tokens?.refreshToken) {
       const csrfToken = generateCsrfToken();
@@ -55,8 +53,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Req() req: Request): Promise<any> {
     const token: string = req.cookies.refreshToken;
-    const { user, accessToken, refreshToken } =
-      await this.authService.refreshToken(token);
+    const { user, accessToken, refreshToken } = await this.authService.refreshToken(token);
     return { user, accessToken, refreshToken };
   }
 

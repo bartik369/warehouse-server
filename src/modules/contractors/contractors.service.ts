@@ -1,11 +1,11 @@
-import { CreateContractorDto } from './dtos/create-contractor.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { ContractorBaseDto } from './dtos/contactor-base.dto';
 import {
   ContactorExistsException,
   ContactorNotFoundException,
 } from 'src/exceptions/device.exceptions';
+import { ContractorBaseDto } from './dtos/contactor-base.dto';
+import { CreateContractorDto } from './dtos/create-contractor.dto';
 import { UpdateContractorDto } from './dtos/update-contractor.dto';
 
 @Injectable()
@@ -16,9 +16,7 @@ export class ContractorsService {
     return this.prisma.contractor.findMany({});
   }
   // CREATE CONTRACTORS
-  async createContractor(
-    contractorDto: CreateContractorDto,
-  ): Promise<ContractorBaseDto> {
+  async createContractor(contractorDto: CreateContractorDto): Promise<ContractorBaseDto> {
     const existContractor = await this.prisma.contractor.findUnique({
       where: {
         name: contractorDto.name,

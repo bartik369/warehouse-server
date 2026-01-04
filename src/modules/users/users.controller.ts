@@ -1,16 +1,16 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
   Param,
+  Post,
+  Query,
   UsePipes,
   ValidationPipe,
-  Query,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UserBaseDto } from './dtos/user-base.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { UserBaseDto } from './dtos/user-base.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
@@ -18,9 +18,7 @@ export class UsersController {
 
   @Post('/')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async create(
-    @Body() userDto: CreateUserDto,
-  ): Promise<{ message: string; user: UserBaseDto }> {
+  async create(@Body() userDto: CreateUserDto): Promise<{ message: string; user: UserBaseDto }> {
     const user = await this.usersService.create(userDto);
     return {
       message: 'rerwerw',
@@ -32,9 +30,7 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
   @Get('/search/sorted')
-  async findSortedUsers(
-    @Query('search') search: string,
-  ): Promise<UserBaseDto[]> {
+  async findSortedUsers(@Query('search') search: string): Promise<UserBaseDto[]> {
     return await this.usersService.findSortedUsers(search);
   }
 

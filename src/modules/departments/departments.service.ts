@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { DepartmentBaseDto } from './dtos/department-base.dto';
 import {
   DepartmentExistException,
   DepartmentNotFoundException,
 } from 'src/exceptions/location.exceptions';
 import { CreateDepartmentDto } from './dtos/create-department.dto';
+import { DepartmentBaseDto } from './dtos/department-base.dto';
 import { UpdateDepartmentDto } from './dtos/update-department.dto';
 
 @Injectable()
@@ -26,9 +26,7 @@ export class DepartmentsService {
     return department;
   }
   // Create
-  async createDepartment(
-    departmentDto: CreateDepartmentDto,
-  ): Promise<DepartmentBaseDto> {
+  async createDepartment(departmentDto: CreateDepartmentDto): Promise<DepartmentBaseDto> {
     const existDepartment = await this.prisma.department.findUnique({
       where: {
         name: departmentDto.name,

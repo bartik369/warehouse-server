@@ -1,6 +1,6 @@
+import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import { extname } from 'path';
-import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import {
   ManufacturerNotFoundException,
@@ -22,8 +22,7 @@ export class ModelsService {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { slug: manufacturer },
     });
-    if (!existingType || !existingManufacturer)
-      throw new ModelNotFoundException();
+    if (!existingType || !existingManufacturer) throw new ModelNotFoundException();
 
     const models = await this.prisma.device_model.findMany({
       where: {
@@ -34,9 +33,7 @@ export class ModelsService {
     return models;
   }
   // Get by ID
-  async getModelById(
-    id: string,
-  ): Promise<ModelBaseDto & { manufacturer: string; type: string }> {
+  async getModelById(id: string): Promise<ModelBaseDto & { manufacturer: string; type: string }> {
     const existModel = await this.prisma.device_model.findUnique({
       where: { id: id },
     });
@@ -62,10 +59,7 @@ export class ModelsService {
     return models;
   }
   // Create
-  async createModel(
-    modelDto: CreateModelDto,
-    file: Express.Multer.File,
-  ): Promise<ModelBaseDto> {
+  async createModel(modelDto: CreateModelDto, file: Express.Multer.File): Promise<ModelBaseDto> {
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
       where: { id: modelDto.manufacturerId },
     });
@@ -90,10 +84,7 @@ export class ModelsService {
     return model;
   }
   // Update
-  async updateModel(
-    modelDto: ModelBaseDto,
-    file: Express.Multer.File,
-  ): Promise<ModelBaseDto> {
+  async updateModel(modelDto: ModelBaseDto, file: Express.Multer.File): Promise<ModelBaseDto> {
     const existModel = await this.prisma.device_model.findUnique({
       where: { id: modelDto.id },
     });
@@ -103,19 +94,14 @@ export class ModelsService {
       data: {
         name: modelDto.name,
         slug: modelDto.slug,
-        imagePath: file
-          ? await this.saveFile(existModel.imagePath, file)
-          : existModel.imagePath,
+        imagePath: file ? await this.saveFile(existModel.imagePath, file) : existModel.imagePath,
         manufacturerId: modelDto.manufacturerId,
         typeId: modelDto.typeId,
       },
     });
     return model;
   }
-  private async saveFile(
-    existFileName: string,
-    file: Express.Multer.File,
-  ): Promise<string> {
+  private async saveFile(existFileName: string, file: Express.Multer.File): Promise<string> {
     const uniqueSuffix = Date.now();
     const fileName = `${file?.fieldname}-${uniqueSuffix}${extname(file?.originalname)}`;
     const filePath = `uploads/models/${fileName}`;
