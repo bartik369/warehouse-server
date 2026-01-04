@@ -1,26 +1,26 @@
-import { WarehousesModule } from './modules/warehouses/warehouses.module';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PrismaService } from 'prisma/prisma.service';
-import { UsersService } from './modules/users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { DevicesModule } from './modules/devices/devices.module';
-import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
 import { AccessTokenGuard } from './modules/auth/guards';
-import { APP_GUARD } from '@nestjs/core';
 import { ContractorsModule } from './modules/contractors/contractors.module';
-import { LocationModule } from './modules/locations/locations.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
+import { DevicesModule } from './modules/devices/devices.module';
+import { IssueModule } from './modules/issue/issue.module';
+import { LocationModule } from './modules/locations/locations.module';
 import { ManufacturersModule } from './modules/manufacturers/manufacturers.module';
-import { TypesModule } from './modules/types/types.module';
 import { ModelsModule } from './modules/models/models.module';
-import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolePermissionsModule } from './modules/role-permissions/role-permissions.module';
-import { IssueModule } from './modules/issue/issue.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { TypesModule } from './modules/types/types.module';
+import { UsersModule } from './modules/users/users.module';
+import { UsersService } from './modules/users/users.service';
+import { WarehousesModule } from './modules/warehouses/warehouses.module';
 
 @Module({
   imports: [

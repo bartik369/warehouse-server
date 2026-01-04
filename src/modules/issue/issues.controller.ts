@@ -8,12 +8,12 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { IssueService } from './issues.service';
 import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.interceptor';
 import { allowedPrintFileOptions } from 'src/common/utils/constants';
-import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
-import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
 import { CreateIssueDto } from './dtos/issue-create.dto';
+import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
+import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
+import { IssueService } from './issues.service';
 
 @Controller('issues')
 export class IssueController {
@@ -40,9 +40,7 @@ export class IssueController {
 
   @Post('process')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async createIssueProcess(
-    @Body() dto: CreateIssueProcessDto,
-  ): Promise<IssueProcessBaseDto> {
+  async createIssueProcess(@Body() dto: CreateIssueProcessDto): Promise<IssueProcessBaseDto> {
     console.log('create issue process', dto);
     return await this.issueService.createIssueProcess(dto);
   }

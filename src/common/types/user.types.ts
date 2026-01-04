@@ -18,4 +18,4 @@ export type JwtPayload = {
   sub: string;
   email: string;
 };
-export type JwtPayloadWithRt = JwtPayload & { refreshToken: string }
+export type JwtPayloadWithRt = JwtPayload & { refreshToken: string };

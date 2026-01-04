@@ -1,4 +1,3 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
 import {
   permissionAlreadyExist,
   permissionNotFound,
@@ -9,6 +8,8 @@ import {
   rolePermissionAlreadyExist,
   rolePermissionNotFound,
 } from 'src/common/utils/constants';
+
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class RoleExistException extends ConflictException {
   constructor() {

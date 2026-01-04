@@ -1,25 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
-import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
-import { CreateIssueDto } from './dtos/issue-create.dto';
+import { PATH } from 'src/common/constants/path.constants';
 import { STATUS } from 'src/common/constants/status.constant';
+import { TYPES } from 'src/common/constants/types.constants';
+import { savePdfFile } from 'src/common/utils/file/file.util';
 import {
   ConflictIssueException,
   ConflictIssueProcessException,
   IssueProcessNotFoundException,
 } from 'src/exceptions/issue.exceptions';
-import { PATH } from 'src/common/constants/path.constants';
-import { TYPES } from 'src/common/constants/types.constants';
-import { savePdfFile } from 'src/common/utils/file/file.util';
+import { CreateIssueDto } from './dtos/issue-create.dto';
+import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
+import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
 
 @Injectable()
 export class IssueService {
   constructor(private prisma: PrismaService) {}
 
-  async createIssueProcess(
-    dto: CreateIssueProcessDto,
-  ): Promise<IssueProcessBaseDto> {
+  async createIssueProcess(dto: CreateIssueProcessDto): Promise<IssueProcessBaseDto> {
     const existingProcess = await this.prisma.device_issue_process.findUnique({
       where: {
         documentNo: dto.documentNo,
@@ -92,10 +90,7 @@ export class IssueService {
     });
   }
 
-  async finalizeIssue(
-    dto: Pick<CreateIssueDto, 'processId'>,
-    file: Express.Multer.File,
-  ) {
+  async finalizeIssue(dto: Pick<CreateIssueDto, 'processId'>, file: Express.Multer.File) {
     if (!file) throw new ConflictIssueException();
     const existingProcess = await this.prisma.device_issue_process.findUnique({
       where: { documentNo: dto.processId },

@@ -1,18 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Put,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import { LocationsService } from './locations.service';
+import { Body, Controller, Get, Param, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { locationCreated, locationUpdated } from 'src/common/utils/constants';
 import { LocationBaseDto } from './dtos/location-base.dto';
-import { UpdateLocationDto } from './dtos/location-update.dto';
 import { CreateLocationDto } from './dtos/location-create.dto';
+import { UpdateLocationDto } from './dtos/location-update.dto';
+import { LocationsService } from './locations.service';
 
 @Controller('locations')
 export class LocationsController {
@@ -46,10 +37,7 @@ export class LocationsController {
     @Param('id') id: string,
     @Body() locationDto: UpdateLocationDto,
   ): Promise<{ message: string; updatedLocation: LocationBaseDto }> {
-    const updatedLocation = await this.locationsService.updateLocation(
-      id,
-      locationDto,
-    );
+    const updatedLocation = await this.locationsService.updateLocation(id, locationDto);
     return {
       message: locationUpdated,
       updatedLocation,

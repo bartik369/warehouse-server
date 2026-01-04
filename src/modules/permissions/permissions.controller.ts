@@ -14,10 +14,10 @@ import {
   permissionDeleted,
   permissionUpdated,
 } from 'src/common/utils/constants';
-import { PermissionsService } from './permissions.service';
-import { PermissionBaseDto } from './dto/permission-base.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
+import { PermissionBaseDto } from './dto/permission-base.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import { PermissionsService } from './permissions.service';
 
 @Controller('permissions')
 export class PermissionsController {
@@ -39,8 +39,7 @@ export class PermissionsController {
   async createPermission(
     @Body() permissionDto: CreatePermissionDto,
   ): Promise<{ message: string; permission: PermissionBaseDto }> {
-    const permission =
-      await this.permissionsService.createPermission(permissionDto);
+    const permission = await this.permissionsService.createPermission(permissionDto);
     return {
       message: permissionCreated,
       permission,
@@ -53,10 +52,7 @@ export class PermissionsController {
     @Param('id') id: string,
     @Body() permissionDto: UpdatePermissionDto,
   ): Promise<{ message: string; updatedPermission: PermissionBaseDto }> {
-    const updatedPermission = await this.permissionsService.updatePermission(
-      id,
-      permissionDto,
-    );
+    const updatedPermission = await this.permissionsService.updatePermission(id, permissionDto);
     return {
       message: permissionUpdated,
       updatedPermission,
@@ -65,9 +61,7 @@ export class PermissionsController {
 
   // Delete
   @Delete(':id')
-  async deletePermission(
-    @Param('id') id: string,
-  ): Promise<{ message: string }> {
+  async deletePermission(@Param('id') id: string): Promise<{ message: string }> {
     await this.permissionsService.deletePermission(id);
     return {
       message: permissionDeleted,

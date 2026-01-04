@@ -1,4 +1,5 @@
 import { userAlreadyExist, userNotFound } from 'src/common/utils/constants';
+
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class ConflictUserException extends ConflictException {

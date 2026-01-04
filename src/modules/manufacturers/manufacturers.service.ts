@@ -5,8 +5,8 @@ import {
   ManufacturerNotFoundException,
 } from 'src/exceptions/device.exceptions';
 import { ManufacturerBaseDto } from './dto/manufacturer-base.dto';
-import { UpdateManufacturerDto } from './dto/manufacturer-update.dto';
 import { CreateManufacturerDto } from './dto/manufacturer-create.dto';
+import { UpdateManufacturerDto } from './dto/manufacturer-update.dto';
 
 @Injectable()
 export class ManufacturersService {
@@ -44,9 +44,7 @@ export class ManufacturersService {
     return updatedManufacturer;
   }
   // Create
-  async createManufacturer(
-    manufacturerDto: CreateManufacturerDto,
-  ): Promise<ManufacturerBaseDto> {
+  async createManufacturer(manufacturerDto: CreateManufacturerDto): Promise<ManufacturerBaseDto> {
     const existingManufacturer = await this.prisma.manufacturer.findFirst({
       where: {
         name: manufacturerDto.name,

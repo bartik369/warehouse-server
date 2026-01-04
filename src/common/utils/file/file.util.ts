@@ -1,9 +1,6 @@
 import * as fs from 'fs';
 
-export async function savePdfFile(
-  folderPath: string,
-  file: Express.Multer.File,
-): Promise<string> {
+export async function savePdfFile(folderPath: string, file: Express.Multer.File): Promise<string> {
   const filePath = `${folderPath}/${file?.originalname}`;
   try {
     await fs.promises.mkdir(folderPath, { recursive: true });

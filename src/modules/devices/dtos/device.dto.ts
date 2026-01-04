@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { DeviceBaseDto } from './device-base.dto';
 
 export class DeviceModelDto {

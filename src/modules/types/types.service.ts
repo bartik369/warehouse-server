@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import {
-  TypeExistsException,
-  TypeNotFoundException,
-} from 'src/exceptions/device.exceptions';
+import { TypeExistsException, TypeNotFoundException } from 'src/exceptions/device.exceptions';
 import { CreateTypeDto } from './dto/create-type.dto';
 import { TypeBaseDto } from './dto/type-base.dto';
 import { UpdateTypeDto } from './dto/update-type.dto';

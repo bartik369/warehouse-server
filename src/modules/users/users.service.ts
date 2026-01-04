@@ -1,8 +1,8 @@
-import * as bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConflictUserException } from 'src/exceptions/auth.exceptions';
+import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UserBaseDto } from './dtos/user-base.dto';
 
@@ -41,9 +41,7 @@ export class UsersService {
       }),
     ]);
     if (!userPassword || !userToken)
-      throw new InternalServerErrorException(
-        'Failed to create password or token',
-      );
+      throw new InternalServerErrorException('Failed to create password or token');
     return user;
   }
 

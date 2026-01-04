@@ -1,15 +1,15 @@
-import { AuthDto } from './dtos/auth.dto';
-import { AuthData, Tokens, GroupAuthData } from 'src/common/types/user.types';
-import { PrismaService } from 'prisma/prisma.service';
-import {
-  DeniedAccessException,
-  UnauthorizeException,
-} from 'src/exceptions/auth.exceptions';
-import { UserNotFoundException } from 'src/exceptions/auth.exceptions';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { PrismaService } from 'prisma/prisma.service';
+import { AuthData, GroupAuthData, Tokens } from 'src/common/types/user.types';
+import {
+  DeniedAccessException,
+  UnauthorizeException,
+  UserNotFoundException,
+} from 'src/exceptions/auth.exceptions';
 import { UserBaseDto } from '../users/dtos/user-base.dto';
+import { AuthDto } from './dtos/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -31,17 +31,10 @@ export class AuthService {
         userId: user.id,
       },
     });
-    const isMatch = await bcrypt.compare(
-      authDto.password,
-      userDBPassword.password,
-    );
+    const isMatch = await bcrypt.compare(authDto.password, userDBPassword.password);
     if (!isMatch) throw new UserNotFoundException();
 
-    const tokens: Tokens = await this.getTokens(
-      user.id,
-      user.email,
-      user.userName,
-    );
+    const tokens: Tokens = await this.getTokens(user.id, user.email, user.userName);
     await this.updateRefreshHash(user.id, tokens.refreshToken);
     return {
       user: user,
@@ -71,11 +64,7 @@ export class AuthService {
 
       const matchRefreshToken = await bcrypt.compare(token, existToken.token);
       if (!matchRefreshToken) throw new DeniedAccessException();
-      const tokens = await this.getTokens(
-        existUser.id,
-        existUser.email,
-        existUser.userName,
-      );
+      const tokens = await this.getTokens(existUser.id, existUser.email, existUser.userName);
       await this.updateRefreshHash(existUser.id, tokens.refreshToken);
       return {
         accessToken: tokens.accessToken,

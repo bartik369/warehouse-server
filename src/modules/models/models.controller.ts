@@ -11,15 +11,11 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ModelsService } from './models.service';
-import { FileUploadInterceptor } from '../../common/interceptors/file-upload.interceptor';
-import {
-  allowedPictureOptions,
-  modelCreated,
-  modelUpdated,
-} from 'src/common/utils/constants';
 import { plainToInstance } from 'class-transformer';
+import { allowedPictureOptions, modelCreated, modelUpdated } from 'src/common/utils/constants';
+import { FileUploadInterceptor } from '../../common/interceptors/file-upload.interceptor';
 import { ModelBaseDto } from './dto/model-base.dto';
+import { ModelsService } from './models.service';
 
 @Controller('models')
 export class ModelsController {

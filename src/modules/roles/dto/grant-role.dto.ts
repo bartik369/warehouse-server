@@ -11,12 +11,12 @@ export class GrantRoleDto {
   @IsNotEmpty()
   @IsString()
   roleId: string;
-  
+
   @IsOptional()
   @Transform(({ value }) => value?.trim())
   warehouseId?: string;
 
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  locationId?: string
+  locationId?: string;
 }
