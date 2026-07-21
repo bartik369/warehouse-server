@@ -1,22 +1,22 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsUUID } from 'class-validator';
 
 export class GrantRoleDto {
-  @Transform(({ value }) => value?.trim())
-  @IsNotEmpty()
-  @IsString()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsUUID()
   userId: string;
 
-  @Transform(({ value }) => value?.trim())
-  @IsNotEmpty()
-  @IsString()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsUUID()
   roleId: string;
 
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (typeof value === 'string' && value.trim() ? value.trim() : undefined))
+  @IsUUID()
   warehouseId?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (typeof value === 'string' && value.trim() ? value.trim() : undefined))
+  @IsUUID()
   locationId?: string;
 }
