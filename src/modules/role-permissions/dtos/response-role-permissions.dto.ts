@@ -1,24 +1,25 @@
 export class RolePermissionsResponseDto {
-  id: string;
   roleId: string;
+  roleName: string;
+  locationId: string | null;
+  locationName: string | null;
+  warehouseId: string | null;
+  warehouseName: string | null;
   permissionIds: string[];
-  permissionName: string[];
-  locationId: string;
-  locationName: string;
-  warehouseId: string;
-  warehouseName: string;
-  comment: string;
+  permissionsName: string[];
+  comment: string | null;
 
   constructor(partial: Partial<RolePermissionsResponseDto>) {
     Object.assign(this, {
-      id: '',
+      roleId: '',
+      roleName: '',
+      locationId: null,
+      locationName: null,
+      warehouseId: null,
+      warehouseName: null,
       permissionIds: [],
-      permissionName: [],
-      locationId: '',
-      locationName: '',
-      warehouseId: '',
-      warehouseName: '',
-      comment: '',
+      permissionsName: [],
+      comment: null,
       ...partial,
     });
   }

@@ -8,6 +8,6 @@ export class CreateRoleDto {
   name: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty() 
   comment: string;
 }

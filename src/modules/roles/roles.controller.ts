@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   UsePipes,
@@ -20,76 +21,89 @@ import { RolesService } from './roles.service';
 
 @Controller('roles')
 export class RolesController {
-  constructor(private rolesService: RolesService) {}
+  constructor(private readonly rolesService: RolesService) {}
 
-  @Get('/users/:id')
-  async getUserRoles(@Param('id') id: string): Promise<RolesListResponseDto> {
-    return await this.rolesService.getUserRoles(id);
+  @Get('users/:id')
+  async getUserRoles(@Param('id', new ParseUUIDPipe()) id: string): Promise<RolesListResponseDto> {
+    return this.rolesService.getUserRoles(id);
   }
-
-  // Get all
   @Get()
   async getRoles(): Promise<RoleBaseDto[]> {
-    return await this.rolesService.getRoles();
-  }
-  @Get('/list')
-  async getRolesList(): Promise<RolesListDto[]> {
-    return await this.rolesService.getRolesList();
-  }
-  // Get all for Assign
-  @Get('assignable')
-  async getAssignableRoles(): Promise<RoleBaseDto[]> {
-    return await this.rolesService.getAssignableRoles();
+    return this.rolesService.getRoles();
   }
 
-  // Get by ID
-  @Get(':id')
-  async getRole(@Param('id') id: string): Promise<RoleBaseDto> {
-    return await this.rolesService.getRole(id);
+  @Get('list')
+  async getRolesList(): Promise<RolesListDto[]> {
+    return this.rolesService.getRolesList();
   }
-  // Create
+
+  @Get('assignable')
+  async getAssignableRoles(): Promise<RoleBaseDto[]> {
+    return this.rolesService.getAssignableRoles();
+  }
+
+  @Get(':id')
+  async getRole(@Param('id', new ParseUUIDPipe()) id: string): Promise<RoleBaseDto> {
+    return this.rolesService.getRole(id);
+  }
   @Post()
-  @UsePipes(new ValidationPipe({ whitelist: true }))
-  async createRole(
-    @Body() roleDto: CreateRoleDto,
-  ): Promise<{ message: string; role: RoleBaseDto }> {
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
+  async createRole(@Body() roleDto: CreateRoleDto): Promise<{
+    message: string;
+    role: RoleBaseDto;
+  }> {
     const role = await this.rolesService.createRole(roleDto);
+
     return {
       message: roleCreated,
       role,
     };
   }
-  // Update
+
   @Put(':id')
-  @UsePipes(new ValidationPipe({ whitelist: true }))
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
   async updateRole(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() roleDto: UpdateRoleDto,
-  ): Promise<{ message: string; updatedRole: RoleBaseDto }> {
+  ): Promise<{
+    message: string;
+    updatedRole: RoleBaseDto;
+  }> {
     const updatedRole = await this.rolesService.updateRole(id, roleDto);
+
     return {
       message: roleUpdated,
       updatedRole,
     };
   }
-  // Delete
+
   @Delete(':id')
-  async deleteRole(@Param('id') id: string): Promise<{ message: string }> {
+  async deleteRole(@Param('id', new ParseUUIDPipe()) id: string): Promise<{ message: string }> {
     await this.rolesService.deleteRole(id);
+
     return {
       message: roleDeleted,
     };
   }
-  @Post('/grant')
-  @UsePipes(new ValidationPipe({ whitelist: true }))
+
+  @Post('grant')
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  )
   async grantUserRole(@Body() body: GrantRoleDto) {
-    const splittedArgs = body.roleId.split('/');
-    const userInfo = {
-      userId: body.userId,
-      roleId: splittedArgs[0],
-      locationId: splittedArgs[1],
-      warehouseId: splittedArgs[2] || null,
-    };
-    return await this.rolesService.grantUserRole(userInfo);
+    return this.rolesService.grantUserRole(body);
   }
 }

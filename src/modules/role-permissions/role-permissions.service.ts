@@ -1,261 +1,339 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { ILocation } from 'src/common/types/location.types';
-import { IRole } from 'src/common/types/permission.types';
-import { IPermission, IRolePermission } from '../permissions/types/permission.types';
-import { IWarehouse } from '../warehouses/types/warehouse.types';
 import { CreateRolePermissionsDto } from './dtos/create-role-permissions.dto';
 import { RolePermissionsResponseDto } from './dtos/response-role-permissions.dto';
+import { GroupedResponse } from './types';
 
 @Injectable()
 export class RolePermissionsService {
-  constructor(private prisma: PrismaService) {}
-  // Get all
-  async getAllRolesPermissions() {
-    const listPermissions = await this.prisma.permission_role.findMany({});
-    if (listPermissions.length === 0) throw new NotFoundException();
-    const groupedByRole = listPermissions.reduce(
-      (acc: Record<string, Partial<RolePermissionsResponseDto>>, elem: IRolePermission) => {
-        const { permissionId, roleId, warehouseId, locationId, comment } = elem;
-        const key = `${roleId}_${locationId ?? 'null'}_${warehouseId ?? 'null'}`;
-        if (!acc[key]) {
-          acc[key] = {
-            roleId,
-            locationId,
-            comment,
-            warehouseId: warehouseId ?? '',
-            permissionIds: permissionId ? [permissionId] : [],
-          };
-        } else if (permissionId) {
-          acc[key].permissionIds.push(permissionId);
-        }
-        return acc;
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getAllRolesPermissions(): Promise<RolePermissionsResponseDto[]> {
+    const permissionRoles = await this.prisma.permission_role.findMany({
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+            comment: true,
+          },
+        },
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        permission: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
-      {} as Record<string, Partial<RolePermissionsResponseDto>>,
-    );
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
 
-    const groupedArray: Partial<RolePermissionsResponseDto>[] = Object.values(groupedByRole);
-    const uniqueRoleIds = [
-      ...new Set(groupedArray.map((r: RolePermissionsResponseDto) => r.roleId)),
-    ];
-    const uniqueWarehouseIds = [
-      ...new Set(
-        groupedArray.map((w: RolePermissionsResponseDto) => w.warehouseId).filter(Boolean),
-      ),
-    ];
-    const uniqueLocationIds = [
-      ...new Set(groupedArray.map((l: RolePermissionsResponseDto) => l.locationId).filter(Boolean)),
-    ];
-    const uniquePermissionIds = [
-      ...new Set(
-        groupedArray.flatMap((p: RolePermissionsResponseDto) => p.permissionIds).filter(Boolean),
-      ),
-    ];
-
-    const [roles, warehouses, locations, permissions] = await Promise.all([
-      this.prisma.role.findMany({
-        where: { id: { in: uniqueRoleIds } },
-      }),
-      this.prisma.warehouse.findMany({
-        where: { id: { in: uniqueWarehouseIds } },
-      }),
-      this.prisma.location.findMany({
-        where: { id: { in: uniqueLocationIds } },
-      }),
-      this.prisma.permission.findMany({
-        where: { id: { in: uniquePermissionIds } },
-        select: { id: true, name: true },
-      }),
-    ]);
-
-    if (roles.length === 0 || locations.length === 0) {
-      throw new NotFoundException('Required roles or locations not found');
+    if (permissionRoles.length === 0) {
+      throw new NotFoundException('Настройки прав ролей не найдены');
     }
 
-    const roleMap: Map<string, IRole> = new Map(roles.map((r: IRole) => [r.id, r]));
-    const warehouseMap: Map<string, IWarehouse> = new Map(
-      warehouses.map((w: IWarehouse) => [w.id, w]),
-    );
-    const locationMap: Map<string, ILocation> = new Map(locations.map((l: ILocation) => [l.id, l]));
-    const permissionsMap: Map<string, IPermission> = new Map(
-      permissions.map((p: IPermission) => [p.id, p]),
-    );
+    const groupedMap = new Map<string, GroupedResponse>();
 
-    return groupedArray.map(({ roleId, warehouseId, locationId, permissionIds }) => ({
-      roleId,
-      roleName: roleMap.get(roleId)?.name ?? null,
-      comment: roleMap.get(roleId)?.comment ?? null,
-      warehouseName: warehouseId ? (warehouseMap.get(warehouseId)?.name ?? '') : '',
-      warehouseId: warehouseId ? (warehouseMap.get(warehouseId)?.id ?? '') : '',
-      locationName: locationMap.get(locationId)?.name ?? null,
-      locationId: locationMap.get(locationId)?.id ?? null,
-      permissionsName:
-        permissionIds.length > 0
-          ? (permissionIds.map((id) => permissionsMap.get(id)?.name).filter(Boolean) as string[])
-          : [],
-      permissionIds:
-        permissionIds.length > 0
-          ? (permissionIds.map((id) => permissionsMap.get(id)?.id).filter(Boolean) as string[])
-          : [],
+    for (const item of permissionRoles) {
+      const key = this.createScopeKey(item.roleId, item.locationId, item.warehouseId);
+
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, {
+          roleId: item.role.id,
+          roleName: item.role.name,
+          comment: item.comment || null,
+          locationId: item.location?.id ?? null,
+          locationName: item.location?.name ?? null,
+          warehouseId: item.warehouse?.id ?? null,
+          warehouseName: item.warehouse?.name ?? null,
+          permissionIds: new Set<string>(),
+          permissionsName: new Set<string>(),
+        });
+      }
+
+      const groupedItem = groupedMap.get(key);
+
+      if (!groupedItem) {
+        continue;
+      }
+
+      if (item.permission) {
+        groupedItem.permissionIds.add(item.permission.id);
+        groupedItem.permissionsName.add(item.permission.name);
+      }
+    }
+
+    return Array.from(groupedMap.values()).map((item) => ({
+      roleId: item.roleId,
+      roleName: item.roleName,
+      comment: item.comment,
+      locationId: item.locationId,
+      locationName: item.locationName,
+      warehouseId: item.warehouseId,
+      warehouseName: item.warehouseName,
+      permissionIds: Array.from(item.permissionIds),
+      permissionsName: Array.from(item.permissionsName),
     }));
   }
-  // Create and Update
-  async createUpdateRolePermissions(rolePermissionsDto: CreateRolePermissionsDto) {
+
+  async createUpdateRolePermissions(
+    rolePermissionsDto: CreateRolePermissionsDto,
+  ): Promise<{ message: string }> {
     const {
-      locationId,
-      oldLocationId,
-      warehouseId,
-      oldWarehouseId,
-      permissionIds,
       roleId,
-      roleName,
+      permissionIds,
+      locationId,
+      warehouseId,
+      oldLocationId,
+      oldWarehouseId,
       comment,
     } = rolePermissionsDto;
 
-    const currentLocationId = locationId || oldLocationId;
-    const currentWarehouseId = roleName !== 'manager' ? warehouseId || oldWarehouseId : null;
+    const normalizedRoleId = roleId.trim();
+    const normalizedLocationId = locationId?.trim() || oldLocationId?.trim() || null;
+    const normalizedWarehouseId = warehouseId?.trim() || oldWarehouseId?.trim() || null;
+    const normalizedComment = comment?.trim() ?? '';
+    const normalizedPermissionIds = [
+      ...new Set(permissionIds.map((permissionId) => permissionId.trim()).filter(Boolean)),
+    ];
 
-    // Get all current permission_role from this role, location, warehouse
-    const existingPermissionRoles = await this.prisma.permission_role.findMany({
-      where: {
-        roleId,
-        locationId: currentLocationId,
-        warehouseId: currentWarehouseId,
-      },
-    });
-
-    const existingPermissionIds = new Set(existingPermissionRoles.map((item) => item.permissionId));
-    const newPermissionIds = new Set(permissionIds);
-
-    // Get new permissions and delete old
-    const permissionIdsToAdd = [...newPermissionIds].filter((id) => !existingPermissionIds.has(id));
-    const permissionRolesToDelete = existingPermissionRoles.filter(
-      (item) => item.permissionId && !newPermissionIds.has(item.permissionId),
-    );
-
-    if (comment) {
-      await this.prisma.permission_role.updateMany({
-        where: {
-          roleId,
-          locationId: currentLocationId,
-          warehouseId: currentWarehouseId,
-        },
-        data: { comment },
-      });
+    if (!normalizedLocationId) {
+      throw new BadRequestException('Необходимо указать locationId');
     }
 
-    // Delete unusable permission_role
-    const idsToDelete = permissionRolesToDelete.map((item) => item.id);
-    const usedPermissionRoles = await this.prisma.user_role.findMany({
-      where: { permissionRoleId: { in: idsToDelete } },
-      select: { permissionRoleId: true },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const [role, location, warehouse] = await Promise.all([
+        tx.role.findUnique({
+          where: {
+            id: normalizedRoleId,
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        }),
 
-    const usedIds = new Set(usedPermissionRoles.map((item) => item.permissionRoleId));
-    const deletableIds = idsToDelete.filter((id) => !usedIds.has(id));
+        tx.location.findUnique({
+          where: {
+            id: normalizedLocationId,
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        }),
 
-    if (deletableIds.length > 0) {
-      await this.prisma.permission_role.deleteMany({
-        where: { id: { in: deletableIds } },
-      });
-    }
-    // Add new permission_role
-    const newPermissionRoleData = permissionIdsToAdd.map((permissionId) => ({
-      permissionId,
-      roleId,
-      locationId: currentLocationId,
-      warehouseId: currentWarehouseId,
-      comment: comment ?? '',
-    }));
+        normalizedWarehouseId
+          ? tx.warehouse.findUnique({
+              where: {
+                id: normalizedWarehouseId,
+              },
+              select: {
+                id: true,
+                name: true,
+                locationId: true,
+              },
+            })
+          : Promise.resolve(null),
+      ]);
 
-    if (newPermissionRoleData.length > 0) {
-      await this.prisma.permission_role.createMany({
-        data: newPermissionRoleData,
-        skipDuplicates: true,
-      });
-    }
-
-    // Sync user_role after update permission_role
-    const userRolesToSync = await this.prisma.user_role.findMany({
-      where: { roleId },
-      include: { permissionRole: true },
-    });
-
-    const filteredUserRoles = userRolesToSync.filter(
-      (role) =>
-        role.permissionRole.locationId === currentLocationId &&
-        role.permissionRole.warehouseId === currentWarehouseId,
-    );
-
-    if (filteredUserRoles.length > 0) {
-      await this.prisma.user_role.deleteMany({
-        where: {
-          id: { in: filteredUserRoles.map((role) => role.id) },
-        },
-      });
-
-      const updatedPermissionRoles = await this.prisma.permission_role.findMany({
-        where: {
-          roleId,
-          locationId: currentLocationId,
-          warehouseId: currentWarehouseId,
-          permissionId: { in: permissionIds },
-        },
-      });
-
-      const permissionRoleMap = new Map(
-        updatedPermissionRoles.map((permission) => [permission.permissionId!, permission.id]),
-      );
-
-      const newUserRoles = [];
-      for (const role of filteredUserRoles) {
-        for (const permId of permissionIds) {
-          const permissionRoleId = permissionRoleMap.get(permId);
-          if (permissionRoleId) {
-            newUserRoles.push({
-              userId: role.userId,
-              roleId,
-              permissionRoleId,
-            });
-          }
-        }
+      if (!role) {
+        throw new NotFoundException('Роль не найдена');
       }
 
-      if (newUserRoles.length > 0) {
-        await this.prisma.user_role.createMany({
-          data: newUserRoles,
-          skipDuplicates: true,
-        });
+      if (!location) {
+        throw new NotFoundException('Локация не найдена');
       }
-    }
 
-    // Role manager without permissions
-    if (roleName === 'manager' && permissionIds.length === 0) {
-      const existingManager = await this.prisma.permission_role.findFirst({
-        where: {
-          roleId,
-          locationId,
-          warehouseId: null,
-          permissionId: null,
-        },
-      });
+      if (normalizedWarehouseId && !warehouse) {
+        throw new NotFoundException('Склад не найден');
+      }
 
-      if (existingManager) {
-        await this.prisma.permission_role.update({
-          where: { id: existingManager.id },
-          data: { comment: comment ?? '' },
-        });
-      } else {
-        await this.prisma.permission_role.create({
-          data: {
-            roleId,
-            locationId,
-            warehouseId: null,
-            permissionId: null,
-            comment: comment ?? '',
+      if (warehouse && warehouse.locationId !== normalizedLocationId) {
+        throw new BadRequestException('Выбранный склад не относится к выбранной локации');
+      }
+
+      const permissions =
+        normalizedPermissionIds.length > 0
+          ? await tx.permission.findMany({
+              where: {
+                id: {
+                  in: normalizedPermissionIds,
+                },
+              },
+              select: {
+                id: true,
+              },
+            })
+          : [];
+
+      if (permissions.length !== normalizedPermissionIds.length) {
+        const existingPermissionIds = new Set(permissions.map((permission) => permission.id));
+
+        const missingPermissionIds = normalizedPermissionIds.filter(
+          (permissionId) => !existingPermissionIds.has(permissionId),
+        );
+
+        throw new NotFoundException(`Permissions не найдены: ${missingPermissionIds.join(', ')}`);
+      }
+      const previousLocationId = oldLocationId?.trim() || normalizedLocationId;
+      const previousWarehouseId = oldWarehouseId?.trim() || null;
+      const scopeWasChanged =
+        previousLocationId !== normalizedLocationId ||
+        previousWarehouseId !== normalizedWarehouseId;
+
+      if (scopeWasChanged) {
+        await tx.permission_role.deleteMany({
+          where: {
+            roleId: normalizedRoleId,
+            locationId: previousLocationId,
+            warehouseId: previousWarehouseId,
           },
         });
       }
-    }
+
+      const existingPermissionRoles = await tx.permission_role.findMany({
+        where: {
+          roleId: normalizedRoleId,
+          locationId: normalizedLocationId,
+          warehouseId: normalizedWarehouseId,
+        },
+        select: {
+          id: true,
+          permissionId: true,
+        },
+      });
+
+      const existingPermissionIds = new Set(
+        existingPermissionRoles
+          .map((item) => item.permissionId)
+          .filter((permissionId): permissionId is string => permissionId !== null),
+      );
+
+      const requestedPermissionIds = new Set(normalizedPermissionIds);
+      const permissionRoleIdsToDelete = existingPermissionRoles
+        .filter(
+          (item) => item.permissionId !== null && !requestedPermissionIds.has(item.permissionId),
+        )
+        .map((item) => item.id);
+
+      if (permissionRoleIdsToDelete.length > 0) {
+        await tx.permission_role.deleteMany({
+          where: {
+            id: {
+              in: permissionRoleIdsToDelete,
+            },
+          },
+        });
+      }
+
+      const permissionIdsToAdd = normalizedPermissionIds.filter(
+        (permissionId) => !existingPermissionIds.has(permissionId),
+      );
+
+      if (permissionIdsToAdd.length > 0) {
+        await tx.permission_role.createMany({
+          data: permissionIdsToAdd.map((permissionId) => ({
+            roleId: normalizedRoleId,
+            permissionId,
+            locationId: normalizedLocationId,
+            warehouseId: normalizedWarehouseId,
+            comment: normalizedComment,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      await tx.permission_role.updateMany({
+        where: {
+          roleId: normalizedRoleId,
+          locationId: normalizedLocationId,
+          warehouseId: normalizedWarehouseId,
+        },
+        data: {
+          comment: normalizedComment,
+        },
+      });
+
+      if (normalizedPermissionIds.length === 0) {
+        const emptyPermissionRecord = await tx.permission_role.findFirst({
+          where: {
+            roleId: normalizedRoleId,
+            locationId: normalizedLocationId,
+            warehouseId: normalizedWarehouseId,
+            permissionId: null,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        await tx.permission_role.deleteMany({
+          where: {
+            roleId: normalizedRoleId,
+            locationId: normalizedLocationId,
+            warehouseId: normalizedWarehouseId,
+            permissionId: {
+              not: null,
+            },
+          },
+        });
+
+        if (emptyPermissionRecord) {
+          await tx.permission_role.update({
+            where: {
+              id: emptyPermissionRecord.id,
+            },
+            data: {
+              comment: normalizedComment,
+            },
+          });
+        } else {
+          await tx.permission_role.create({
+            data: {
+              roleId: normalizedRoleId,
+              permissionId: null,
+              locationId: normalizedLocationId,
+              warehouseId: normalizedWarehouseId,
+              comment: normalizedComment,
+            },
+          });
+        }
+      } else {
+        await tx.permission_role.deleteMany({
+          where: {
+            roleId: normalizedRoleId,
+            locationId: normalizedLocationId,
+            warehouseId: normalizedWarehouseId,
+            permissionId: null,
+          },
+        });
+      }
+
+      return {
+        message: 'Права роли успешно обновлены',
+      };
+    });
+  }
+
+  private createScopeKey(
+    roleId: string,
+    locationId: string | null,
+    warehouseId: string | null,
+  ): string {
+    return [roleId, locationId ?? 'null', warehouseId ?? 'null'].join('::');
   }
 }
