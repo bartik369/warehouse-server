@@ -36,7 +36,10 @@ export class RolesController {
   async getRolesList(): Promise<RolesListDto[]> {
     return this.rolesService.getRolesList();
   }
-
+  @Delete('users/:id')
+  async revokeRole(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.rolesService.revokeUserRole(id);
+  }
   @Get('assignable')
   async getAssignableRoles(): Promise<RoleBaseDto[]> {
     return this.rolesService.getAssignableRoles();
@@ -104,6 +107,6 @@ export class RolesController {
     }),
   )
   async grantUserRole(@Body() body: GrantRoleDto) {
-    return this.rolesService.grantUserRole(body);
+    return this.rolesService.grantUserRoles(body);
   }
 }
