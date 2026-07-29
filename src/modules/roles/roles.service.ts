@@ -1,21 +1,13 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import {
-  PermissionNotFoundException,
-  RoleExistException,
-  RoleNotFoundException,
-} from 'src/exceptions/permissions.exceptions';
+import { RoleExistException, RoleNotFoundException } from 'src/exceptions/permissions.exceptions';
 import { NotFoundUserException } from 'src/exceptions/user.exceptions';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { GrantRoleDto } from './dto/grant-role.dto';
 import { RoleBaseDto } from './dto/role-base.dto';
 import { RolesListResponseDto } from './dto/roles-list-res.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { PermissionInfo, RoleListItem } from './types/role.types';
 
 @Injectable()
 export class RolesService {
@@ -138,6 +130,28 @@ export class RolesService {
     };
   }
 
+  async revokeUserRole(assignmentId: string) {
+    const assignment = await this.prisma.user_role.findUnique({
+      where: {
+        id: assignmentId,
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Назначение роли не найдено');
+    }
+
+    await this.prisma.user_role.delete({
+      where: {
+        id: assignmentId,
+      },
+    });
+
+    return {
+      message: 'Роль пользователя удалена',
+    };
+  }
+
   async getRolesList() {
     const permissionRoles = await this.prisma.permission_role.findMany({
       where: {
@@ -177,20 +191,6 @@ export class RolesService {
       },
     });
 
-    type RoleListItem = {
-      roleId: string;
-      roleName: string;
-
-      locationId: string | null;
-      locationName: string | null;
-
-      warehouseId: string | null;
-      warehouseName: string | null;
-
-      permissionIds: Set<string>;
-      permissionsName: Set<string>;
-    };
-
     const rolesMap = new Map<string, RoleListItem>();
 
     for (const item of permissionRoles) {
@@ -200,13 +200,10 @@ export class RolesService {
         rolesMap.set(key, {
           roleId: item.role.id,
           roleName: item.role.name,
-
           locationId: item.location?.id ?? null,
           locationName: item.location?.name ?? null,
-
           warehouseId: item.warehouse?.id ?? null,
           warehouseName: item.warehouse?.name ?? null,
-
           permissionIds: new Set<string>(),
           permissionsName: new Set<string>(),
         });
@@ -225,197 +222,239 @@ export class RolesService {
     return Array.from(rolesMap.values()).map((item) => ({
       roleId: item.roleId,
       roleName: item.roleName,
-
       locationId: item.locationId,
       locationName: item.locationName,
-
       warehouseId: item.warehouseId,
       warehouseName: item.warehouseName,
-
       permissionIds: Array.from(item.permissionIds),
       permissionsName: Array.from(item.permissionsName),
     }));
   }
-
-  async grantUserRole(userInfo: GrantRoleDto) {
-    const userId = userInfo.userId.trim();
-    const roleId = userInfo.roleId.trim();
-    const locationId = userInfo.locationId?.trim() || null;
-    const warehouseId = userInfo.warehouseId?.trim() || null;
+  async grantUserRoles(userInfo: GrantRoleDto) {
+    const { userId, roles } = userInfo;
 
     return this.prisma.$transaction(async (tx) => {
-      const [user, role, location, warehouse] = await Promise.all([
-        tx.user.findUnique({
-          where: {
-            id: userId,
-          },
-          select: {
-            id: true,
-            userName: true,
-            email: true,
-            isActive: true,
-          },
-        }),
-
-        tx.role.findUnique({
-          where: {
-            id: roleId,
-          },
-          select: {
-            id: true,
-            name: true,
-          },
-        }),
-
-        locationId
-          ? tx.location.findUnique({
-              where: {
-                id: locationId,
-              },
-              select: {
-                id: true,
-                name: true,
-              },
-            })
-          : Promise.resolve(null),
-
-        warehouseId
-          ? tx.warehouse.findUnique({
-              where: {
-                id: warehouseId,
-              },
-              select: {
-                id: true,
-                name: true,
-                locationId: true,
-              },
-            })
-          : Promise.resolve(null),
-      ]);
+      const user = await tx.user.findUnique({
+        where: {
+          id: userId,
+        },
+        select: {
+          id: true,
+          userName: true,
+          email: true,
+          firstNameRu: true,
+          lastNameRu: true,
+          isActive: true,
+        },
+      });
 
       if (!user) {
-        throw new NotFoundUserException();
+        throw new NotFoundException('Пользователь не найден');
       }
 
       if (!user.isActive) {
         throw new BadRequestException('Нельзя назначить роль неактивному пользователю');
       }
 
-      if (!role) {
-        throw new RoleNotFoundException();
-      }
+      const assignments: Array<{
+        id: string;
+        roleId: string;
+        roleName: string;
+        locationId: string;
+        locationName: string;
+        warehouseId: string | null;
+        warehouseName: string | null;
+        permissions: Array<{
+          id: string;
+          name: string;
+        }>;
+      }> = [];
 
-      if (locationId && !location) {
-        throw new NotFoundException('Локация не найдена');
-      }
+      const skippedAssignments: Array<{
+        id: string;
+        roleId: string;
+        roleName: string;
+        locationId: string;
+        locationName: string;
+        warehouseId: string | null;
+        warehouseName: string | null;
+      }> = [];
 
-      if (warehouseId && !warehouse) {
-        throw new NotFoundException('Склад не найден');
-      }
+      const processedAssignments = new Set<string>();
 
-      if (warehouse && locationId && warehouse.locationId !== locationId) {
-        throw new BadRequestException('Выбранный склад не относится к выбранной локации');
-      }
-      const resolvedLocationId = warehouse?.locationId ?? locationId;
+      for (const roleItem of roles) {
+        const roleId = roleItem.roleId;
+        const locationId = roleItem.locationId;
+        const warehouseId = roleItem.warehouseId ?? null;
+        const assignmentKey = [roleId, locationId, warehouseId ?? 'without-warehouse'].join('::');
 
-      if (!resolvedLocationId) {
-        throw new BadRequestException('Необходимо указать locationId или warehouseId');
-      }
+        if (processedAssignments.has(assignmentKey)) {
+          continue;
+        }
 
-      const permissionRoles = await tx.permission_role.findMany({
-        where: {
-          roleId,
-          locationId: resolvedLocationId,
-          warehouseId,
-          permissionId: {
-            not: null,
-          },
-        },
-        include: {
-          permission: {
+        processedAssignments.add(assignmentKey);
+
+        const [role, location, warehouse] = await Promise.all([
+          tx.role.findUnique({
+            where: {
+              id: roleId,
+            },
             select: {
               id: true,
               name: true,
             },
+          }),
+
+          tx.location.findUnique({
+            where: {
+              id: locationId,
+            },
+            select: {
+              id: true,
+              name: true,
+            },
+          }),
+
+          warehouseId
+            ? tx.warehouse.findUnique({
+                where: {
+                  id: warehouseId,
+                },
+                select: {
+                  id: true,
+                  name: true,
+                  locationId: true,
+                },
+              })
+            : Promise.resolve(null),
+        ]);
+
+        if (!role) {
+          throw new NotFoundException(`Роль с идентификатором "${roleId}" не найдена`);
+        }
+
+        if (!location) {
+          throw new NotFoundException(`Локация с идентификатором "${locationId}" не найдена`);
+        }
+
+        if (warehouseId && !warehouse) {
+          throw new NotFoundException(`Склад с идентификатором "${warehouseId}" не найден`);
+        }
+
+        if (warehouse && warehouse.locationId !== locationId) {
+          throw new BadRequestException(
+            `Склад "${warehouse.name}" не относится к локации "${location.name}"`,
+          );
+        }
+
+        const existingUserRole = await tx.user_role.findFirst({
+          where: {
+            userId,
+            roleId,
+            locationId,
+            warehouseId,
           },
-        },
-      });
+          select: {
+            id: true,
+          },
+        });
 
-      if (permissionRoles.length === 0) {
-        throw new PermissionNotFoundException();
-      }
+        if (existingUserRole) {
+          skippedAssignments.push({
+            id: existingUserRole.id,
+            roleId: role.id,
+            roleName: role.name,
+            locationId: location.id,
+            locationName: location.name,
+            warehouseId: warehouse?.id ?? null,
+            warehouseName: warehouse?.name ?? null,
+          });
 
-      const existingUserRole = await tx.user_role.findFirst({
-        where: {
-          userId,
-          roleId,
-          locationId: resolvedLocationId,
-          warehouseId,
-        },
-        select: {
-          id: true,
-        },
-      });
+          continue;
+        }
 
-      if (existingUserRole) {
-        throw new ConflictException('Эта роль уже назначена пользователю');
-      }
+        const createdUserRole = await tx.user_role.create({
+          data: {
+            userId,
+            roleId,
+            locationId,
+            warehouseId,
+          },
+          select: {
+            id: true,
+          },
+        });
 
-      const userRole = await tx.user_role.create({
-        data: {
-          userId,
-          roleId,
-          locationId: resolvedLocationId,
-          warehouseId,
-        },
-      });
+        const permissionRoles = await tx.permission_role.findMany({
+          where: {
+            roleId,
+            locationId,
+            warehouseId,
+            permissionId: {
+              not: null,
+            },
+          },
+          select: {
+            permission: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        });
 
-      return {
-        message: 'Доступ предоставлен',
-        assignment: {
-          id: userRole.id,
+        const permissions = permissionRoles
+          .map((item) => item.permission)
+          .filter(
+            (
+              permission,
+            ): permission is {
+              id: string;
+              name: string;
+            } => permission !== null,
+          );
 
-          userId: user.id,
-          userName: user.userName,
-          email: user.email,
-
+        assignments.push({
+          id: createdUserRole.id,
           roleId: role.id,
           roleName: role.name,
-
-          locationId: resolvedLocationId,
-          locationName:
-            location?.name ??
-            (warehouse
-              ? ((
-                  await tx.location.findUnique({
-                    where: {
-                      id: resolvedLocationId,
-                    },
-                    select: {
-                      name: true,
-                    },
-                  })
-                )?.name ?? null)
-              : null),
-
+          locationId: location.id,
+          locationName: location.name,
           warehouseId: warehouse?.id ?? null,
           warehouseName: warehouse?.name ?? null,
+          permissions,
+        });
+      }
 
-          permissions: permissionRoles
-            .map((item) => item.permission)
-            .filter(
-              (
-                permission,
-              ): permission is {
-                id: string;
-                name: string;
-              } => permission !== null,
-            ),
+      let message: string;
+
+      if (assignments.length > 0 && skippedAssignments.length > 0) {
+        message =
+          `Добавлено ролей: ${assignments.length}. ` +
+          `Уже было назначено: ${skippedAssignments.length}`;
+      } else if (assignments.length > 0) {
+        message = `Добавлено ролей: ${assignments.length}`;
+      } else {
+        message = 'Все выбранные роли уже назначены пользователю';
+      }
+
+      return {
+        message,
+
+        user: {
+          id: user.id,
+          userName: user.userName,
+          email: user.email,
+          firstNameRu: user.firstNameRu,
+          lastNameRu: user.lastNameRu,
         },
+
+        assignments,
+        skippedAssignments,
       };
     });
   }
-
   async getUserRoles(id: string): Promise<RolesListResponseDto> {
     const existingUser = await this.prisma.user.findUnique({
       where: {
@@ -506,11 +545,6 @@ export class RolesService {
       },
     });
 
-    type PermissionInfo = {
-      id: string;
-      name: string;
-    };
-
     const permissionsMap = new Map<string, PermissionInfo[]>();
 
     for (const item of permissionRoles) {
@@ -541,18 +575,13 @@ export class RolesService {
 
       return {
         assignmentId: userRole.id,
-
         roleId: userRole.role.id,
         roleName: userRole.role.name,
-
         locationId: userRole.location?.id ?? null,
         locationName: userRole.location?.name ?? null,
-
         warehouseId: userRole.warehouse?.id ?? null,
         warehouseName: userRole.warehouse?.name ?? null,
-
         permissionIds: permissions.map((permission) => permission.id),
-
         permissionsName: permissions.map((permission) => permission.name),
       };
     });
