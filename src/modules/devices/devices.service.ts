@@ -144,6 +144,7 @@ export class DevicesService {
             type: {
               select: {
                 name: true,
+                slug: true,
               },
             },
           },
@@ -157,6 +158,7 @@ export class DevicesService {
         ...rest,
         modelName: model?.name ?? null,
         typeName: model?.type.name ?? null,
+        typeSlug: model?.type.slug ?? null,
         manufacturerName: model?.manufacturer.name ?? null,
         price_with_vat: price_with_vat?.toNumber() ?? null,
         price_without_vat: price_without_vat?.toNumber() ?? null,
