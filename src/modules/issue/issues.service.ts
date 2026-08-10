@@ -12,6 +12,7 @@ import {
 import { CreateIssueDto } from './dtos/issue-create.dto';
 import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
+import { IssueProcessListItemDto } from './dtos/issue-process-list.dto';
 
 @Injectable()
 export class IssueService {
@@ -61,6 +62,82 @@ export class IssueService {
       createdAt: newProcess.createdAt,
       updatedAt: newProcess.updatedAt,
     };
+  }
+
+  async getIssueProcess(id: string) {
+    const process = await this.prisma.device_issue_process.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        user: true,
+        issuedBy: true,
+        warehouse: true,
+      },
+    });
+
+    if (!process) {
+      throw new IssueProcessNotFoundException();
+    }
+
+    return process;
+  }
+
+  async getIssueProcesses(): Promise<IssueProcessListItemDto[]> {
+    return this.prisma.device_issue_process.findMany({
+      select: {
+        id: true,
+        documentNo: true,
+        status: true,
+        issueDate: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            firstNameRu: true,
+            lastNameRu: true,
+
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+
+            location: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        issuedBy: {
+          select: {
+            id: true,
+            firstNameRu: true,
+            lastNameRu: true,
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
   async createIssue(dto: CreateIssueDto) {
