@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
   UploadedFile,
   UsePipes,
@@ -13,6 +14,7 @@ import { allowedPrintFileOptions } from 'src/common/utils/constants';
 import { CreateIssueDto } from './dtos/issue-create.dto';
 import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
+import { IssueProcessListItemDto } from './dtos/issue-process-list.dto';
 import { IssueService } from './issues.service';
 
 @Controller('issues')
@@ -44,7 +46,13 @@ export class IssueController {
     console.log('create issue process', dto);
     return await this.issueService.createIssueProcess(dto);
   }
+  @Get('processes')
+  async getIssueProcesses(): Promise<IssueProcessListItemDto[]> {
+    return await this.issueService.getIssueProcesses();
+  }
 
   @Get('process/:id')
-  async getIssueProcess() {}
+  async getIssueProcess(@Param('id') id: string): Promise<any> {
+    return await this.issueService.getIssueProcess(id);
+  }
 }
