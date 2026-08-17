@@ -123,15 +123,35 @@ export class DevicesService {
     ]);
     return { devices, totalCount };
   }
-  async searchDevices(query: string): Promise<DeviceCombineDto[]> {
+  async searchDevices(query: string, warehouseId: string): Promise<DeviceCombineDto[]> {
     const devices = await this.prisma.device.findMany({
       where: {
+        warehouseId,
+        inStock: true,
+        isAssigned: false,
+
         OR: [
-          { inventoryNumber: { startsWith: query, mode: 'insensitive' } },
-          { serialNumber: { startsWith: query, mode: 'insensitive' } },
-          { modelCode: { startsWith: query, mode: 'insensitive' } },
+          {
+            inventoryNumber: {
+              startsWith: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            serialNumber: {
+              startsWith: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            modelCode: {
+              startsWith: query,
+              mode: 'insensitive',
+            },
+          },
         ],
       },
+
       include: {
         model: {
           select: {
@@ -151,15 +171,18 @@ export class DevicesService {
         },
       },
     });
+
     return devices.map((device) => {
       const { price_with_vat, price_without_vat, residual_price, model, ...rest } = device;
 
       return {
         ...rest,
+
         modelName: model?.name ?? null,
         typeName: model?.type.name ?? null,
         typeSlug: model?.type.slug ?? null,
         manufacturerName: model?.manufacturer.name ?? null,
+
         price_with_vat: price_with_vat?.toNumber() ?? null,
         price_without_vat: price_without_vat?.toNumber() ?? null,
         residual_price: residual_price?.toNumber() ?? null,
@@ -218,13 +241,6 @@ export class DevicesService {
     });
     if (!device) throw new BadRequestException();
     return device;
-    // return {
-    //   ...device,
-    //   // deviceIssues: device.deviceIssues.map((issue: IDeviceIssue) => ({
-    //   //   firstNameEn: issue.user.firstNameEn,
-    //   //   lastNameEn: issue.user.lastNameEn,
-    //   // })),
-    // };
   }
   // async deviceHistory() {
   //   const history = await this.prisma.device.findMany({
@@ -339,6 +355,19 @@ export class DevicesService {
       isFunctional: isFunctional,
       isAssigned: isAssigned,
     };
+  }
+  async getAssignedDevicesByUser(userId: string): Promise<DeviceBaseDto[]> {
+    const devices = await this.prisma.device.findMany({
+      where: {
+        assignedUserId: userId,
+      },
+    });
+    return devices.map((device) => ({
+      ...device,
+      price_with_vat: device.price_with_vat?.toNumber() ?? null,
+      price_without_vat: device.price_without_vat?.toNumber() ?? null,
+      residual_price: device.residual_price?.toNumber() ?? null,
+    }));
   }
 
   // Create

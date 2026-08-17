@@ -9,35 +9,36 @@ datasource db {
 }
 
 model user {
-  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userName               String                 @unique
-  email                  String                 @unique
-  workId                 String?                @unique
-  firstNameEn            String
-  lastNameEn             String
-  isActive               Boolean
-  locationId             String                 @db.Uuid
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
-  firstNameRu            String
-  lastNameRu             String
-  departmentId           String?                @db.Uuid
-  devicesAdded           device[]               @relation("who_add_device")
-  devicesUpdated         device[]               @relation("who_update_device")
-  deviceRepairsReceived  device_repair[]        @relation("contractor_who_gets_device_for_repair")
-  deviceRepairsSent      device_repair[]        @relation("who_sent_device_for_repair")
-  DeviceReturn           device_return[]
-  deviceReturns          device_return[]        @relation("user_who_returns_device")
-  InventoryCreateBy      inventory[]            @relation("who_created_inventory")
-  InventoryResponseBy    inventory[]            @relation("who_responsible_inventory")
-  password               password?
-  token                  token?
-  Transfer               transfer[]
-  department             department?            @relation(fields: [departmentId], references: [id])
-  location               location               @relation("user_assigned_to_location", fields: [locationId], references: [id])
-  roles                  user_role[]
-  issueProcessesIssued   device_issue_process[] @relation("issued_by_user")
-  issueProcessesReceived device_issue_process[] @relation("issued_to_user")
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userName                String                    @unique
+  email                   String                    @unique
+  workId                  String?                   @unique
+  firstNameEn             String
+  lastNameEn              String
+  isActive                Boolean
+  locationId              String                    @db.Uuid
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  firstNameRu             String
+  lastNameRu              String
+  departmentId            String?                   @db.Uuid
+  devicesAdded            device[]                  @relation("who_add_device")
+  devicesUpdated          device[]                  @relation("who_update_device")
+  deviceRepairsReceived   device_repair[]           @relation("contractor_who_gets_device_for_repair")
+  deviceRepairsSent       device_repair[]           @relation("who_sent_device_for_repair")
+  InventoryCreateBy       inventory[]               @relation("who_created_inventory")
+  InventoryResponseBy     inventory[]               @relation("who_responsible_inventory")
+  password                password?
+  token                   token?
+  returnProcesses         device_return_process[]   @relation("return_from_user")
+  acceptedReturnProcesses device_return_process[]   @relation("return_accepted_by")
+  transferProcesses       device_transfer_process[]
+  department              department?               @relation(fields: [departmentId], references: [id])
+  location                location                  @relation("user_assigned_to_location", fields: [locationId], references: [id])
+  roles                   user_role[]
+  issueProcessesIssued    device_issue_process[]    @relation("issued_by_user")
+  issueProcessesReceived  device_issue_process[]    @relation("issued_to_user")
+  assignedDevices         device[]                  @relation("assigned_user")
 }
 
 model location {
@@ -130,17 +131,18 @@ model user_role {
 }
 
 model warehouse {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String            @unique
-  slug            String            @unique
-  locationId      String?           @db.Uuid
-  comment         String?
-  devices         device[]
-  inventories     inventory[]
-  permission_role permission_role[]
-  TransferFrom    transfer[]        @relation("from_warehouse")
-  TransferTo      transfer[]        @relation("to_warehouse")
-  location        location?         @relation(fields: [locationId], references: [id])
+  id                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String                    @unique
+  slug                  String                    @unique
+  locationId            String?                   @db.Uuid
+  comment               String?
+  devices               device[]
+  inventories           inventory[]
+  permission_role       permission_role[]
+  transferProcessesFrom device_transfer_process[] @relation("transfer_process_from")
+  transferProcessesTo   device_transfer_process[] @relation("transfer_process_to")
+  returnProcesses       device_return_process[]
+  location              location?                 @relation(fields: [locationId], references: [id])
 
   device_issue_process device_issue_process[]
   userRoles            user_role[]
@@ -186,6 +188,7 @@ model device {
   inStock           Boolean
   isFunctional      Boolean
   isAssigned        Boolean
+  assignedUserId    String?            @db.Uuid
   warehouseId       String?            @db.Uuid
   description       String?
   addedById         String             @db.Uuid
@@ -201,11 +204,12 @@ model device {
   model             device_model?      @relation(fields: [modelId], references: [id])
   updatedBy         user               @relation("who_update_device", fields: [updatedById], references: [id])
   warehouse         warehouse?         @relation(fields: [warehouseId], references: [id])
+  assignedUser      user?              @relation("assigned_user", fields: [assignedUserId], references: [id])
   deviceIssues      device_issue[]
   deviceRepairs     device_repair[]
   deviceReturns     device_return[]
   InventoryDevice   inventory_device[]
-  transfers         transfer[]
+  deviceTransfers   device_transfer[]
   warranty          warranty?
 }
 
@@ -238,38 +242,69 @@ model device_issue {
   process   device_issue_process? @relation("process_device_issues", fields: [processId], references: [id])
 }
 
-model device_return {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId    Int      @default(autoincrement())
-  deviceId     String?  @db.Uuid
-  userId       String?  @db.Uuid
-  returnedById String?  @db.Uuid
-  returnDate   DateTime @default(now())
-  condition    String?
+model device_return_process {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentNo   String    @unique
+  userId       String    @db.Uuid
+  warehouseId  String    @db.Uuid
+  acceptedById String    @db.Uuid
+  status       String    @default("draft")
+  fileId       String?   @db.Uuid
+  returnDate   DateTime?
   comment      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  device       device?  @relation(fields: [deviceId], references: [id])
-  returnedBy   user?    @relation(fields: [returnedById], references: [id])
-  user         user?    @relation("user_who_returns_device", fields: [userId], references: [id])
-  files        file[]   @relation("device_return_files")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         user      @relation("return_from_user", fields: [userId], references: [id])
+  acceptedBy   user      @relation("return_accepted_by", fields: [acceptedById], references: [id])
+  warehouse    warehouse @relation(fields: [warehouseId], references: [id])
+  file         file?     @relation(fields: [fileId], references: [id])
+
+  devices device_return[]
 }
 
-model transfer {
-  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  processId       Int        @default(autoincrement())
-  fromId          String?    @db.Uuid
-  toId            String?    @db.Uuid
-  deviceId        String?    @db.Uuid
-  status          String     @default("in_progress")
-  transferredById String     @db.Uuid
+model device_return {
+  id        String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId String                @db.Uuid
+  deviceId  String                @db.Uuid
+  condition String?
+  comment   String?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+  process   device_return_process @relation(fields: [processId], references: [id], onDelete: Cascade)
+  device    device                @relation(fields: [deviceId], references: [id])
+
+  @@unique([processId, deviceId])
+}
+
+model device_transfer_process {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentNo      String            @unique
+  fromWarehouseId String            @db.Uuid
+  toWarehouseId   String            @db.Uuid
+  transferredById String            @db.Uuid
+  status          String            @default("draft")
+  fileId          String?           @db.Uuid
+  transferDate    DateTime?
   comment         String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  device          device?    @relation(fields: [deviceId], references: [id])
-  fromWarehouse   warehouse? @relation("from_warehouse", fields: [fromId], references: [id])
-  toWarehouse     warehouse? @relation("to_warehouse", fields: [toId], references: [id])
-  transferredBy   user       @relation(fields: [transferredById], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  fromWarehouse   warehouse         @relation("transfer_process_from", fields: [fromWarehouseId], references: [id])
+  toWarehouse     warehouse         @relation("transfer_process_to", fields: [toWarehouseId], references: [id])
+  transferredBy   user              @relation(fields: [transferredById], references: [id])
+  file            file?             @relation(fields: [fileId], references: [id])
+  devices         device_transfer[]
+}
+
+model device_transfer {
+  id        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  processId String                  @db.Uuid
+  deviceId  String                  @db.Uuid
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  process   device_transfer_process @relation(fields: [processId], references: [id], onDelete: Cascade)
+  device    device                  @relation(fields: [deviceId], references: [id])
+
+  @@unique([processId, deviceId])
 }
 
 model inventory {
@@ -350,15 +385,16 @@ model warranty {
 }
 
 model file {
-  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fileName             String
-  filePath             String
-  fileType             String
-  size                 Int
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  deviceRepairs        device_repair[]        @relation("device_repair_files")
-  deviceReturns        device_return[]        @relation("device_return_files")
-  inventories          inventory[]            @relation("inventory_files")
-  device_issue_process device_issue_process[]
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fileName                String
+  filePath                String
+  fileType                String
+  size                    Int
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  deviceRepairs           device_repair[]           @relation("device_repair_files")
+  inventories             inventory[]               @relation("inventory_files")
+  device_issue_process    device_issue_process[]
+  device_return_process   device_return_process[]
+  device_transfer_process device_transfer_process[]
 }
