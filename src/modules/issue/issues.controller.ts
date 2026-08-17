@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.interceptor';
 import { allowedPrintFileOptions } from 'src/common/utils/constants';
-import { CreateIssueDto } from './dtos/issue-create.dto';
+import { FinalizeIssueDto } from './dtos/finalize-issue.dto';
 import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
 import { IssueProcessListItemDto } from './dtos/issue-process-list.dto';
@@ -24,21 +24,18 @@ export class IssueController {
   @Post('finalize')
   @HttpCode(200)
   @FileUploadInterceptor(allowedPrintFileOptions)
-  async finalizeIssue(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() dto: Pick<CreateIssueDto, 'processId'>,
-  ) {
+  async finalizeIssue(@UploadedFile() file: Express.Multer.File, @Body() dto: FinalizeIssueDto) {
     const result = await this.issueService.finalizeIssue(dto, file);
     await new Promise((res) => setTimeout(res, 1500));
     return result;
   }
 
-  @Post()
-  @UsePipes(new ValidationPipe({ whitelist: true }))
-  async createIssue(@Body() dto: CreateIssueDto) {
-    console.log('create issue', dto);
-    return await this.issueService.createIssue(dto);
-  }
+  // @Post()
+  // @UsePipes(new ValidationPipe({ whitelist: true }))
+  // async createIssue(@Body() dto: CreateIssueDto) {
+  //   console.log('create issue', dto);
+  //   return await this.issueService.createIssue(dto);
+  // }
 
   @Post('process')
   @UsePipes(new ValidationPipe({ whitelist: true }))

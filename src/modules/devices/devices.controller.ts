@@ -18,7 +18,6 @@ import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
 import { DevicesService } from './devices.service';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
-import { DeviceCombineDto } from './dtos/device-combine.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Controller('devices')
@@ -36,9 +35,15 @@ export class DevicesController {
       device,
     };
   }
+
   @Get('search')
-  async searchDevices(@Query('q') q: string): Promise<DeviceCombineDto[]> {
-    return await this.devicesService.searchDevices(q);
+  searchDevices(@Query('q') q: string, @Query('warehouseId') warehouseId: string) {
+    return this.devicesService.searchDevices(q, warehouseId);
+  }
+
+  @Get('assigned/user/:userId')
+  async getAssignedDevicesByUser(@Param('userId') userId: string) {
+    return this.devicesService.getAssignedDevicesByUser(userId);
   }
 
   @Get('/locations/:city')
@@ -48,7 +53,6 @@ export class DevicesController {
   ): Promise<{ devices: IFilteredDevices[]; totalCount: number }> {
     const result = await this.devicesService.findAll(query, city);
     const { devices, totalCount } = result;
-    console.log(totalCount);
     return { devices, totalCount };
   }
 

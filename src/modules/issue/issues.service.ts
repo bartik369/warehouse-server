@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { PATH } from 'src/common/constants/path.constants';
-import { STATUS } from 'src/common/constants/status.constant';
 import { TYPES } from 'src/common/constants/types.constants';
 import { savePdfFile } from 'src/common/utils/file/file.util';
 import {
@@ -9,7 +8,8 @@ import {
   ConflictIssueProcessException,
   IssueProcessNotFoundException,
 } from 'src/exceptions/issue.exceptions';
-import { CreateIssueDto } from './dtos/issue-create.dto';
+import { STATUS } from '../types/types';
+import { FinalizeIssueDto } from './dtos/finalize-issue.dto';
 import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
 import { IssueProcessListItemDto } from './dtos/issue-process-list.dto';
@@ -140,55 +140,171 @@ export class IssueService {
     });
   }
 
-  async createIssue(dto: CreateIssueDto) {
-    const existingProcess = await this.prisma.device_issue_process.findUnique({
-      where: { documentNo: dto.processId },
-    });
-    if (!existingProcess) throw new IssueProcessNotFoundException();
+  // async createIssue(dto: CreateIssueDto) {
+  //   const existingProcess = await this.prisma.device_issue_process.findUnique({
+  //     where: { documentNo: dto.processId },
+  //   });
+  //   if (!existingProcess) throw new IssueProcessNotFoundException();
 
-    const existingIssue = await this.prisma.device_issue.findMany({
-      where: { processId: existingProcess.id },
-    });
-    if (existingIssue.length > 0) throw new ConflictIssueException();
+  //   const existingIssue = await this.prisma.device_issue.findMany({
+  //     where: { processId: existingProcess.id },
+  //   });
+  //   if (existingIssue.length > 0) throw new ConflictIssueException();
 
-    const issueData = dto.devices.map((deviceId) => ({
-      processId: existingProcess.id,
-      deviceId,
-    }));
+  //   const issueData = dto.devices.map((deviceId) => ({
+  //     processId: existingProcess.id,
+  //     deviceId,
+  //   }));
 
-    await this.prisma.device_issue.createMany({
-      data: issueData,
-      skipDuplicates: true,
-    });
+  //   await this.prisma.device_issue.createMany({
+  //     data: issueData,
+  //     skipDuplicates: true,
+  //   });
 
-    await this.prisma.device_issue_process.update({
-      where: { id: existingProcess.id },
-      data: { status: STATUS.sign_document },
-    });
-  }
+  //   await this.prisma.device_issue_process.update({
+  //     where: { id: existingProcess.id },
+  //     data: { status: STATUS.sign_document },
+  //   });
+  // }
 
-  async finalizeIssue(dto: Pick<CreateIssueDto, 'processId'>, file: Express.Multer.File) {
-    if (!file) throw new ConflictIssueException();
-    const existingProcess = await this.prisma.device_issue_process.findUnique({
-      where: { documentNo: dto.processId },
-    });
-    if (!existingProcess) throw new IssueProcessNotFoundException();
-    const newFileRecord = await this.prisma.file.create({
-      data: {
-        fileName: file.originalname,
-        filePath: PATH.upload_issue,
-        fileType: TYPES.pdf,
-        size: file.size,
+  async finalizeIssue(dto: FinalizeIssueDto, file: Express.Multer.File) {
+    if (!file) {
+      throw new ConflictIssueException();
+    }
+
+    const deviceIds = [...new Set(dto.deviceIds)];
+    const process = await this.prisma.device_issue_process.findUnique({
+      where: {
+        id: dto.processId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        warehouseId: true,
+        status: true,
+        fileId: true,
       },
     });
+
+    if (!process) {
+      throw new IssueProcessNotFoundException();
+    }
+
+    if (process.status !== STATUS.draft) {
+      throw new ConflictIssueProcessException();
+    }
+
+    if (process.fileId) {
+      throw new ConflictIssueProcessException();
+    }
+
+    const devices = await this.prisma.device.findMany({
+      where: {
+        id: {
+          in: deviceIds,
+        },
+      },
+      select: {
+        id: true,
+        warehouseId: true,
+        inStock: true,
+        isAssigned: true,
+        assignedUserId: true,
+      },
+    });
+
+    if (devices.length !== deviceIds.length) {
+      throw new ConflictIssueException();
+    }
+
+    const invalidDevice = devices.find(
+      (device) =>
+        device.isAssigned ||
+        device.assignedUserId !== null ||
+        !device.inStock ||
+        device.warehouseId !== process.warehouseId,
+    );
+
+    if (invalidDevice) {
+      throw new ConflictIssueException();
+    }
+
     await savePdfFile(PATH.upload_issue, file);
-    const finishProcess = await this.prisma.device_issue_process.update({
-      where: { id: existingProcess.id },
-      data: {
-        fileId: newFileRecord.id,
-        status: STATUS.signed,
-      },
+
+    const issuedAt = new Date();
+
+    return this.prisma.$transaction(async (tx) => {
+      const fileRecord = await tx.file.create({
+        data: {
+          fileName: file.originalname,
+          filePath: PATH.upload_issue,
+          fileType: TYPES.pdf,
+          size: file.size,
+        },
+      });
+
+      await tx.device_issue.createMany({
+        data: deviceIds.map((deviceId) => ({
+          processId: process.id,
+          deviceId,
+        })),
+      });
+
+      await tx.device.updateMany({
+        where: {
+          id: {
+            in: deviceIds,
+          },
+        },
+        data: {
+          isAssigned: true,
+          inStock: false,
+          assignedUserId: process.userId,
+          lastIssuedAt: issuedAt,
+        },
+      });
+
+      const completedProcess = await tx.device_issue_process.update({
+        where: {
+          id: process.id,
+        },
+        data: {
+          status: STATUS.completed,
+          issueDate: issuedAt,
+          fileId: fileRecord.id,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstNameRu: true,
+              lastNameRu: true,
+              email: true,
+            },
+          },
+          issuedBy: {
+            select: {
+              id: true,
+              firstNameRu: true,
+              lastNameRu: true,
+            },
+          },
+          warehouse: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          file: true,
+          deviceIssues: {
+            include: {
+              device: true,
+            },
+          },
+        },
+      });
+
+      return completedProcess;
     });
-    return finishProcess;
   }
 }

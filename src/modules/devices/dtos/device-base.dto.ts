@@ -2,6 +2,7 @@ export class DeviceBaseDto {
   id: string;
   name: string;
   inventoryNumber?: string;
+  assignedUserId: string | null;
   modelId?: string;
   modelCode?: string;
   serialNumber?: string;
