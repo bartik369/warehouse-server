@@ -35,6 +35,10 @@ export class DevicesController {
       device,
     };
   }
+  @Get(':processId/devices')
+  async getIssueDevices(@Param('processId') processId: string) {
+    return await this.devicesService.getIssueDevices(processId);
+  }
 
   @Get('search')
   searchDevices(@Query('q') q: string, @Query('warehouseId') warehouseId: string) {
