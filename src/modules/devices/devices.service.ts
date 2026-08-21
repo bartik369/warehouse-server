@@ -123,6 +123,78 @@ export class DevicesService {
     ]);
     return { devices, totalCount };
   }
+  async getIssueDevices(issueId: string): Promise<DeviceCombineDto[]> {
+    const issue = await this.prisma.device_issue_process.findUnique({
+      where: {
+        id: issueId,
+      },
+      include: {
+        deviceIssues: {
+          include: {
+            device: {
+              include: {
+                model: {
+                  include: {
+                    manufacturer: true,
+                    type: true,
+                  },
+                },
+                warranty: {
+                  include: {
+                    contractor: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!issue) throw new BadRequestException();
+
+    return issue.deviceIssues
+      .filter((item) => item.device !== null)
+      .map((item) => {
+        const device = item.device!;
+
+        return {
+          id: device.id,
+          name: device.name,
+          inventoryNumber: device.inventoryNumber ?? undefined,
+          modelId: device.modelId ?? undefined,
+          modelCode: device.modelCode ?? undefined,
+          modelName: device.model?.name,
+          typeName: device.model?.type?.name,
+          typeSlug: device.model?.type?.slug,
+          manufacturerName: device.model?.manufacturer?.name ?? '',
+          serialNumber: device.serialNumber ?? undefined,
+          weight: device.weight ?? undefined,
+          screenSize: device.screenSize ?? undefined,
+          memorySize: device.memorySize ?? undefined,
+          inStock: device.inStock,
+          isFunctional: device.isFunctional,
+          isAssigned: device.isAssigned,
+          warehouseId: device.warehouseId ?? '',
+          description: device.description ?? undefined,
+          addedById: device.addedById,
+          updatedById: device.updatedById,
+          lastIssuedAt: device.lastIssuedAt,
+          lastReturnedAt: device.lastReturnedAt,
+          createdAt: device.createdAt,
+          updatedAt: device.updatedAt,
+          price_without_vat: device.price_without_vat?.toNumber() ?? 0,
+          price_with_vat: device.price_with_vat?.toNumber() ?? 0,
+          residual_price: device.residual_price?.toNumber() ?? 0,
+          contractorId: device.warranty?.contractorId ?? undefined,
+          providerName: device.warranty?.provider ?? undefined,
+          warrantyNumber: device.warranty?.warrantyNumber ?? undefined,
+          startWarrantyDate: device.warranty?.startWarrantyDate?.toISOString(),
+          endWarrantyDate: device.warranty?.endWarrantyDate?.toISOString(),
+        };
+      });
+  }
+
   async searchDevices(query: string, warehouseId: string): Promise<DeviceCombineDto[]> {
     const devices = await this.prisma.device.findMany({
       where: {

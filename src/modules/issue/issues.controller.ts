@@ -30,13 +30,6 @@ export class IssueController {
     return result;
   }
 
-  // @Post()
-  // @UsePipes(new ValidationPipe({ whitelist: true }))
-  // async createIssue(@Body() dto: CreateIssueDto) {
-  //   console.log('create issue', dto);
-  //   return await this.issueService.createIssue(dto);
-  // }
-
   @Post('process')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createIssueProcess(@Body() dto: CreateIssueProcessDto): Promise<IssueProcessBaseDto> {

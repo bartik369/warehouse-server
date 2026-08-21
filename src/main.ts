@@ -32,7 +32,12 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+    }),
+  );
   app.setGlobalPrefix('api');
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 5000);

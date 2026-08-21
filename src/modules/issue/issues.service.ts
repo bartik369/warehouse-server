@@ -70,8 +70,16 @@ export class IssueService {
         id,
       },
       include: {
-        user: true,
-        issuedBy: true,
+        user: {
+          include: {
+            department: true,
+          },
+        },
+        issuedBy: {
+          include: {
+            department: true,
+          },
+        },
         warehouse: true,
       },
     });
@@ -171,7 +179,6 @@ export class IssueService {
     if (!file) {
       throw new ConflictIssueException();
     }
-
     const deviceIds = [...new Set(dto.deviceIds)];
     const process = await this.prisma.device_issue_process.findUnique({
       where: {
