@@ -471,6 +471,8 @@ export class RolesService {
           select: {
             id: true,
             name: true,
+            slug: true,
+            comment: true,
           },
         },
       },
@@ -516,7 +518,7 @@ export class RolesService {
         user: {
           ...userData,
           location: location.name,
-          department: department?.name ?? null,
+          department,
         },
         roles: [],
       };
@@ -592,7 +594,7 @@ export class RolesService {
       user: {
         ...userData,
         location: location.name,
-        department: department?.name ?? null,
+        department,
       },
       roles: groupedRolesData,
     };

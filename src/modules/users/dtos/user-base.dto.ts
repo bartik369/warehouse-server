@@ -1,3 +1,5 @@
+import { DepartmentBaseDto } from 'src/modules/departments/dtos/department-base.dto';
+
 export class UserBaseDto {
   id: string;
   userName: string;
@@ -9,7 +11,7 @@ export class UserBaseDto {
   lastNameEn: string;
   isActive: boolean;
   departmentId?: string;
-  department?: string;
+  department?: DepartmentBaseDto;
   locationId?: string;
   location?: string;
   createdAt?: Date;
