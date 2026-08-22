@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'prisma/prisma.service';
-import { ConflictUserException } from 'src/exceptions/auth.exceptions';
+import { ConflictUserException, UserNotFoundException } from 'src/exceptions/auth.exceptions';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UserBaseDto } from './dtos/user-base.dto';
@@ -49,24 +49,31 @@ export class UsersService {
     const users = await this.prisma.user.findMany({
       include: {
         location: {
-          select: { name: true },
+          select: {
+            name: true,
+          },
         },
         department: {
-          select: { name: true },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            comment: true,
+          },
         },
       },
     });
 
     return users.map(({ department, location, ...user }) => ({
       ...user,
-      department: department?.name,
+      department,
       location: location?.name,
     }));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<UserBaseDto> {
     const existingUser = await this.prisma.user.findUnique({
-      where: { id: id },
+      where: { id },
       include: {
         location: {
           select: {
@@ -75,16 +82,25 @@ export class UsersService {
         },
         department: {
           select: {
+            id: true,
             name: true,
+            slug: true,
+            comment: true,
           },
         },
       },
     });
+
+    if (!existingUser) {
+      throw new UserNotFoundException();
+    }
+
     const { location, department, ...rest } = existingUser;
+
     return {
       ...rest,
       location: location.name,
-      department: department.name,
+      department,
     };
   }
   async findSortedUsers(search: string): Promise<UserBaseDto[]> {
@@ -98,6 +114,9 @@ export class UsersService {
           { firstNameRu: { contains: search, mode: 'insensitive' } },
           { lastNameRu: { contains: search, mode: 'insensitive' } },
         ],
+      },
+      include: {
+        department: true,
       },
     });
   }
