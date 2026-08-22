@@ -5,10 +5,12 @@ import {
   HttpCode,
   Param,
   Post,
+  Res,
   UploadedFile,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.interceptor';
 import { allowedPrintFileOptions } from 'src/common/utils/constants';
 import { FinalizeIssueDto } from './dtos/finalize-issue.dto';
@@ -44,5 +46,11 @@ export class IssueController {
   @Get('process/:id')
   async getIssueProcess(@Param('id') id: string): Promise<any> {
     return await this.issueService.getIssueProcess(id);
+  }
+  @Get('process/:id/file')
+  async downloadIssueFile(@Param('id') id: string, @Res() res: Response) {
+    const file = await this.issueService.getIssueFile(id);
+
+    return res.download(file.fullPath, file.fileName);
   }
 }

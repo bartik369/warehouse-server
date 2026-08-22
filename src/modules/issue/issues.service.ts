@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { join } from 'path';
 import { PrismaService } from 'prisma/prisma.service';
 import { PATH } from 'src/common/constants/path.constants';
 import { TYPES } from 'src/common/constants/types.constants';
@@ -6,6 +7,7 @@ import { savePdfFile } from 'src/common/utils/file/file.util';
 import {
   ConflictIssueException,
   ConflictIssueProcessException,
+  IssueFileNotFoundException,
   IssueProcessNotFoundException,
 } from 'src/exceptions/issue.exceptions';
 import { STATUS } from '../types/types';
@@ -148,33 +150,6 @@ export class IssueService {
     });
   }
 
-  // async createIssue(dto: CreateIssueDto) {
-  //   const existingProcess = await this.prisma.device_issue_process.findUnique({
-  //     where: { documentNo: dto.processId },
-  //   });
-  //   if (!existingProcess) throw new IssueProcessNotFoundException();
-
-  //   const existingIssue = await this.prisma.device_issue.findMany({
-  //     where: { processId: existingProcess.id },
-  //   });
-  //   if (existingIssue.length > 0) throw new ConflictIssueException();
-
-  //   const issueData = dto.devices.map((deviceId) => ({
-  //     processId: existingProcess.id,
-  //     deviceId,
-  //   }));
-
-  //   await this.prisma.device_issue.createMany({
-  //     data: issueData,
-  //     skipDuplicates: true,
-  //   });
-
-  //   await this.prisma.device_issue_process.update({
-  //     where: { id: existingProcess.id },
-  //     data: { status: STATUS.sign_document },
-  //   });
-  // }
-
   async finalizeIssue(dto: FinalizeIssueDto, file: Express.Multer.File) {
     if (!file) {
       throw new ConflictIssueException();
@@ -313,5 +288,23 @@ export class IssueService {
 
       return completedProcess;
     });
+  }
+  async getIssueFile(fileId: string) {
+    const file = await this.prisma.file.findUnique({
+      where: {
+        id: fileId,
+      },
+    });
+
+    if (!file) {
+      throw new IssueFileNotFoundException();
+    }
+
+    const fullPath = join(file.filePath, file.fileName);
+
+    return {
+      ...file,
+      fullPath,
+    };
   }
 }
