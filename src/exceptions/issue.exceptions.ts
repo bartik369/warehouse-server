@@ -10,6 +10,11 @@ export class IssueProcessNotFoundException extends NotFoundException {
     super('Процесс не найден');
   }
 }
+export class IssueFileNotFoundException extends NotFoundException {
+  constructor() {
+    super('Файл не найден');
+  }
+}
 
 export class ConflictIssueException extends ConflictException {
   constructor() {
