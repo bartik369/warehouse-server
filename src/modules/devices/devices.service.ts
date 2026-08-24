@@ -98,7 +98,7 @@ export class DevicesService {
           inventoryNumber: true,
           serialNumber: true,
           warehouse: {
-            select: { name: true, slug: true },
+            select: { id: true, name: true, slug: true, locationId: true, comment: true },
           },
           model: {
             select: {
