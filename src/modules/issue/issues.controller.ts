@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -46,6 +47,10 @@ export class IssueController {
   @Get('process/:id')
   async getIssueProcess(@Param('id') id: string): Promise<any> {
     return await this.issueService.getIssueProcess(id);
+  }
+  @Delete('process/:id')
+  async deleteIssueProcess(@Param('id') id: string): Promise<any> {
+    return await this.issueService.deleteIssueProcess(id);
   }
   @Get('process/:id/file')
   async downloadIssueFile(@Param('id') id: string, @Res() res: Response) {

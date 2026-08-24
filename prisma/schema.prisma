@@ -221,7 +221,7 @@ model device_issue_process {
   issuedById   String         @db.Uuid // Кто выдал (пользователь)
   issueDate    DateTime       @default(now())
   comment      String?
-  status       String         @default("draft") // draft, issued, signed и т.п.
+  status       String         @default("draft")
   fileId       String?        @db.Uuid // путь к PDF акту
   file         file?          @relation(fields: [fileId], references: [id]) // связь с моделью `file`
   createdAt    DateTime       @default(now())

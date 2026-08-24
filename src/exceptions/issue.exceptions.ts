@@ -26,3 +26,8 @@ export class ConflictIssueProcessException extends ConflictException {
     super('Процесс уже существует');
   }
 }
+export class ConflictIssueStatusException extends ConflictException {
+  constructor() {
+    super('Процесс завершен и удалению не подлежит');
+  }
+}

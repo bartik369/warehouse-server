@@ -7,6 +7,7 @@ import { savePdfFile } from 'src/common/utils/file/file.util';
 import {
   ConflictIssueException,
   ConflictIssueProcessException,
+  ConflictIssueStatusException,
   IssueFileNotFoundException,
   IssueProcessNotFoundException,
 } from 'src/exceptions/issue.exceptions';
@@ -64,6 +65,19 @@ export class IssueService {
       createdAt: newProcess.createdAt,
       updatedAt: newProcess.updatedAt,
     };
+  }
+  async deleteIssueProcess(id: string) {
+    const existProcess = await this.prisma.device_issue_process.findUnique({
+      where: { id },
+    });
+    if (!existProcess) throw new IssueProcessNotFoundException();
+
+    if (existProcess.status !== 'draft') {
+      throw new ConflictIssueStatusException();
+    }
+    return await this.prisma.device_issue_process.delete({
+      where: { id },
+    });
   }
 
   async getIssueProcess(id: string) {
