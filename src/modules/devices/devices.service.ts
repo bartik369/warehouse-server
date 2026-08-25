@@ -195,7 +195,7 @@ export class DevicesService {
       });
   }
 
-  async searchDevices(query: string, warehouseId: string): Promise<DeviceCombineDto[]> {
+  async searchDevices(query: string, warehouseId: string): Promise<DeviceBaseDto[]> {
     const devices = await this.prisma.device.findMany({
       where: {
         warehouseId,
@@ -223,18 +223,49 @@ export class DevicesService {
           },
         ],
       },
-
       include: {
         model: {
           select: {
+            id: true,
             name: true,
+            slug: true,
+
             manufacturer: {
               select: {
+                id: true,
                 name: true,
+                slug: true,
               },
             },
+
             type: {
               select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            locationId: true,
+          },
+        },
+        warranty: {
+          select: {
+            warrantyNumber: true,
+            provider: true,
+            contractorId: true,
+            startWarrantyDate: true,
+            endWarrantyDate: true,
+
+            contractor: {
+              select: {
+                id: true,
                 name: true,
                 slug: true,
               },
@@ -243,17 +274,11 @@ export class DevicesService {
         },
       },
     });
-
-    return devices.map((device) => {
-      const { price_with_vat, price_without_vat, residual_price, model, ...rest } = device;
+    return devices.map((device): DeviceBaseDto => {
+      const { price_with_vat, price_without_vat, residual_price, ...rest } = device;
 
       return {
         ...rest,
-
-        modelName: model?.name ?? null,
-        typeName: model?.type.name ?? null,
-        typeSlug: model?.type.slug ?? null,
-        manufacturerName: model?.manufacturer.name ?? null,
 
         price_with_vat: price_with_vat?.toNumber() ?? null,
         price_without_vat: price_without_vat?.toNumber() ?? null,
@@ -261,6 +286,7 @@ export class DevicesService {
       };
     });
   }
+
   // Get by ID
   async getDevice(id: string): Promise<IAggregatedDeviceInfo> {
     const device = await this.prisma.device.findUnique({
@@ -433,13 +459,65 @@ export class DevicesService {
       where: {
         assignedUserId: userId,
       },
+      include: {
+        model: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            manufacturer: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+            type: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            locationId: true,
+          },
+        },
+        warranty: {
+          select: {
+            warrantyNumber: true,
+            startWarrantyDate: true,
+            endWarrantyDate: true,
+            provider: true,
+            contractorId: true,
+            contractor: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+      },
     });
-    return devices.map((device) => ({
-      ...device,
-      price_with_vat: device.price_with_vat?.toNumber() ?? null,
-      price_without_vat: device.price_without_vat?.toNumber() ?? null,
-      residual_price: device.residual_price?.toNumber() ?? null,
-    }));
+
+    return devices.map((device): DeviceBaseDto => {
+      const { price_with_vat, price_without_vat, residual_price, ...rest } = device;
+
+      return {
+        ...rest,
+        price_with_vat: price_with_vat?.toNumber() ?? null,
+        price_without_vat: price_without_vat?.toNumber() ?? null,
+        residual_price: residual_price?.toNumber() ?? null,
+      };
+    });
   }
 
   // Create
