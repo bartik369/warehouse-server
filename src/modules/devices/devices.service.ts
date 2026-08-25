@@ -582,18 +582,27 @@ export class DevicesService {
   //Update
   async updateDevice(deviceId: string, deviceDto: UpdateDeviceDto): Promise<DeviceBaseDto> {
     const existDevice = await this.prisma.device.findUnique({
-      where: { id: deviceId },
+      where: {
+        id: deviceId,
+      },
     });
-    if (!existDevice) throw new DeviceNotFoundException();
+
+    if (!existDevice) {
+      throw new DeviceNotFoundException();
+    }
 
     const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
+
     if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
       if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
         throw new WarrantyValidateException();
       }
     }
+
     const updatedDevice = await this.prisma.device.update({
-      where: { id: existDevice.id },
+      where: {
+        id: existDevice.id,
+      },
       data: {
         name: deviceDto.name,
         inventoryNumber: deviceDto.inventoryNumber ? deviceDto.inventoryNumber : null,
@@ -611,19 +620,83 @@ export class DevicesService {
         updatedById: deviceDto.updatedById,
       },
     });
-    const existContractor = await this.prisma.contractor.findUnique({
+
+    if (deviceDto.providerName) {
+      const existContractor = await this.prisma.contractor.findUnique({
+        where: {
+          name: deviceDto.providerName.trim(),
+        },
+      });
+
+      if (existContractor) {
+        await this.warrantyAction(deviceDto, existContractor.id, deviceId);
+      }
+    }
+
+    const device = await this.prisma.device.findUnique({
       where: {
-        name: deviceDto.providerName.trim(),
+        id: updatedDevice.id,
+      },
+      include: {
+        model: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            manufacturer: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+            type: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            locationId: true,
+          },
+        },
+        warranty: {
+          select: {
+            warrantyNumber: true,
+            startWarrantyDate: true,
+            endWarrantyDate: true,
+            provider: true,
+            contractorId: true,
+            contractor: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
       },
     });
-    if (existContractor) {
-      await this.warrantyAction(deviceDto, existContractor.id, deviceId);
+
+    if (!device) {
+      throw new DeviceNotFoundException();
     }
+
+    const { price_with_vat, price_without_vat, residual_price, ...rest } = device;
+
     return {
-      ...updatedDevice,
-      price_with_vat: updatedDevice.price_with_vat?.toNumber(),
-      price_without_vat: updatedDevice.price_without_vat?.toNumber(),
-      residual_price: updatedDevice.residual_price?.toNumber(),
+      ...rest,
+      price_with_vat: price_with_vat?.toNumber() ?? null,
+      price_without_vat: price_without_vat?.toNumber() ?? null,
+      residual_price: residual_price?.toNumber() ?? null,
     };
   }
 
