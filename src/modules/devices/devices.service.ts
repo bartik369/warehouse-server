@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import {
   IAggregatedDeviceInfo,
@@ -13,6 +14,7 @@ import {
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
 import { DeviceCombineDto } from './dtos/device-combine.dto';
+import { GetDevicesQueryDto } from './dtos/get-devices.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Injectable()
@@ -20,74 +22,107 @@ export class DevicesService {
   constructor(private prisma: PrismaService) {}
   // All
   async findAll(
-    query: Record<string, string>,
+    query: GetDevicesQueryDto,
     city: string,
   ): Promise<{ devices: IFilteredDevices[]; totalCount: number }> {
-    const where: Record<string, any> = {};
-    if (city) {
-      where.warehouse = {
-        location: { slug: city.trim() },
-      };
+    const {
+      page = 1,
+      limit = 20,
+      warehouseIds,
+      manufacturerIds,
+      typeIds,
+      displaySize,
+      memorySize,
+      isFunctional,
+      search,
+      isAvailable,
+    } = query;
+
+    if (page <= 0 || limit <= 0) {
+      throw new BadRequestException('Page and limit must be greater than 0');
     }
-    const checkQueryArray = (field: string) => {
-      if (Array.isArray(query[field])) {
-        return query[field];
-      } else {
-        return query[field]?.split(',').map((item) => item.trim());
-      }
+
+    const where: Prisma.deviceWhereInput = {
+      warehouse: {
+        location: {
+          slug: city.trim(),
+        },
+      },
     };
-    if (query?.manufacturer) {
-      where.model = where.model || {};
-      where.model.manufacturer = {
-        slug: { in: checkQueryArray('manufacturer') },
+
+    if (warehouseIds?.length) {
+      where.warehouseId = {
+        in: warehouseIds,
       };
     }
-    if (query?.model) {
-      where.model = where.model || {};
-      where.model = { slug: { in: checkQueryArray('model') } };
-    }
-    if (query?.type) {
-      where.model = where.model || {};
-      where.model.type = { slug: { in: checkQueryArray('type') } };
-    }
-    if (query?.warehouse) {
-      where.warehouse = { slug: { in: checkQueryArray('warehouse') } };
-    }
-    if (query.memorySize) where.memorySize = Number(query.memorySize);
-    if (query.screenSize) where.screenSize = { in: query.screenSize.split(',').map(Number) };
-    if (query.isFunctional) {
-      const isFunctionalArray = Array.isArray(query.isFunctional)
-        ? query.isFunctional
-        : query.isFunctional.split(',').map((item) => item.trim() === 'true');
 
-      if (isFunctionalArray.length === 1) {
-        where.OR = [
-          {
-            isFunctional: isFunctionalArray[0],
+    if (isFunctional !== undefined) {
+      where.isFunctional = isFunctional;
+    }
+
+    if (isAvailable !== undefined) {
+      where.isAssigned = !isAvailable;
+    }
+
+    if (manufacturerIds?.length || typeIds?.length) {
+      where.model = {
+        ...(manufacturerIds?.length && {
+          manufacturerId: {
+            in: manufacturerIds,
           },
-        ];
-      }
-    }
-    if (query.isAssigned) {
-      const isAssignedArray = Array.isArray(query.isAssigned)
-        ? query.isAssigned
-        : query.isAssigned.split(',').map((item) => item.trim() === 'true');
+        }),
 
-      if (isAssignedArray.length === 1) {
-        where.isAssigned = isAssignedArray[0];
-      }
+        ...(typeIds?.length && {
+          typeId: {
+            in: typeIds,
+          },
+        }),
+      };
     }
-    const limit = Number(query.limit) || 20;
-    const page = Number(query.page) || 1;
 
-    if (limit <= 0 || page <= 0) {
-      throw new BadRequestException();
+    if (displaySize) {
+      const [min, max] = displaySize;
+
+      where.screenSize = {
+        gte: min,
+        lte: max,
+      };
     }
+
+    if (memorySize) {
+      const [min, max] = memorySize;
+
+      where.memorySize = {
+        gte: min,
+        lte: max,
+      };
+    }
+
+    if (search?.trim()) {
+      const value = search.trim();
+
+      where.OR = [
+        {
+          inventoryNumber: {
+            contains: value,
+            mode: 'insensitive',
+          },
+        },
+        {
+          serialNumber: {
+            contains: value,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
     const skip = (page - 1) * limit;
 
     const [devices, totalCount] = await Promise.all([
       this.prisma.device.findMany({
         where,
+
         select: {
           id: true,
           name: true,
@@ -97,16 +132,29 @@ export class DevicesService {
           isAssigned: true,
           inventoryNumber: true,
           serialNumber: true,
+
           warehouse: {
-            select: { id: true, name: true, slug: true, locationId: true, comment: true },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              locationId: true,
+              comment: true,
+            },
           },
+
           model: {
             select: {
               name: true,
               slug: true,
+
               type: {
-                select: { name: true, slug: true },
+                select: {
+                  name: true,
+                  slug: true,
+                },
               },
+
               manufacturer: {
                 select: {
                   name: true,
@@ -116,12 +164,20 @@ export class DevicesService {
             },
           },
         },
+
         take: limit,
-        skip: skip,
+        skip,
       }),
-      this.prisma.device.count({ where }),
+
+      this.prisma.device.count({
+        where,
+      }),
     ]);
-    return { devices, totalCount };
+
+    return {
+      devices,
+      totalCount,
+    };
   }
   async getIssueDevices(issueId: string): Promise<DeviceCombineDto[]> {
     const issue = await this.prisma.device_issue_process.findUnique({
