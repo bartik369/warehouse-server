@@ -18,6 +18,7 @@ import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
 import { DevicesService } from './devices.service';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
+import { GetDevicesQueryDto } from './dtos/get-devices.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
 
 @Controller('devices')
@@ -53,7 +54,7 @@ export class DevicesController {
   @Get('/locations/:city')
   async findAll(
     @Param('city') city: string,
-    @Query() query: Record<string, string>,
+    @Query() query: GetDevicesQueryDto,
   ): Promise<{ devices: IFilteredDevices[]; totalCount: number }> {
     const result = await this.devicesService.findAll(query, city);
     const { devices, totalCount } = result;
