@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import {
   LocationNotFoundException,
@@ -13,10 +14,18 @@ import { WarehouseBaseDto } from './dtos/warehouseBase.dto';
 export class WarehousesService {
   constructor(private prisma: PrismaService) {}
   // Get all
-  async findAll(): Promise<WarehouseBaseDto[]> {
-    const warehouses = await this.prisma.warehouse.findMany();
-    if (warehouses) return warehouses;
-    return null;
+  async findAll(city?: string): Promise<WarehouseBaseDto[]> {
+    const where: Prisma.warehouseWhereInput = {};
+
+    if (city) {
+      where.location = {
+        slug: city,
+      };
+    }
+
+    return this.prisma.warehouse.findMany({
+      where,
+    });
   }
   // Get all assignable
   async getAssignable(locationId: string): Promise<WarehouseBaseDto[]> {
