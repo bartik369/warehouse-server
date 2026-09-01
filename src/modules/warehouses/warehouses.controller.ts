@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { warehouseCreated, warehouseUpdated } from 'src/common/utils/constants';
 import { CreateWarehouseDto } from './dtos/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dtos/update-warehouse.dto';
@@ -16,8 +16,9 @@ export class WarehousesController {
   }
   // Get all
   @Get()
-  async findAll(): Promise<WarehouseBaseDto[]> {
-    return await this.warehousesService.findAll();
+  async findAll(@Query('city') city?: string): Promise<WarehouseBaseDto[]> {
+    console.log(city);
+    return await this.warehousesService.findAll(city);
   }
   @Get('/by-user/:id')
   async getWarehousesByUser(@Param('id') id: string): Promise<WarehouseBaseDto[]> {
