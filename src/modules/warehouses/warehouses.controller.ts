@@ -17,7 +17,6 @@ export class WarehousesController {
   // Get all
   @Get()
   async findAll(@Query('city') city?: string): Promise<WarehouseBaseDto[]> {
-    console.log(city);
     return await this.warehousesService.findAll(city);
   }
   @Get('/by-user/:id')

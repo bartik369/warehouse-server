@@ -44,10 +44,16 @@ export class IssueController {
     return await this.issueService.getIssueProcesses();
   }
 
+  @Get('process/by-device/:id')
+  async getIssueProcessByDevice(@Param('id') id: string): Promise<any> {
+    return await this.issueService.getIssueProcessByDevice(id);
+  }
+
   @Get('process/:id')
   async getIssueProcess(@Param('id') id: string): Promise<any> {
     return await this.issueService.getIssueProcess(id);
   }
+
   @Delete('process/:id')
   async deleteIssueProcess(@Param('id') id: string): Promise<any> {
     return await this.issueService.deleteIssueProcess(id);
