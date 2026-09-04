@@ -4,11 +4,13 @@ import { PrismaService } from 'prisma/prisma.service';
 import { PATH } from 'src/common/constants/path.constants';
 import { TYPES } from 'src/common/constants/types.constants';
 import { savePdfFile } from 'src/common/utils/file/file.util';
+import { DeviceNotFoundException } from 'src/exceptions/device.exceptions';
 import {
   ConflictIssueException,
   ConflictIssueProcessException,
   ConflictIssueStatusException,
   IssueFileNotFoundException,
+  IssueNotFoundException,
   IssueProcessNotFoundException,
 } from 'src/exceptions/issue.exceptions';
 import { STATUS } from '../types/types';
@@ -78,6 +80,87 @@ export class IssueService {
     return await this.prisma.device_issue_process.delete({
       where: { id },
     });
+  }
+
+  async getIssueProcessByDevice(deviceId: string) {
+    const existDevice = await this.prisma.device.findUnique({
+      where: {
+        id: deviceId,
+      },
+    });
+
+    if (!existDevice) {
+      throw new DeviceNotFoundException();
+    }
+
+    const existDeviceIssue = await this.prisma.device_issue.findFirst({
+      where: {
+        deviceId: existDevice.id,
+      },
+
+      orderBy: {
+        process: {
+          issueDate: 'desc',
+        },
+      },
+
+      include: {
+        process: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstNameRu: true,
+                lastNameRu: true,
+                firstNameEn: true,
+                lastNameEn: true,
+                email: true,
+                workId: true,
+
+                department: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+
+            issuedBy: {
+              select: {
+                id: true,
+                firstNameRu: true,
+                lastNameRu: true,
+                firstNameEn: true,
+                lastNameEn: true,
+                email: true,
+                workId: true,
+
+                department: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+
+            warehouse: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existDeviceIssue) {
+      throw new IssueNotFoundException();
+    }
+
+    return existDeviceIssue.process;
   }
 
   async getIssueProcess(id: string) {
