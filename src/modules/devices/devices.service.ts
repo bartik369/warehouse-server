@@ -16,6 +16,7 @@ import { DeviceBaseDto } from './dtos/device-base.dto';
 import { DeviceCombineDto } from './dtos/device-combine.dto';
 import { GetDevicesQueryDto } from './dtos/get-devices.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
+import { DeviceHistoryItem } from './types';
 
 @Injectable()
 export class DevicesService {
@@ -396,21 +397,191 @@ export class DevicesService {
     if (!device) throw new BadRequestException();
     return device;
   }
-  // async deviceHistory() {
-  //   const history = await this.prisma.device.findMany({
-  //     include: {
-  //       deviceIssues: {
-  //         include: { user: true, issuedBy: true },
-  //       },
-  //       deviceReturns: {
-  //         include: { user: true, returnedBy: true },
-  //       },
-  //     },
-  //   });
-  //   return history;
-  // }
 
-  // Options
+  async getDeviceHistory(deviceId: string) {
+    const device = await this.prisma.device.findUnique({
+      where: {
+        id: deviceId,
+      },
+      select: {
+        deviceIssues: {
+          select: {
+            id: true,
+            createdAt: true,
+            process: {
+              select: {
+                id: true,
+                documentNo: true,
+                issueDate: true,
+                status: true,
+                comment: true,
+                user: {
+                  select: {
+                    id: true,
+                    userName: true,
+                    firstNameEn: true,
+                    lastNameEn: true,
+                    firstNameRu: true,
+                    lastNameRu: true,
+                  },
+                },
+                issuedBy: {
+                  select: {
+                    id: true,
+                    userName: true,
+                    firstNameEn: true,
+                    lastNameEn: true,
+                    firstNameRu: true,
+                    lastNameRu: true,
+                  },
+                },
+                warehouse: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        deviceReturns: {
+          select: {
+            id: true,
+            condition: true,
+            comment: true,
+            createdAt: true,
+            process: {
+              select: {
+                id: true,
+                documentNo: true,
+                returnDate: true,
+                status: true,
+                comment: true,
+                user: {
+                  select: {
+                    id: true,
+                    userName: true,
+                    firstNameEn: true,
+                    lastNameEn: true,
+                    firstNameRu: true,
+                    lastNameRu: true,
+                  },
+                },
+                acceptedBy: {
+                  select: {
+                    id: true,
+                    userName: true,
+                    firstNameEn: true,
+                    lastNameEn: true,
+                    firstNameRu: true,
+                    lastNameRu: true,
+                  },
+                },
+                warehouse: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        deviceTransfers: {
+          select: {
+            id: true,
+            createdAt: true,
+            process: {
+              select: {
+                id: true,
+                documentNo: true,
+                transferDate: true,
+                status: true,
+                comment: true,
+                transferredBy: {
+                  select: {
+                    id: true,
+                    userName: true,
+                    firstNameEn: true,
+                    lastNameEn: true,
+                    firstNameRu: true,
+                    lastNameRu: true,
+                  },
+                },
+                fromWarehouse: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+                toWarehouse: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!device) {
+      throw new DeviceNotFoundException();
+    }
+
+    const issueHistory: DeviceHistoryItem[] = device.deviceIssues.map((issue) => ({
+      id: issue.id,
+      type: 'ISSUE',
+      date: issue.process?.issueDate ?? issue.createdAt,
+      processId: issue.process?.id ?? null,
+      documentNo: issue.process?.documentNo ?? null,
+      status: issue.process?.status ?? null,
+      user: issue.process?.user ?? null,
+      performedBy: issue.process?.issuedBy ?? null,
+      warehouse: issue.process?.warehouse ?? null,
+      comment: issue.process?.comment ?? null,
+    }));
+
+    const returnHistory: DeviceHistoryItem[] = device.deviceReturns.map((deviceReturn) => ({
+      id: deviceReturn.id,
+      type: 'RETURN',
+      date: deviceReturn.process.returnDate ?? deviceReturn.createdAt,
+      processId: deviceReturn.process.id,
+      documentNo: deviceReturn.process.documentNo,
+      status: deviceReturn.process.status,
+      user: deviceReturn.process.user,
+      performedBy: deviceReturn.process.acceptedBy,
+      warehouse: deviceReturn.process.warehouse,
+      comment: deviceReturn.comment ?? deviceReturn.process.comment ?? null,
+      condition: deviceReturn.condition,
+    }));
+
+    const transferHistory: DeviceHistoryItem[] = device.deviceTransfers.map((deviceTransfer) => ({
+      id: deviceTransfer.id,
+      type: 'TRANSFER',
+      date: deviceTransfer.process.transferDate ?? deviceTransfer.createdAt,
+      processId: deviceTransfer.process.id,
+      documentNo: deviceTransfer.process.documentNo,
+      status: deviceTransfer.process.status,
+      performedBy: deviceTransfer.process.transferredBy,
+      fromWarehouse: deviceTransfer.process.fromWarehouse,
+      toWarehouse: deviceTransfer.process.toWarehouse,
+      comment: deviceTransfer.process.comment ?? null,
+    }));
+
+    const history = [...issueHistory, ...returnHistory, ...transferHistory].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
+    return history;
+  }
   async getOptions(city: string): Promise<IDeviceOptions> {
     const where: Record<string, any> = city
       ? {

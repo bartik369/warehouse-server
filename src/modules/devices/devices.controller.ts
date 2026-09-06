@@ -70,6 +70,10 @@ export class DevicesController {
   async getDevice(@Param('id') id: string): Promise<IAggregatedDeviceInfo> {
     return await this.devicesService.getDevice(id);
   }
+  @Get(':id/history')
+  async getDeviceHistory(@Param('id') id: string) {
+    return this.devicesService.getDeviceHistory(id);
+  }
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
