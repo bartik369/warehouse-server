@@ -15,12 +15,13 @@ import { CreateModelDto } from './dto/model-create.dto';
 export class ModelsService {
   constructor(private prisma: PrismaService) {}
   // All models
-  async getModels(manufacturer: string, type: string): Promise<ModelBaseDto[]> {
+  async getModels(manufacturerId: string, typeId: string): Promise<ModelBaseDto[]> {
+    console.log(manufacturerId, typeId);
     const existingType = await this.prisma.device_type.findUnique({
-      where: { slug: type },
+      where: { id: typeId },
     });
     const existingManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { slug: manufacturer },
+      where: { id: manufacturerId },
     });
     if (!existingType || !existingManufacturer) throw new ModelNotFoundException();
 
