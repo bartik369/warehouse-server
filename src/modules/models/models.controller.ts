@@ -30,12 +30,12 @@ export class ModelsController {
     return model;
   }
 
-  @Get('/united/:manufacturer/:type')
+  @Get('/united/:manufacturerId/:typeId')
   async getModels(
-    @Param('manufacturer') manufacturer: string,
-    @Param('type') type: string,
+    @Param('manufacturerId') manufacturerId: string,
+    @Param('typeId') typeId: string,
   ): Promise<ModelBaseDto[]> {
-    return await this.modelsService.getModels(manufacturer, type);
+    return await this.modelsService.getModels(manufacturerId, typeId);
   }
   @Get('/all')
   async getAllModels() {
