@@ -11,6 +11,7 @@ import {
   DeviceNotFoundException,
   WarrantyValidateException,
 } from 'src/exceptions/device.exceptions';
+import { ProviderNotFoundException } from 'src/exceptions/provider.exceptions';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
 import { DeviceCombineDto } from './dtos/device-combine.dto';
@@ -749,22 +750,44 @@ export class DevicesService {
 
   // Create
   async createDevice(deviceDto: CreateDeviceDto): Promise<Partial<DeviceBaseDto>> {
-    const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
-    // Validate warranty fields
-    if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
-      if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
-        throw new WarrantyValidateException();
-      }
+    const { providerId, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
+    const hasWarrantyData = providerId || warrantyNumber || startWarrantyDate || endWarrantyDate;
+    const hasAllWarrantyData = providerId && warrantyNumber && startWarrantyDate && endWarrantyDate;
+
+    if (hasWarrantyData && !hasAllWarrantyData) {
+      throw new WarrantyValidateException();
     }
+
     if (deviceDto.serialNumber || deviceDto.inventoryNumber) {
-      const existingDevice = await this.prisma.device.findUnique({
+      const existingDevice = await this.prisma.device.findFirst({
         where: {
-          serialNumber: deviceDto.serialNumber?.trim(),
-          inventoryNumber: deviceDto.inventoryNumber?.trim(),
+          OR: [
+            ...(deviceDto.serialNumber ? [{ serialNumber: deviceDto.serialNumber.trim() }] : []),
+            ...(deviceDto.inventoryNumber
+              ? [{ inventoryNumber: deviceDto.inventoryNumber.trim() }]
+              : []),
+          ],
         },
       });
-      if (existingDevice) throw new DeviceExistsException();
+
+      if (existingDevice) {
+        throw new DeviceExistsException();
+      }
     }
+    let provider = null;
+
+    if (providerId) {
+      provider = await this.prisma.contractor.findUnique({
+        where: {
+          id: providerId,
+        },
+      });
+
+      if (!provider) {
+        throw new ProviderNotFoundException();
+      }
+    }
+
     // Create device
     const device = await this.prisma.device.create({
       data: {
@@ -777,34 +800,30 @@ export class DevicesService {
         screenSize: deviceDto.screenSize === 0 ? null : deviceDto.screenSize,
         memorySize: deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
         inStock: deviceDto.inStock,
+        isFunctional: deviceDto.isFunctional,
+        isAssigned: deviceDto.isAssigned,
         price_with_vat: deviceDto.price_with_vat === 0 ? null : deviceDto.price_with_vat,
         price_without_vat: deviceDto.price_without_vat === 0 ? null : deviceDto.price_without_vat,
         residual_price: deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
-        isFunctional: deviceDto.isFunctional,
-        isAssigned: deviceDto.isAssigned,
         warehouseId: deviceDto.warehouseId,
         description: deviceDto.description || '',
         addedById: deviceDto.addedById,
-        updatedById: deviceDto.addedById,
+        updatedById: deviceDto.updatedById,
       },
     });
-    if (deviceDto.contractorId) {
-      const existContractor = await this.prisma.contractor.findUnique({
-        where: { id: deviceDto.contractorId },
-      });
-      // Create warranty record with created device info
-      if (existContractor && device) {
-        await this.warrantyAction(deviceDto, existContractor.id, device.id);
-      }
+
+    if (provider && device) {
+      await this.warrantyAction(deviceDto, provider.id, device.id);
     }
-    if (device) {
-      return {
-        ...device,
-        price_with_vat: device.price_with_vat.toNumber() ?? null,
-        price_without_vat: device.price_without_vat.toNumber() ?? null,
-        residual_price: device.residual_price.toNumber() ?? null,
-      };
-    }
+
+    return {
+      ...device,
+      price_with_vat: device.price_with_vat?.toNumber() ?? null,
+
+      price_without_vat: device.price_without_vat?.toNumber() ?? null,
+
+      residual_price: device.residual_price?.toNumber() ?? null,
+    };
   }
   //Update
   async updateDevice(deviceId: string, deviceDto: UpdateDeviceDto): Promise<DeviceBaseDto> {
@@ -818,11 +837,27 @@ export class DevicesService {
       throw new DeviceNotFoundException();
     }
 
-    const { providerName, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
+    const { providerId, warrantyNumber, startWarrantyDate, endWarrantyDate } = deviceDto;
 
-    if (providerName || warrantyNumber || startWarrantyDate || endWarrantyDate) {
-      if (!(providerName && warrantyNumber && startWarrantyDate && endWarrantyDate)) {
-        throw new WarrantyValidateException();
+    const hasWarrantyData = providerId || warrantyNumber || startWarrantyDate || endWarrantyDate;
+
+    const hasAllWarrantyData = providerId && warrantyNumber && startWarrantyDate && endWarrantyDate;
+
+    if (hasWarrantyData && !hasAllWarrantyData) {
+      throw new WarrantyValidateException();
+    }
+
+    let provider = null;
+
+    if (providerId) {
+      provider = await this.prisma.contractor.findUnique({
+        where: {
+          id: providerId,
+        },
+      });
+
+      if (!provider) {
+        throw new ProviderNotFoundException();
       }
     }
 
@@ -832,34 +867,58 @@ export class DevicesService {
       },
       data: {
         name: deviceDto.name,
-        inventoryNumber: deviceDto.inventoryNumber ? deviceDto.inventoryNumber : null,
-        modelId: deviceDto.modelId ? deviceDto.modelId : null,
-        modelCode: deviceDto.modelCode ? deviceDto.modelCode : null,
-        serialNumber: deviceDto.serialNumber ? deviceDto.serialNumber : null,
-        weight: deviceDto.weight === 0 ? null : deviceDto.weight,
-        screenSize: deviceDto.screenSize === 0 ? null : deviceDto.screenSize,
-        memorySize: deviceDto.memorySize === 0 ? null : deviceDto.memorySize,
+        inventoryNumber:
+          deviceDto.inventoryNumber !== undefined ? deviceDto.inventoryNumber || null : undefined,
+        modelId: deviceDto.modelId !== undefined ? deviceDto.modelId || null : undefined,
+        modelCode: deviceDto.modelCode !== undefined ? deviceDto.modelCode || null : undefined,
+        serialNumber:
+          deviceDto.serialNumber !== undefined ? deviceDto.serialNumber || null : undefined,
+        weight:
+          deviceDto.weight !== undefined
+            ? deviceDto.weight === 0
+              ? null
+              : deviceDto.weight
+            : undefined,
+        screenSize:
+          deviceDto.screenSize !== undefined
+            ? deviceDto.screenSize === 0
+              ? null
+              : deviceDto.screenSize
+            : undefined,
+        memorySize:
+          deviceDto.memorySize !== undefined
+            ? deviceDto.memorySize === 0
+              ? null
+              : deviceDto.memorySize
+            : undefined,
         isFunctional: deviceDto.isFunctional,
         description: deviceDto.description,
-        price_without_vat: deviceDto.price_without_vat === 0 ? null : deviceDto.price_without_vat,
-        price_with_vat: deviceDto.price_with_vat === 0 ? null : deviceDto.price_with_vat,
-        residual_price: deviceDto.residual_price === 0 ? null : deviceDto.residual_price,
+        price_without_vat:
+          deviceDto.price_without_vat !== undefined
+            ? deviceDto.price_without_vat === 0
+              ? null
+              : deviceDto.price_without_vat
+            : undefined,
+        price_with_vat:
+          deviceDto.price_with_vat !== undefined
+            ? deviceDto.price_with_vat === 0
+              ? null
+              : deviceDto.price_with_vat
+            : undefined,
+        residual_price:
+          deviceDto.residual_price !== undefined
+            ? deviceDto.residual_price === 0
+              ? null
+              : deviceDto.residual_price
+            : undefined,
+
         updatedById: deviceDto.updatedById,
       },
     });
 
-    if (deviceDto.providerName) {
-      const existContractor = await this.prisma.contractor.findUnique({
-        where: {
-          name: deviceDto.providerName.trim(),
-        },
-      });
-
-      if (existContractor) {
-        await this.warrantyAction(deviceDto, existContractor.id, deviceId);
-      }
+    if (provider) {
+      await this.warrantyAction(deviceDto, provider.id, deviceId);
     }
-
     const device = await this.prisma.device.findUnique({
       where: {
         id: updatedDevice.id,
@@ -926,28 +985,40 @@ export class DevicesService {
       residual_price: residual_price?.toNumber() ?? null,
     };
   }
+  warrantyAction = async (deviceDto: UpdateDeviceDto, contractorId: string, deviceId: string) => {
+    const contractor = await this.prisma.contractor.findUnique({
+      where: {
+        id: contractorId,
+      },
+    });
 
-  warrantyAction = async (deviceDto: UpdateDeviceDto, id: string, deviceId: string) => {
+    if (!contractor) {
+      throw new Error('Provider not found');
+    }
+
     const warrantyData = {
-      deviceId: deviceId || undefined,
-      warrantyNumber: deviceDto.warrantyNumber || undefined,
-      startWarrantyDate: deviceDto.startWarrantyDate || undefined,
-      endWarrantyDate: deviceDto.endWarrantyDate || undefined,
-      provider: deviceDto.providerName || undefined,
-      contractorId: id?.trim() || undefined,
+      deviceId,
+      warrantyNumber: deviceDto.warrantyNumber,
+      startWarrantyDate: new Date(deviceDto.startWarrantyDate!),
+      endWarrantyDate: new Date(deviceDto.endWarrantyDate!),
+      provider: contractor.name,
+      contractorId: contractor.id,
     };
     const existWarranty = await this.prisma.warranty.findUnique({
-      where: { deviceId: deviceId || '' },
+      where: {
+        deviceId,
+      },
     });
     if (existWarranty) {
-      await this.prisma.warranty.update({
-        where: { id: existWarranty.id },
-        data: { ...warrantyData },
-      });
-    } else {
-      await this.prisma.warranty.create({
-        data: { ...warrantyData },
+      return this.prisma.warranty.update({
+        where: {
+          id: existWarranty.id,
+        },
+        data: warrantyData,
       });
     }
+    return this.prisma.warranty.create({
+      data: warrantyData,
+    });
   };
 }

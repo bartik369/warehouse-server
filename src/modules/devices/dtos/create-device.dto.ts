@@ -64,7 +64,7 @@ export class CreateDeviceDto {
   @Transform(({ value }) => value?.trim())
   @IsString()
   @IsOptional()
-  contractorId?: string;
+  providerId?: string;
 
   @IsNotEmpty()
   @Type(() => Boolean)
@@ -87,11 +87,6 @@ export class CreateDeviceDto {
   @IsNotEmpty()
   @IsString()
   updatedById: string;
-
-  @Transform(({ value }) => value?.trim())
-  @IsOptional()
-  @IsString()
-  providerName?: string;
 
   @Transform(({ value }) => value?.trim())
   @IsOptional()
