@@ -36,7 +36,6 @@ export class IssueController {
   @Post('process')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createIssueProcess(@Body() dto: CreateIssueProcessDto): Promise<IssueProcessBaseDto> {
-    console.log('create issue process', dto);
     return await this.issueService.createIssueProcess(dto);
   }
   @Get('processes')

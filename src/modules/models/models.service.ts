@@ -16,7 +16,6 @@ export class ModelsService {
   constructor(private prisma: PrismaService) {}
   // All models
   async getModels(manufacturerId: string, typeId: string): Promise<ModelBaseDto[]> {
-    console.log(manufacturerId, typeId);
     const existingType = await this.prisma.device_type.findUnique({
       where: { id: typeId },
     });

@@ -14,7 +14,7 @@ import {
   IDeviceOptions,
   IFilteredDevices,
 } from 'src/common/types/device.types';
-import { deviceCreated, deviceUpdated } from 'src/common/utils/constants';
+import { deviceUpdated } from 'src/common/utils/constants';
 import { DevicesService } from './devices.service';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
@@ -27,14 +27,8 @@ export class DevicesController {
 
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async createDevice(
-    @Body() deviceDto: CreateDeviceDto,
-  ): Promise<{ message: string; device: Partial<DeviceBaseDto> }> {
-    const device = await this.devicesService.createDevice(deviceDto);
-    return {
-      message: deviceCreated,
-      device,
-    };
+  async createDevice(@Body() deviceDto: CreateDeviceDto) {
+    return await this.devicesService.createDevice(deviceDto);
   }
   @Get(':processId/devices')
   async getIssueDevices(@Param('processId') processId: string) {
