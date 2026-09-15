@@ -14,7 +14,7 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { allowedPictureOptions, modelCreated, modelUpdated } from 'src/common/utils/constants';
 import { FileUploadInterceptor } from '../../common/interceptors/file-upload.interceptor';
-import { ModelBaseDto } from './dto/model-base.dto';
+import { DeviceModelResponseDto, ModelBaseDto } from './dto/model-base.dto';
 import { ModelsService } from './models.service';
 
 @Controller('models')
@@ -38,7 +38,7 @@ export class ModelsController {
     return await this.modelsService.getModels(manufacturerId, typeId);
   }
   @Get('/all')
-  async getAllModels() {
+  async getAllModels(): Promise<DeviceModelResponseDto[]> {
     return await this.modelsService.getAllModels();
   }
 
