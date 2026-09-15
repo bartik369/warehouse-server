@@ -8,7 +8,7 @@ import {
   ModelNotFoundException,
   TypeNotFoundException,
 } from 'src/exceptions/device.exceptions';
-import { ModelBaseDto } from './dto/model-base.dto';
+import { DeviceModelResponseDto, ModelBaseDto } from './dto/model-base.dto';
 import { CreateModelDto } from './dto/model-create.dto';
 
 @Injectable()
@@ -54,8 +54,13 @@ export class ModelsService {
     };
   }
   // GET ALL MODElS
-  async getAllModels(): Promise<ModelBaseDto[]> {
-    const models = await this.prisma.device_model.findMany({});
+  async getAllModels(): Promise<DeviceModelResponseDto[]> {
+    const models = await this.prisma.device_model.findMany({
+      include: {
+        manufacturer: true,
+        type: true,
+      },
+    });
     return models;
   }
   // Create
