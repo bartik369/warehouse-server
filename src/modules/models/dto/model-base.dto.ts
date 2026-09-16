@@ -7,6 +7,11 @@ export class ModelBaseDto {
   manufacturerId: string;
 }
 
+export class SortedDeviceModelDto {
+  items: ModelBaseDto[];
+  total: number;
+}
+
 export class DeviceModelResponseDto extends ModelBaseDto {
   manufacturer: {
     id: string;

@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UsePipes,
   ValidationPipe,
@@ -14,7 +15,8 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { allowedPictureOptions, modelCreated, modelUpdated } from 'src/common/utils/constants';
 import { FileUploadInterceptor } from '../../common/interceptors/file-upload.interceptor';
-import { DeviceModelResponseDto, ModelBaseDto } from './dto/model-base.dto';
+import { GetModelsQueryDto } from './dto/get-models.dto';
+import { DeviceModelResponseDto, ModelBaseDto, SortedDeviceModelDto } from './dto/model-base.dto';
 import { ModelsService } from './models.service';
 
 @Controller('models')
@@ -30,12 +32,9 @@ export class ModelsController {
     return model;
   }
 
-  @Get('/united/:manufacturerId/:typeId')
-  async getModels(
-    @Param('manufacturerId') manufacturerId: string,
-    @Param('typeId') typeId: string,
-  ): Promise<ModelBaseDto[]> {
-    return await this.modelsService.getModels(manufacturerId, typeId);
+  @Get('/united/')
+  async getModels(@Query() query: GetModelsQueryDto): Promise<SortedDeviceModelDto> {
+    return await this.modelsService.getModels(query);
   }
   @Get('/all')
   async getAllModels(): Promise<DeviceModelResponseDto[]> {

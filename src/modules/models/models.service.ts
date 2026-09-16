@@ -8,6 +8,7 @@ import {
   ModelNotFoundException,
   TypeNotFoundException,
 } from 'src/exceptions/device.exceptions';
+import { GetModelsQueryDto } from './dto/get-models.dto';
 import { DeviceModelResponseDto, ModelBaseDto } from './dto/model-base.dto';
 import { CreateModelDto } from './dto/model-create.dto';
 
@@ -15,22 +16,46 @@ import { CreateModelDto } from './dto/model-create.dto';
 export class ModelsService {
   constructor(private prisma: PrismaService) {}
   // All models
-  async getModels(manufacturerId: string, typeId: string): Promise<ModelBaseDto[]> {
-    const existingType = await this.prisma.device_type.findUnique({
-      where: { id: typeId },
-    });
-    const existingManufacturer = await this.prisma.manufacturer.findUnique({
-      where: { id: manufacturerId },
-    });
-    if (!existingType || !existingManufacturer) throw new ModelNotFoundException();
+  async getModels(query: GetModelsQueryDto) {
+    const { page = 1, limit = 20, manufacturersIds, typeIds, search } = query;
 
-    const models = await this.prisma.device_model.findMany({
-      where: {
-        manufacturerId: existingManufacturer.id,
-        typeId: existingType.id,
-      },
-    });
-    return models;
+    const where = {
+      ...(manufacturersIds?.length && {
+        manufacturerId: {
+          in: manufacturersIds,
+        },
+      }),
+
+      ...(typeIds?.length && {
+        typeId: {
+          in: typeIds,
+        },
+      }),
+      ...(search?.trim() && {
+        name: {
+          contains: search.trim(),
+          mode: 'insensitive' as const,
+        },
+      }),
+    };
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.device_model.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: {
+          name: 'asc',
+        },
+      }),
+      this.prisma.device_model.count({
+        where,
+      }),
+    ]);
+
+    return {
+      items,
+      total,
+    };
   }
   // Get by ID
   async getModelById(id: string): Promise<ModelBaseDto & { manufacturer: string; type: string }> {
