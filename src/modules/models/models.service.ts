@@ -9,14 +9,14 @@ import {
   TypeNotFoundException,
 } from 'src/exceptions/device.exceptions';
 import { GetModelsQueryDto } from './dto/get-models.dto';
-import { DeviceModelResponseDto, ModelBaseDto } from './dto/model-base.dto';
+import { DeviceModelResponseDto, ModelBaseDto, SortedDeviceModelDto } from './dto/model-base.dto';
 import { CreateModelDto } from './dto/model-create.dto';
 
 @Injectable()
 export class ModelsService {
   constructor(private prisma: PrismaService) {}
   // All models
-  async getModels(query: GetModelsQueryDto) {
+  async getModels(query: GetModelsQueryDto): Promise<SortedDeviceModelDto> {
     const { page = 1, limit = 20, manufacturersIds, typeIds, search } = query;
 
     const where = {
@@ -25,7 +25,6 @@ export class ModelsService {
           in: manufacturersIds,
         },
       }),
-
       ...(typeIds?.length && {
         typeId: {
           in: typeIds,
@@ -41,12 +40,17 @@ export class ModelsService {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.device_model.findMany({
         where,
+        include: {
+          manufacturer: true,
+          type: true,
+        },
         skip: (page - 1) * limit,
         take: limit,
         orderBy: {
           name: 'asc',
         },
       }),
+
       this.prisma.device_model.count({
         where,
       }),
@@ -56,6 +60,17 @@ export class ModelsService {
       items,
       total,
     };
+  }
+  async getModelsByManufacturerAndType(
+    manufacturerId: string,
+    typeId: string,
+  ): Promise<ModelBaseDto[]> {
+    return this.prisma.device_model.findMany({
+      where: {
+        manufacturerId,
+        typeId,
+      },
+    });
   }
   // Get by ID
   async getModelById(id: string): Promise<ModelBaseDto & { manufacturer: string; type: string }> {

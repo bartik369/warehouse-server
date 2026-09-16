@@ -32,9 +32,17 @@ export class ModelsController {
     return model;
   }
 
-  @Get('/united/')
+  @Get('/united')
   async getModels(@Query() query: GetModelsQueryDto): Promise<SortedDeviceModelDto> {
-    return await this.modelsService.getModels(query);
+    return this.modelsService.getModels(query);
+  }
+
+  @Get('/united/:manufacturerId/:typeId')
+  async getModelsByManufacturerAndType(
+    @Param('manufacturerId') manufacturerId: string,
+    @Param('typeId') typeId: string,
+  ): Promise<ModelBaseDto[]> {
+    return this.modelsService.getModelsByManufacturerAndType(manufacturerId, typeId);
   }
   @Get('/all')
   async getAllModels(): Promise<DeviceModelResponseDto[]> {
