@@ -15,14 +15,14 @@ import { CreateModelDto } from './dto/model-create.dto';
 @Injectable()
 export class ModelsService {
   constructor(private prisma: PrismaService) {}
-  // All models
-  async getModels(query: GetModelsQueryDto): Promise<SortedDeviceModelDto> {
-    const { page = 1, limit = 20, manufacturersIds, typeIds, search } = query;
+
+  async searchModels(query: GetModelsQueryDto): Promise<SortedDeviceModelDto> {
+    const { page = 1, limit = 20, manufacturerIds, typeIds, search } = query;
 
     const where = {
-      ...(manufacturersIds?.length && {
+      ...(manufacturerIds?.length && {
         manufacturerId: {
-          in: manufacturersIds,
+          in: manufacturerIds,
         },
       }),
       ...(typeIds?.length && {
@@ -71,6 +71,7 @@ export class ModelsService {
         typeId,
       },
     });
+    return;
   }
   // Get by ID
   async getModelById(id: string): Promise<ModelBaseDto & { manufacturer: string; type: string }> {

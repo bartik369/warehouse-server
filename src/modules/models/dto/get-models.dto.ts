@@ -33,7 +33,7 @@ export class GetModelsQueryDto {
   @Transform(toArray)
   @IsArray()
   @IsUUID('4', { each: true })
-  manufacturersIds?: string[];
+  manufacturerIds?: string[];
 
   @IsOptional()
   @Transform(toArray)
