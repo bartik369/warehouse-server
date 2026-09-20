@@ -18,7 +18,6 @@ export class ModelsService {
 
   async searchModels(query: GetModelsQueryDto): Promise<SortedDeviceModelDto> {
     const { page = 1, limit = 20, manufacturerIds, typeIds, search } = query;
-
     const where = {
       ...(manufacturerIds?.length && {
         manufacturerId: {
