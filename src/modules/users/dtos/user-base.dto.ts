@@ -1,4 +1,5 @@
 import { DepartmentBaseDto } from 'src/modules/departments/dtos/department-base.dto';
+import { LocationBaseDto } from 'src/modules/locations/dtos/location-base.dto';
 
 export class UserBaseDto {
   id: string;
@@ -16,4 +17,12 @@ export class UserBaseDto {
   location?: string;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export class SortedUserDto {
+  items: (Omit<UserBaseDto, 'location' | 'department'> & {
+    location: LocationBaseDto;
+    department: DepartmentBaseDto;
+  })[];
+  total: number;
 }

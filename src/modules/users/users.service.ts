@@ -4,7 +4,8 @@ import { PrismaService } from 'prisma/prisma.service';
 import { ConflictUserException, UserNotFoundException } from 'src/exceptions/auth.exceptions';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { UserBaseDto } from './dtos/user-base.dto';
+import { GetUsersQueryDto } from './dtos/get-users.dto';
+import { SortedUserDto, UserBaseDto } from './dtos/user-base.dto';
 
 @Injectable()
 export class UsersService {
@@ -101,6 +102,49 @@ export class UsersService {
       ...rest,
       location: location.name,
       department,
+    };
+  }
+  async searchUsers(query: GetUsersQueryDto): Promise<SortedUserDto> {
+    const { page = 1, limit = 10, search } = query;
+    const searchValue = search.trim();
+    const where = searchValue
+      ? {
+          OR: [
+            {
+              lastNameEn: {
+                contains: searchValue,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              email: {
+                contains: searchValue,
+                mode: 'insensitive' as const,
+              },
+            },
+          ],
+        }
+      : {};
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where,
+        include: {
+          department: true,
+          location: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: {
+          userName: 'asc',
+        },
+      }),
+      this.prisma.user.count({
+        where,
+      }),
+    ]);
+    return {
+      items,
+      total,
     };
   }
   async findSortedUsers(search: string): Promise<UserBaseDto[]> {
