@@ -9,7 +9,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { UserBaseDto } from './dtos/user-base.dto';
+import { GetUsersQueryDto } from './dtos/get-users.dto';
+import { SortedUserDto, UserBaseDto } from './dtos/user-base.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -21,14 +22,16 @@ export class UsersController {
   async create(@Body() userDto: CreateUserDto): Promise<{ message: string; user: UserBaseDto }> {
     const user = await this.usersService.create(userDto);
     return {
-      message: 'rerwerw',
+      message: 'rerwerw', // todo изменить контракт
       user,
     };
   }
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<UserBaseDto> {
-    return this.usersService.findOne(id);
+
+  @Get('/search')
+  async getUsers(@Query() query: GetUsersQueryDto): Promise<SortedUserDto> {
+    return await this.usersService.searchUsers(query);
   }
+
   @Get('/search/sorted')
   async findSortedUsers(@Query('search') search: string): Promise<UserBaseDto[]> {
     return await this.usersService.findSortedUsers(search);
@@ -37,6 +40,11 @@ export class UsersController {
   @Get()
   async findAll(): Promise<UserBaseDto[]> {
     return this.usersService.findAll();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<UserBaseDto> {
+    return this.usersService.findOne(id);
   }
 
   @Get('/profile/:id')
