@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { join } from 'path';
 import { PrismaService } from 'prisma/prisma.service';
 import { PATH } from 'src/common/constants/path.constants';
@@ -15,9 +16,9 @@ import {
 } from 'src/exceptions/issue.exceptions';
 import { STATUS } from '../types/types';
 import { FinalizeIssueDto } from './dtos/finalize-issue.dto';
-import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
+import { GetProcessesQueryDto } from './dtos/get-processes.dto';
+import { IssueProcessBaseDto, SortedProcessDto } from './dtos/issue-process-base.dto';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
-import { IssueProcessListItemDto } from './dtos/issue-process-list.dto';
 
 @Injectable()
 export class IssueService {
@@ -190,61 +191,96 @@ export class IssueService {
     return process;
   }
 
-  async getIssueProcesses(): Promise<IssueProcessListItemDto[]> {
-    return this.prisma.device_issue_process.findMany({
-      select: {
-        id: true,
-        documentNo: true,
-        status: true,
-        issueDate: true,
-        createdAt: true,
-        updatedAt: true,
-        user: {
-          select: {
-            id: true,
-            firstNameRu: true,
-            lastNameRu: true,
+  async searchProcesses(query: GetProcessesQueryDto): Promise<SortedProcessDto> {
+    const { page = 1, limit = 20, warehousesSlugs, search, dateRange } = query;
+    const skip = (page - 1) * limit;
 
-            department: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
+    const where: Prisma.device_issue_processWhereInput = {
+      ...(search?.trim() && {
+        documentNo: {
+          contains: search.trim(),
+          mode: 'insensitive',
         },
+      }),
+      ...(warehousesSlugs?.length && {
         warehouse: {
-          select: {
-            id: true,
-            name: true,
+          slug: {
+            in: warehousesSlugs,
+          },
+        },
+      }),
+      ...(dateRange?.length === 2 && {
+        issueDate: {
+          gte: new Date(dateRange[0]),
+          lte: new Date(dateRange[1]),
+        },
+      }),
+    };
 
-            location: {
-              select: {
-                id: true,
-                name: true,
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.device_issue_process.findMany({
+        where,
+        select: {
+          id: true,
+          documentNo: true,
+          status: true,
+          issueDate: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              id: true,
+              firstNameRu: true,
+              lastNameRu: true,
+              department: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          warehouse: {
+            select: {
+              id: true,
+              name: true,
+              location: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          issuedBy: {
+            select: {
+              id: true,
+              firstNameRu: true,
+              lastNameRu: true,
+              department: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-        issuedBy: {
-          select: {
-            id: true,
-            firstNameRu: true,
-            lastNameRu: true,
-            department: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
+        orderBy: {
+          createdAt: 'desc',
         },
-      },
+        skip,
+        take: limit,
+      }),
+      this.prisma.device_issue_process.count({
+        where,
+      }),
+    ]);
 
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    return {
+      items,
+      total,
+    };
   }
 
   async finalizeIssue(dto: FinalizeIssueDto, file: Express.Multer.File) {
