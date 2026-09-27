@@ -1,3 +1,5 @@
+import { IssueProcessListItemDto } from './issue-process-list.dto';
+
 export class IssueProcessBaseDto {
   id: string;
   documentNo: string;
@@ -17,4 +19,8 @@ export class IssueProcessBaseDto {
   filePath?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+export class SortedProcessDto {
+  items: IssueProcessListItemDto[];
+  total: number;
 }

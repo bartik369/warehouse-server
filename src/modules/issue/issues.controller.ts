@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   Res,
   UploadedFile,
   UsePipes,
@@ -15,9 +16,9 @@ import type { Response } from 'express';
 import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.interceptor';
 import { allowedPrintFileOptions } from 'src/common/utils/constants';
 import { FinalizeIssueDto } from './dtos/finalize-issue.dto';
-import { IssueProcessBaseDto } from './dtos/issue-process-base.dto';
+import { GetProcessesQueryDto } from './dtos/get-processes.dto';
+import { IssueProcessBaseDto, SortedProcessDto } from './dtos/issue-process-base.dto';
 import { CreateIssueProcessDto } from './dtos/issue-process-create.dto';
-import { IssueProcessListItemDto } from './dtos/issue-process-list.dto';
 import { IssueService } from './issues.service';
 
 @Controller('issues')
@@ -38,9 +39,10 @@ export class IssueController {
   async createIssueProcess(@Body() dto: CreateIssueProcessDto): Promise<IssueProcessBaseDto> {
     return await this.issueService.createIssueProcess(dto);
   }
+
   @Get('processes')
-  async getIssueProcesses(): Promise<IssueProcessListItemDto[]> {
-    return await this.issueService.getIssueProcesses();
+  async getIssueProcesses(@Query() query: GetProcessesQueryDto): Promise<SortedProcessDto> {
+    return await this.issueService.searchProcesses(query);
   }
 
   @Get('process/by-device/:id')
