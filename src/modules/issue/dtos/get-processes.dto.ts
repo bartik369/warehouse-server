@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import { IsArray, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { ProcessStatus } from '../types';
 
 const toArray = ({ value }: { value: unknown }): string[] => {
   if (Array.isArray(value)) {
@@ -33,6 +34,18 @@ export class GetProcessesQueryDto {
   @Transform(toArray)
   @IsArray()
   warehousesSlugs?: string[];
+
+  @IsOptional()
+  @IsString()
+  companyPersonId?: string;
+
+  @IsOptional()
+  @IsString()
+  employeePersonId?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: ProcessStatus;
 
   @IsOptional()
   @Transform(toArray)

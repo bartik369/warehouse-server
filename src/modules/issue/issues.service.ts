@@ -192,7 +192,16 @@ export class IssueService {
   }
 
   async searchProcesses(query: GetProcessesQueryDto): Promise<SortedProcessDto> {
-    const { page = 1, limit = 20, warehousesSlugs, search, dateRange } = query;
+    const {
+      page = 1,
+      limit = 20,
+      warehousesSlugs,
+      search,
+      companyPersonId,
+      employeePersonId,
+      status,
+      dateRange,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.device_issue_processWhereInput = {
@@ -208,6 +217,15 @@ export class IssueService {
             in: warehousesSlugs,
           },
         },
+      }),
+      ...(companyPersonId?.trim() && {
+        issuedById: companyPersonId,
+      }),
+      ...(employeePersonId?.trim() && {
+        userId: employeePersonId,
+      }),
+      ...(status.trim() && {
+        status,
       }),
       ...(dateRange?.length === 2 && {
         issueDate: {
