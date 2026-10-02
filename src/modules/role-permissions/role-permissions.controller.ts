@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { createdRolePermissions, updatedRolePermissions } from 'src/common/utils/constants';
 import { CreateRolePermissionsDto } from './dtos/create-role-permissions.dto';
-import { RolePermissionsBaseDto } from './dtos/role-permissions-base.dto';
+import { GetRolePermissionsQueryDto } from './dtos/get-role-permissions.dto';
+import { RolePermissionsBaseDto, SortedRolePermissionsDto } from './dtos/role-permissions-base.dto';
 import { RolePermissionsService } from './role-permissions.service';
 
 @Controller('permissions-roles')
@@ -9,9 +10,17 @@ export class RolePermissionsController {
   constructor(private rolePermissionsService: RolePermissionsService) {}
   //Get all
   @Get('')
-  async getRolePermissions(): Promise<RolePermissionsBaseDto[]> {
-    return await this.rolePermissionsService.getAllRolesPermissions();
+  async getRolePermissions(
+    @Query() query: GetRolePermissionsQueryDto,
+  ): Promise<SortedRolePermissionsDto> {
+    return await this.rolePermissionsService.getAllRolesPermissions(query);
   }
+
+  @Get('options')
+  async getRolePermissionsOptions(): Promise<RolePermissionsBaseDto[]> {
+    return await this.rolePermissionsService.getRolesPermissionsOptions();
+  }
+
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createRolePermissions(

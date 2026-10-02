@@ -1,15 +1,42 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateRolePermissionsDto } from './dtos/create-role-permissions.dto';
-import { RolePermissionsResponseDto } from './dtos/response-role-permissions.dto';
+import { GetRolePermissionsQueryDto } from './dtos/get-role-permissions.dto';
+import { SortedRolePermissionsDto } from './dtos/role-permissions-base.dto';
 import { GroupedResponse } from './types';
 
 @Injectable()
 export class RolePermissionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllRolesPermissions(): Promise<RolePermissionsResponseDto[]> {
+  async getAllRolesPermissions(
+    query: GetRolePermissionsQueryDto,
+  ): Promise<SortedRolePermissionsDto> {
+    const { page = 1, limit = 10 } = query;
+
+    const groups = await this.prisma.permission_role.groupBy({
+      by: ['roleId', 'locationId', 'warehouseId'],
+      orderBy: [{ roleId: 'asc' }, { locationId: 'asc' }, { warehouseId: 'asc' }],
+    });
+    const total = groups.length;
+
+    const pageGroups = groups.slice((page - 1) * limit, page * limit);
+
+    if (pageGroups.length === 0) {
+      return {
+        items: [],
+        total,
+      };
+    }
+
     const permissionRoles = await this.prisma.permission_role.findMany({
+      where: {
+        OR: pageGroups.map((group) => ({
+          roleId: group.roleId,
+          locationId: group.locationId,
+          warehouseId: group.warehouseId,
+        })),
+      },
       include: {
         role: {
           select: {
@@ -37,14 +64,7 @@ export class RolePermissionsService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'asc',
-      },
     });
-
-    if (permissionRoles.length === 0) {
-      throw new NotFoundException('Настройки прав ролей не найдены');
-    }
 
     const groupedMap = new Map<string, GroupedResponse>();
 
@@ -74,6 +94,82 @@ export class RolePermissionsService {
       if (item.permission) {
         groupedItem.permissionIds.add(item.permission.id);
         groupedItem.permissionsName.add(item.permission.name);
+      }
+    }
+
+    const items = pageGroups.flatMap((group) => {
+      const key = this.createScopeKey(group.roleId, group.locationId, group.warehouseId);
+
+      const item = groupedMap.get(key);
+
+      if (!item) {
+        return [];
+      }
+
+      return [
+        {
+          roleId: item.roleId,
+          roleName: item.roleName,
+          comment: item.comment,
+          locationId: item.locationId,
+          locationName: item.locationName,
+          warehouseId: item.warehouseId,
+          warehouseName: item.warehouseName,
+          permissionIds: Array.from(item.permissionIds),
+          permissionsName: Array.from(item.permissionsName),
+        },
+      ];
+    });
+
+    return {
+      items,
+      total,
+    };
+  }
+
+  async getRolesPermissionsOptions() {
+    const permissionRoles = await this.prisma.permission_role.findMany({
+      include: {
+        role: {
+          select: { id: true, name: true, comment: true },
+        },
+        location: {
+          select: { id: true, name: true },
+        },
+        warehouse: {
+          select: { id: true, name: true },
+        },
+        permission: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const groupedMap = new Map<string, GroupedResponse>();
+
+    for (const item of permissionRoles) {
+      const key = this.createScopeKey(item.roleId, item.locationId, item.warehouseId);
+
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, {
+          roleId: item.role.id,
+          roleName: item.role.name,
+          comment: item.comment || null,
+          locationId: item.location?.id ?? null,
+          locationName: item.location?.name ?? null,
+          warehouseId: item.warehouse?.id ?? null,
+          warehouseName: item.warehouse?.name ?? null,
+          permissionIds: new Set<string>(),
+          permissionsName: new Set<string>(),
+        });
+      }
+
+      const group = groupedMap.get(key)!;
+
+      if (item.permission) {
+        group.permissionIds.add(item.permission.id);
+        group.permissionsName.add(item.permission.name);
       }
     }
 

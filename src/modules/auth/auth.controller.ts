@@ -37,7 +37,6 @@ export class AuthController {
     const data: GroupAuthData = await this.authService.signin(authDto);
     if (data?.tokens?.refreshToken) {
       const csrfToken = generateCsrfToken();
-      console.log(csrfToken);
       return {
         user: data.user,
         accessToken: data.tokens.accessToken,
