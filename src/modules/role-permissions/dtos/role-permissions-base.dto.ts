@@ -9,3 +9,8 @@ export class RolePermissionsBaseDto {
   oldLocationId?: string;
   comment: string;
 }
+
+export class SortedRolePermissionsDto {
+  items: RolePermissionsBaseDto[];
+  total: number;
+}

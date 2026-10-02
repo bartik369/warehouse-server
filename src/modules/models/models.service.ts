@@ -55,8 +55,6 @@ export class ModelsService {
       }),
     ]);
 
-    console.log(total);
-
     return {
       items,
       total,
