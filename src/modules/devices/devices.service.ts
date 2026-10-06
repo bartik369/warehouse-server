@@ -23,6 +23,69 @@ import { DeviceHistoryItem } from './types';
 export class DevicesService {
   constructor(private prisma: PrismaService) {}
   // All
+  async getAllDevices() {
+    return this.prisma.device.findMany();
+  }
+  async getStatistics() {
+    const [total, assigned, inStock, nonFunctional, inRepair, types] = await Promise.all([
+      this.prisma.device.count(),
+      this.prisma.device.count({
+        where: {
+          isAssigned: true,
+        },
+      }),
+      this.prisma.device.count({
+        where: {
+          inStock: true,
+        },
+      }),
+      this.prisma.device.count({
+        where: {
+          isFunctional: false,
+        },
+      }),
+      this.prisma.device.count({
+        where: {
+          deviceRepairs: {
+            some: {
+              status: 'in_progress',
+            },
+          },
+        },
+      }),
+      this.prisma.device_type.findMany({
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          device_model: {
+            select: {
+              _count: {
+                select: {
+                  device: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+    const byCategory = types.map((type) => ({
+      id: type.id,
+      name: type.name,
+      slug: type.slug,
+      count: type.device_model.reduce((acc, elem) => acc + elem._count.device, 0),
+    }));
+
+    return {
+      total,
+      assigned,
+      inStock,
+      nonFunctional,
+      inRepair,
+      byCategory,
+    };
+  }
   async findAll(
     query: GetDevicesQueryDto,
     city: string,

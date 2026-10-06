@@ -18,6 +18,7 @@ import { deviceUpdated } from 'src/common/utils/constants';
 import { DevicesService } from './devices.service';
 import { CreateDeviceDto } from './dtos/create-device.dto';
 import { DeviceBaseDto } from './dtos/device-base.dto';
+import { DeviceStatisticsDto } from './dtos/get-devices-statistics.dto';
 import { GetDevicesQueryDto } from './dtos/get-devices.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
 
@@ -33,6 +34,15 @@ export class DevicesController {
   @Get(':processId/devices')
   async getIssueDevices(@Param('processId') processId: string) {
     return await this.devicesService.getIssueDevices(processId);
+  }
+
+  @Get('all')
+  async getAllDevices() {
+    return await this.devicesService.getAllDevices();
+  }
+  @Get('statistics')
+  async getStatistics(): Promise<DeviceStatisticsDto> {
+    return await this.devicesService.getStatistics();
   }
 
   @Get('search')
