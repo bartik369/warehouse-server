@@ -17,7 +17,7 @@ import { DeviceBaseDto } from './dtos/device-base.dto';
 import { DeviceCombineDto } from './dtos/device-combine.dto';
 import { GetDevicesQueryDto } from './dtos/get-devices.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
-import { DeviceHistoryItem } from './types';
+import { DeviceAdditionsPeriod, DeviceHistoryItem } from './types';
 
 @Injectable()
 export class DevicesService {
@@ -25,6 +25,34 @@ export class DevicesService {
   // All
   async getAllDevices() {
     return this.prisma.device.findMany();
+  }
+  async getDeviceAdditionsStatistics(period: DeviceAdditionsPeriod) {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const devices = await this.prisma.device.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+        },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+    const statistics = devices.reduce(
+      (acc, elem) => {
+        const year = elem.createdAt.getFullYear();
+        const month = elem.createdAt.getMonth() + 1;
+        const formattedMonth = String(month).padStart(2, '0');
+        const key = `${year}-${formattedMonth}`;
+
+        acc[key] = (acc[key] ?? 0) + 1;
+
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   }
   async getStatistics() {
     const [total, assigned, inStock, nonFunctional, inRepair, types] = await Promise.all([

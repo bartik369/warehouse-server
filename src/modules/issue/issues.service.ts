@@ -440,6 +440,63 @@ export class IssueService {
       return completedProcess;
     });
   }
+  async getRecentIssues() {
+    return this.prisma.device_issue_process.findMany({
+      where: {
+        status: STATUS.completed,
+      },
+      select: {
+        id: true,
+        documentNo: true,
+        status: true,
+        issueDate: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            firstNameRu: true,
+            lastNameRu: true,
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+            location: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        issuedBy: {
+          select: {
+            id: true,
+            firstNameRu: true,
+            lastNameRu: true,
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        issueDate: 'desc',
+      },
+      take: 4,
+    });
+  }
   async getIssueFile(fileId: string) {
     const file = await this.prisma.file.findUnique({
       where: {
