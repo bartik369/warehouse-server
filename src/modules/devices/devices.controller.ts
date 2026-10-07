@@ -21,6 +21,7 @@ import { DeviceBaseDto } from './dtos/device-base.dto';
 import { DeviceStatisticsDto } from './dtos/get-devices-statistics.dto';
 import { GetDevicesQueryDto } from './dtos/get-devices.dto';
 import { UpdateDeviceDto } from './dtos/update-device.dto';
+import { DeviceAdditionsPeriod } from './types';
 
 @Controller('devices')
 export class DevicesController {
@@ -43,6 +44,11 @@ export class DevicesController {
   @Get('statistics')
   async getStatistics(): Promise<DeviceStatisticsDto> {
     return await this.devicesService.getStatistics();
+  }
+
+  @Get('statistics/additions')
+  getDeviceAdditionsStatistics(@Query('period') period: DeviceAdditionsPeriod) {
+    return this.devicesService.getDeviceAdditionsStatistics(period);
   }
 
   @Get('search')

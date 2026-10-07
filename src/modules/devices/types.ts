@@ -39,3 +39,5 @@ export interface DeviceHistoryItem {
   comment: string | null;
   condition?: string | null;
 }
+
+export type DeviceAdditionsPeriod = '6m' | '12m' | '24m';

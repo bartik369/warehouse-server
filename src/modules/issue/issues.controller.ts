@@ -45,6 +45,11 @@ export class IssueController {
     return await this.issueService.searchProcesses(query);
   }
 
+  @Get('recent')
+  async getRecentIssues() {
+    return await this.issueService.getRecentIssues();
+  }
+
   @Get('process/by-device/:id')
   async getIssueProcessByDevice(@Param('id') id: string): Promise<any> {
     return await this.issueService.getIssueProcessByDevice(id);
