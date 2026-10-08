@@ -497,6 +497,14 @@ export class IssueService {
       take: 4,
     });
   }
+
+  async getUnfinishedIssueCount() {
+    return this.prisma.device_issue_process.count({
+      where: {
+        status: STATUS.draft,
+      },
+    });
+  }
   async getIssueFile(fileId: string) {
     const file = await this.prisma.file.findUnique({
       where: {
