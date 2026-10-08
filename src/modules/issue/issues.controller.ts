@@ -50,6 +50,11 @@ export class IssueController {
     return await this.issueService.getRecentIssues();
   }
 
+  @Get('unfinished/count')
+  async getUnfinishedIssueCount() {
+    return await this.issueService.getUnfinishedIssueCount();
+  }
+
   @Get('process/by-device/:id')
   async getIssueProcessByDevice(@Param('id') id: string): Promise<any> {
     return await this.issueService.getIssueProcessByDevice(id);
